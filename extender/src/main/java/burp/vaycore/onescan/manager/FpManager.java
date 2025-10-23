@@ -7,6 +7,9 @@ import burp.vaycore.common.utils.Utils;
 import burp.vaycore.onescan.bean.*;
 import burp.vaycore.onescan.common.FpMethodHandler;
 import burp.vaycore.onescan.common.OnFpColumnModifyListener;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.LoaderOptions;
 
 import java.awt.*;
 import java.lang.reflect.Method;
@@ -65,11 +68,42 @@ public class FpManager {
     }
 
     private static void loadConfig() {
-        String json = FileUtils.readFileToString(sFilePath);
-        if (StringUtils.isEmpty(json)) {
+        String content = FileUtils.readFileToString(sFilePath);
+        if (StringUtils.isEmpty(content)) {
             throw new IllegalArgumentException("fingerprint config is empty.");
         }
-        sConfig = GsonUtils.toObject(json, FpConfig.class);
+
+        // 判断文件格式
+        if (sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml")) {
+            // YAML 格式解析
+            try {
+                LoaderOptions options = new LoaderOptions();
+                Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
+                sConfig = yaml.load(content);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("YAML config parsing failed: " + e.getMessage());
+            }
+        } else if (sFilePath.endsWith(".json")) {
+            // JSON 格式解析（向后兼容）
+            sConfig = GsonUtils.toObject(content, FpConfig.class);
+        } else {
+            // 自动检测格式：尝试JSON，失败后尝试YAML
+            content = content.trim();
+            if (content.startsWith("{") || content.startsWith("[")) {
+                // 看起来像JSON
+                sConfig = GsonUtils.toObject(content, FpConfig.class);
+            } else {
+                // 尝试作为YAML解析
+                try {
+                    LoaderOptions options = new LoaderOptions();
+                    Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
+                    sConfig = yaml.load(content);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Config parsing failed (tried both JSON and YAML): " + e.getMessage());
+                }
+            }
+        }
+
         if (sConfig == null) {
             throw new IllegalArgumentException("fingerprint config parsing failed.");
         }
