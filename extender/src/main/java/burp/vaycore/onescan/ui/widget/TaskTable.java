@@ -15,12 +15,17 @@ import burp.vaycore.onescan.common.L;
 import burp.vaycore.onescan.manager.FpManager;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.MalformedURLException;
@@ -38,19 +43,19 @@ import java.util.stream.Collectors;
 public class TaskTable extends JTable implements ActionListener {
 
     /**
-     * 预设的列宽
+     * 预设的列宽比例（总和为100%）
      */
-    private static final int[] PRE_COLUMN_WIDTH = {
-            70, // #
-            65, // From
-            70, // Method
-            200, // Host
-            200, // Url
-            200, // Title
-            125, // IP
-            70, // Status
-            100, // Length
-            70, // Color
+    private static final double[] COLUMN_WIDTH_RATIOS = {
+            0.05,  // # (5%)
+            0.06,  // From (6%)
+            0.06,  // Method (6%)
+            0.15,  // Host (15%)
+            0.20,  // Url (20%)
+            0.18,  // Title (18%)
+            0.10,  // IP (10%)
+            0.06,  // Status (6%)
+            0.08,  // Length (8%)
+            0.06,  // Color (6%)
     };
 
     private static Vector<String> sColumnNames;
@@ -115,7 +120,7 @@ public class TaskTable extends JTable implements ActionListener {
         mTaskTableModel = new TaskTableModel();
         mLastSelectedRow = -1;
         setModel(mTaskTableModel);
-        setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
         // 使组件垂直填充父容器
         setFillsViewportHeight(true);
         // 不可拖动表头
@@ -129,6 +134,8 @@ public class TaskTable extends JTable implements ActionListener {
         setRowSorter(mTableRowSorter);
         // 初始化监听器
         initEvent();
+        // 添加大小变化监听
+        initResizeListener();
     }
 
     private void initEvent() {
@@ -157,20 +164,79 @@ public class TaskTable extends JTable implements ActionListener {
     }
 
     /**
-     * 初始化列宽
+     * 初始化列宽（基于百分比动态计算）
      */
     private void initColumnWidth() {
+        // 获取父容器宽度（用于计算百分比）
+        Container parent = getParent();
+        int tableWidth = 1000; // 默认宽度
+
+        if (parent != null) {
+            // 如果父容器是JViewport，使用其宽度
+            if (parent instanceof JViewport) {
+                tableWidth = ((JViewport) parent).getWidth();
+            } else {
+                tableWidth = parent.getWidth();
+            }
+            // 确保有合理的最小宽度
+            if (tableWidth < 100) {
+                tableWidth = 1000;
+            }
+        }
+
         int columnCount = getColumnModel().getColumnCount();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-            // 默认宽度
-            int columnWidth = 120;
-            // 如果在预设宽度范围内
-            if (columnIndex < PRE_COLUMN_WIDTH.length) {
-                columnWidth = PRE_COLUMN_WIDTH[columnIndex];
-            }
-            // 设置宽度
-            getColumnModel().getColumn(columnIndex).setPreferredWidth(columnWidth);
+            // 获取列宽比例
+            double ratio = (columnIndex < COLUMN_WIDTH_RATIOS.length) ?
+                    COLUMN_WIDTH_RATIOS[columnIndex] : 0.1;
+            int columnWidth = (int) (tableWidth * ratio);
+
+            // 设置列宽度
+            TableColumn column = getColumnModel().getColumn(columnIndex);
+            column.setPreferredWidth(columnWidth);
+            // 设置最小宽度防止过小
+            column.setMinWidth(30);
         }
+    }
+
+    /**
+     * 初始化大小变化监听器
+     */
+    private void initResizeListener() {
+        // 监听表格组件自身的大小变化
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                SwingUtilities.invokeLater(() -> initColumnWidth());
+            }
+        });
+
+        // 监听父容器变化（当表格被添加到容器中时）
+        addAncestorListener(new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                Container parent = getParent();
+                if (parent instanceof JViewport) {
+                    // 为父容器也添加大小监听
+                    parent.addComponentListener(new ComponentAdapter() {
+                        @Override
+                        public void componentResized(ComponentEvent e) {
+                            SwingUtilities.invokeLater(() -> initColumnWidth());
+                        }
+                    });
+                }
+                // 初始化列宽
+                SwingUtilities.invokeLater(() -> initColumnWidth());
+            }
+
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
+            }
+        });
     }
 
     @Override
