@@ -103,7 +103,8 @@ public class TaskTable extends JTable implements ActionListener {
                     c.setForeground(fontColor);
                     return c;
                 } else {
-                    fontColor = Color.BLACK;
+                    // 根据背景色亮度自动选择合适的前景色
+                    fontColor = getContrastColor(bgColor);
                 }
                 // 高亮颜色选中处理
                 if (isSelected) {
@@ -320,6 +321,23 @@ public class TaskTable extends JTable implements ActionListener {
                 Math.max((int) (color.getGreen() * 0.85D), 0),
                 Math.max((int) (color.getBlue() * 0.85D), 0),
                 color.getAlpha());
+    }
+
+    /**
+     * 根据背景色亮度自动选择合适的前景色（黑色或白色）
+     * 使用 W3C 推荐的相对亮度公式
+     *
+     * @param bgColor 背景颜色
+     * @return 合适的前景色（黑色或白色）
+     */
+    private Color getContrastColor(Color bgColor) {
+        // 计算相对亮度：(0.299 * R + 0.587 * G + 0.114 * B) / 255
+        double luminance = (0.299 * bgColor.getRed() +
+                           0.587 * bgColor.getGreen() +
+                           0.114 * bgColor.getBlue()) / 255.0;
+
+        // 如果背景较暗（亮度 < 0.5），使用白色；否则使用黑色
+        return luminance < 0.5 ? Color.WHITE : Color.BLACK;
     }
 
     /**
