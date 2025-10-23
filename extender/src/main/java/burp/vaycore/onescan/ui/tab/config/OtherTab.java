@@ -20,7 +20,6 @@ public class OtherTab extends BaseConfigTab {
         // 请求响应最大长度
         addTextConfigPanel(L.get("maximum_display_length"), L.get("maximum_display_length_sub_title"),
                 20, Config.KEY_MAX_DISPLAY_LENGTH).addKeyListener(new NumberFilter(8));
-        addDirectoryConfigPanel(L.get("collect_directory"), L.get("collect_directory_sub_title"), Config.KEY_COLLECT_PATH);
         addDirectoryConfigPanel(L.get("wordlist_directory"), L.get("wordlist_directory_sub_title"), Config.KEY_WORDLIST_PATH);
     }
 

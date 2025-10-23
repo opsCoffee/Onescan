@@ -10,7 +10,6 @@ import burp.vaycore.onescan.bean.FpData;
 import burp.vaycore.onescan.bean.TaskData;
 import burp.vaycore.onescan.common.*;
 import burp.vaycore.onescan.info.OneScanInfoTab;
-import burp.vaycore.onescan.manager.CollectManager;
 import burp.vaycore.onescan.manager.FpManager;
 import burp.vaycore.onescan.manager.WordlistManager;
 import burp.vaycore.onescan.ui.tab.DataBoardTab;
@@ -312,9 +311,6 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
                 Logger.debug("doScan allowlist and blocklist filter host: %s", host);
                 return;
             }
-            // 收集数据（只收集代理流量的数据）
-            CollectManager.collect(true, host, request);
-            CollectManager.collect(false, host, response);
         }
         // 如果启用，对来自重定向的包进行检测
         if (from.startsWith(FROM_REDIRECT) && Config.getBoolean(Config.KEY_REDIRECT_TARGET_HOST_LIMIT)) {
@@ -768,8 +764,6 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
                 // 构建展示的数据包
                 TaskData data = buildTaskData(newReqResp, from);
                 mDataBoardTab.getTaskTable().addTaskData(data);
-                // 收集数据
-                CollectManager.collect(false, service.getHost(), newReqResp.getResponse());
                 // 处理重定向
                 handleFollowRedirect(data);
                 // 任务完成计数
@@ -1852,13 +1846,6 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 关闭指纹识别线程池
         count = mFpThreadPool.shutdownNow().size();
         Logger.info("Close: fingerprint recognition thread pool completed. Task %d records.", count);
-        // 关闭数据收集线程池
-        count = CollectManager.closeThreadPool();
-        Logger.info("Close: data collection thread pool completed. Task %d records.", count);
-        // 清除数据收集的去重过滤集合
-        count = CollectManager.getRepeatFilterCount();
-        CollectManager.clearRepeatFilter();
-        Logger.info("Clear: data collection repeat filter list completed. Total %d records.", count);
         // 清除指纹识别缓存
         count = FpManager.getCacheCount();
         FpManager.clearCache();

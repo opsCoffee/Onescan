@@ -9,7 +9,6 @@ import burp.vaycore.common.utils.Utils;
 import burp.vaycore.onescan.common.Config;
 import burp.vaycore.onescan.common.L;
 import burp.vaycore.onescan.common.PopupMenuListenerAdapter;
-import burp.vaycore.onescan.manager.CollectManager;
 import burp.vaycore.onescan.manager.WordlistManager;
 import burp.vaycore.onescan.ui.tab.config.OtherTab;
 import burp.vaycore.onescan.ui.widget.DividerLine;
@@ -152,8 +151,6 @@ public abstract class BaseConfigTab extends BaseTab {
                         UIHelper.showTipsDialog(L.get("wordlist_directory_save_success"));
                         sendTabEvent(OtherTab.EVENT_UNLOAD_PLUGIN);
                         return;
-                    } else if (configKey.equals(Config.KEY_COLLECT_PATH)) {
-                        CollectManager.init(newPath);
                     }
                     UIHelper.showTipsDialog(L.get("save_success"));
                 } catch (Exception ex) {

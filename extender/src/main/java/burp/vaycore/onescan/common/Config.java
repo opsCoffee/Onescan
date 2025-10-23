@@ -4,7 +4,6 @@ import burp.vaycore.common.config.ConfigManager;
 import burp.vaycore.common.filter.FilterRule;
 import burp.vaycore.common.log.Logger;
 import burp.vaycore.common.utils.*;
-import burp.vaycore.onescan.manager.CollectManager;
 import burp.vaycore.onescan.manager.FpManager;
 import burp.vaycore.onescan.manager.WordlistManager;
 import burp.vaycore.onescan.ui.widget.payloadlist.PayloadItem;
@@ -35,7 +34,6 @@ public class Config {
     public static final String KEY_RETRY_COUNT = "retry-count";
     public static final String KEY_RETRY_INTERVAL = "retry-interval";
     public static final String KEY_MAX_DISPLAY_LENGTH = "max-display-length";
-    public static final String KEY_COLLECT_PATH = "collect-path";
     public static final String KEY_EXCLUDE_SUFFIX = "exclude-suffix";
     public static final String KEY_INCLUDE_METHOD = "include-method";
     public static final String KEY_WORDLIST_PATH = "dict-path";
@@ -70,7 +68,6 @@ public class Config {
         initDefaultConfig(Config.KEY_RETRY_COUNT, "3");
         initDefaultConfig(Config.KEY_RETRY_INTERVAL, "3000");
         initDefaultConfig(Config.KEY_MAX_DISPLAY_LENGTH, "0");
-        initDefaultConfig(Config.KEY_COLLECT_PATH, getWorkDir() + "collect");
         initDefaultConfig(KEY_EXCLUDE_SUFFIX, "3g2|3gp|7z|aac|abw|aif|aifc|aiff|arc|au|avi|azw|bin|bmp|bz|" +
                 "bz2|cmx|cod|csh|css|csv|doc|docx|eot|epub|gif|gz|ico|ics|ief|jar|jfif|jpe|jpeg|jpg|m3u|mid|midi|" +
                 "mjs|mp2|mp3|mpa|mpe|mpeg|mpg|mpkg|mpp|mpv2|odp|ods|odt|oga|ogv|ogx|otf|pbm|pdf|pgm|png|pnm|ppm|" +
@@ -88,8 +85,6 @@ public class Config {
         initDefaultConfig(Config.KEY_ENABLE_REPLACE_HEADER, "true");
         initDefaultConfig(Config.KEY_ENABLE_DIR_SCAN, "true");
         initDefaultConfig(Config.KEY_ENABLE_PAYLOAD_PROCESSING, "true");
-        // 初始化数据收集管理
-        CollectManager.init(get(Config.KEY_COLLECT_PATH));
         // 初始化字典管理
         WordlistManager.init(get(Config.KEY_WORDLIST_PATH));
         // 初始化指纹管理
