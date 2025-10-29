@@ -876,7 +876,7 @@ public class TaskTable extends JTable implements ActionListener {
 
         public TaskTableModel() {
             mData = Collections.synchronizedList(new ArrayList<>());
-            mCounter = new AtomicInteger();
+            mCounter = new AtomicInteger(1);  // 从1开始计数，而不是0
             mItemLoader = new DataTableItemLoader<>(this, 500);
         }
 
