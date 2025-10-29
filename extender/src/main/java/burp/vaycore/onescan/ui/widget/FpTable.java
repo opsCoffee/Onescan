@@ -288,7 +288,7 @@ public class FpTable extends JTable {
             String columnName = getColumnName(columnIndex);
             FpData data = mData.get(rowIndex);
             if (columnIndex == 0) {
-                return rowIndex;
+                return rowIndex + 1;
             } else if (columnIndex == getColumnCount() - 1) {
                 return data.getColor();
             }
