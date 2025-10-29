@@ -31,8 +31,8 @@ public class FpTable extends JTable {
         setRowSorter(mTableRowSorter);
         getTableHeader().setReorderingAllowed(false);
         initColorLevelSorter();
-        initColumnWidth();
         loadData();
+        initColumnWidth();
     }
 
     public void loadData() {
@@ -69,15 +69,52 @@ public class FpTable extends JTable {
     private void initColumnWidth() {
         int columnCount = getColumnModel().getColumnCount();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
-            // 预设宽度
-            int columnWidth = 120;
-            // 首列和结尾的列宽一致
-            if (columnIndex == 0 || columnIndex == columnCount - 1) {
-                // 首列 ID 字段名
-                columnWidth = 70;
-            }
+            int columnWidth = calculateColumnWidth(columnIndex);
             this.getColumnModel().getColumn(columnIndex).setPreferredWidth(columnWidth);
         }
+    }
+
+    /**
+     * 计算列的最佳宽度（根据内容自适应）
+     *
+     * @param columnIndex 列索引
+     * @return 计算后的列宽
+     */
+    private int calculateColumnWidth(int columnIndex) {
+        int columnCount = getColumnModel().getColumnCount();
+        
+        // ID 列和 Color 列使用固定较小宽度
+        if (columnIndex == 0 || columnIndex == columnCount - 1) {
+            return 80;
+        }
+        
+        // 获取列标题宽度
+        String columnName = getColumnName(columnIndex);
+        FontMetrics headerMetrics = getFontMetrics(getTableHeader().getFont());
+        int headerWidth = headerMetrics.stringWidth(columnName);
+        
+        // 计算内容宽度（扫描所有行以确保宽度足够）
+        int maxContentWidth = headerWidth;
+        int rowCount = mTableModel.getRowCount();
+        FontMetrics cellMetrics = getFontMetrics(getFont());
+        
+        for (int row = 0; row < rowCount; row++) {
+            Object value = mTableModel.getValueAt(row, columnIndex);
+            if (value != null) {
+                String cellValue = value.toString();
+                int cellWidth = cellMetrics.stringWidth(cellValue);
+                maxContentWidth = Math.max(maxContentWidth, cellWidth);
+            }
+        }
+        
+        // 添加内边距（左右各15px，共30px）确保内容不会太挤
+        int padding = 30;
+        int calculatedWidth = maxContentWidth + padding;
+        
+        // 设置合理的最小宽度，避免列太窄
+        int minWidth = 120;
+        
+        return Math.max(calculatedWidth, minWidth);
     }
 
     @Override
