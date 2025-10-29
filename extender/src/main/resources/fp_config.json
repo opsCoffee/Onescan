@@ -327,7 +327,12 @@
 			]
 		},
 		{
-			"params": [{ "k": "yPv", "v": "Druid" }],
+			"params": [
+				{
+					"k": "yPv",
+					"v": "Druid"
+				}
+			],
 			"color": "orange",
 			"rules": [
 				[
@@ -339,27 +344,62 @@
 					}
 				],
 				[
-					{ "ds": "response", "f": "status", "m": "equals", "c": "200" },
+					{
+						"ds": "response",
+						"f": "status",
+						"m": "equals",
+						"c": "200"
+					},
 					{
 						"ds": "response",
 						"f": "body",
 						"m": "iContains",
 						"c": "com.alibaba.druid"
 					},
-					{ "ds": "response", "f": "body", "m": "iContains", "c": "DbType" },
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iContains",
+						"c": "DbType"
+					},
 					{
 						"ds": "response",
 						"f": "body",
 						"m": "iContains",
 						"c": "DriverClassName"
 					},
-					{ "ds": "response", "f": "body", "m": "iContains", "c": "jdbc:" }
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iContains",
+						"c": "jdbc:"
+					}
 				],
 				[
-					{ "ds": "response", "f": "status", "m": "equals", "c": "200" },
-					{ "ds": "response", "f": "body", "m": "iContains", "c": "Content" },
-					{ "ds": "response", "f": "body", "m": "iContains", "c": "Version" },
-					{ "ds": "response", "f": "body", "m": "iContains", "c": "Drivers" },
+					{
+						"ds": "response",
+						"f": "status",
+						"m": "equals",
+						"c": "200"
+					},
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iContains",
+						"c": "Content"
+					},
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iContains",
+						"c": "Version"
+					},
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iContains",
+						"c": "Drivers"
+					},
 					{
 						"ds": "response",
 						"f": "body",
@@ -384,7 +424,12 @@
 						"m": "iContains",
 						"c": "JavaClassPath"
 					},
-					{ "ds": "response", "f": "body", "m": "iContains", "c": "StartTime" }
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iContains",
+						"c": "StartTime"
+					}
 				]
 			]
 		},
@@ -1124,6 +1169,31 @@
 						"f": "body",
 						"m": "regex",
 						"c": "[^0-9]((\\d{8}(0\\d|10|11|12)([0-2]\\d|30|31)\\d{3}$)|(\\d{6}(18|19|20)\\d{2}(0[1-9]|10|11|12)([0-2]\\d|30|31)\\d{3}(\\d|X|x)))[^0-9]"
+					}
+				]
+			]
+		},
+		{
+			"params": [
+				{
+					"k": "yPv",
+					"v": "swagger-api"
+				}
+			],
+			"color": "red",
+			"rules": [
+				[
+					{
+						"ds": "response",
+						"f": "status",
+						"m": "equals",
+						"c": "200"
+					},
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iRegex",
+						"c": "(?i)(?:swagger:|Swagger 2\\\\.0|\\\"swagger\\\":|Swagger UI|loadSwaggerUI|\\\\*\\\\*token\\\\*\\\\*:|id=\\\"swagger-ui)"
 					}
 				]
 			]
