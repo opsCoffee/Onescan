@@ -13,30 +13,85 @@
 
 ### 当前架构
 
-```
-FingerprintTab (指纹管理面板)
-    └── FpTestWindow (测试窗口)
-        ├── JTextArea (请求输入)
-        ├── JTextArea (响应输入)
-        ├── FpTestResultPanel (结果展示)
-        └── 操作按钮 (测试/重置/关闭)
+```mermaid
+graph TD
+    A[FingerprintTab<br/>指纹管理面板] --> B[FpTestWindow<br/>测试窗口]
+    B --> C[JTextArea<br/>请求输入]
+    B --> D[JTextArea<br/>响应输入]
+    B --> E[FpTestResultPanel<br/>结果展示]
+    B --> F[操作按钮<br/>测试/重置/关闭]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#ffe1e1
+    style D fill:#ffe1e1
+    style E fill:#e1ffe1
+    style F fill:#f0e1ff
 ```
 
 ### 改进后架构
 
+```mermaid
+graph TD
+    A[FingerprintTab<br/>指纹管理面板] --> B[FpTestWindow<br/>测试窗口]
+    B --> C[JSplitPane<br/>水平分割]
+    C --> D[HttpRequestEditor<br/>Montoya API]
+    C --> E[HttpResponseEditor<br/>Montoya API]
+    B --> F[FpTestResultPanel<br/>结果展示]
+    B --> G[操作按钮<br/>测试/重置/关闭]
+    
+    H[FpManager<br/>指纹管理器] --> I[loadConfig<br/>支持JSON/YAML]
+    H --> J[saveConfig<br/>保持JSON可读]
+    H --> K[validateConfig<br/>格式校验]
+    
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#ffe8d1
+    style D fill:#d1f5d1
+    style E fill:#d1f5d1
+    style F fill:#e1ffe1
+    style G fill:#f0e1ff
+    style H fill:#e1f5ff
+    style I fill:#d1e8ff
+    style J fill:#d1e8ff
+    style K fill:#d1e8ff
 ```
-FingerprintTab (指纹管理面板)
-    └── FpTestWindow (测试窗口)
-        ├── JSplitPane (水平分割)
-        │   ├── HttpRequestEditor (Montoya API)
-        │   └── HttpResponseEditor (Montoya API)
-        ├── FpTestResultPanel (结果展示)
-        └── 操作按钮 (测试/重置/关闭)
 
-FpManager (指纹管理器)
-    ├── loadConfig() - 支持JSON/YAML格式
-    ├── saveConfig() - 保持JSON可读格式
-    └── validateConfig() - 格式校验
+## 测试流程序列图
+
+```mermaid
+sequenceDiagram
+    actor User as 用户
+    participant FTW as FpTestWindow
+    participant ReqEditor as HttpRequestEditor
+    participant RespEditor as HttpResponseEditor
+    participant FPM as FpManager
+    participant Result as FpTestResultPanel
+    
+    User->>FTW: 点击"测试"按钮
+    FTW->>ReqEditor: getRequest()
+    ReqEditor-->>FTW: HttpRequest
+    FTW->>RespEditor: getResponse()
+    RespEditor-->>FTW: HttpResponse
+    
+    FTW->>FTW: 转换为字节数组
+    FTW->>FPM: check(reqBytes, respBytes, false)
+    FPM->>FPM: 执行指纹匹配
+    FPM-->>FTW: List<FpData>
+    
+    alt 匹配成功
+        FTW->>Result: setData(list)
+        Result-->>User: 显示匹配结果
+    else 无匹配
+        FTW->>Result: showTips("无测试结果")
+        Result-->>User: 显示提示信息
+    end
+    
+    User->>FTW: 点击"重置"按钮
+    FTW->>ReqEditor: setRequest(null)
+    FTW->>RespEditor: setResponse(null)
+    FTW->>Result: clearResult()
+    Result-->>User: 清空界面
 ```
 
 ## 组件和接口
@@ -325,6 +380,39 @@ public class BurpExtender implements IBurpExtender, ... {
 }
 ```
 
+## 数据流图
+
+```mermaid
+flowchart TD
+    Start([用户打开测试窗口]) --> Input[输入HTTP请求/响应]
+    Input --> Edit{编辑数据}
+    Edit -->|继续编辑| Input
+    Edit -->|点击测试| Convert[转换为字节数组]
+    
+    Convert --> Match[FpManager.check]
+    Match --> Rules[加载指纹规则]
+    Rules --> Process[并行匹配处理]
+    
+    Process --> Check{有匹配结果?}
+    Check -->|是| Display[显示指纹标签]
+    Check -->|否| NoResult[显示无结果提示]
+    
+    Display --> Action{用户操作}
+    NoResult --> Action
+    
+    Action -->|重置| Clear[清空编辑器]
+    Action -->|关闭| End([关闭窗口])
+    Action -->|继续测试| Input
+    
+    Clear --> Input
+    
+    style Start fill:#e1f5ff
+    style End fill:#ffe1e1
+    style Match fill:#fff4e1
+    style Display fill:#e1ffe1
+    style NoResult fill:#ffe8d1
+```
+
 ## 数据模型
 
 ### FpConfig (指纹配置)
@@ -470,6 +558,7 @@ try {
 - **升级计划**：升级到最新版本以获得最新功能和bug修复
 - **最低要求**：Burp Suite 2023.1+（支持Montoya API）
 - **说明**：Montoya API v2025.5 是截至2025年10月的最新稳定版本
+- **依赖来源**：使用Maven中央仓库依赖（本地API模块已移除）
 - 向后兼容：保持对旧版Burp Extender API的支持
 
 ### 2. 配置文件兼容性
@@ -485,10 +574,85 @@ try {
 
 ## 部署注意事项
 
-### 1. 依赖更新
+### 1. Montoya API 版本升级
 
-- 确保Montoya API依赖已正确配置
-- 验证Gson版本支持pretty printing
+#### 版本信息
+- **当前版本**: v2023.12.1
+- **目标版本**: v2025.5（截至2025年10月的最新稳定版本）
+- **依赖来源**: Maven中央仓库（本地模块已移除）
+
+#### Maven 依赖配置
+
+更新根 `pom.xml` 中的版本属性：
+
+```xml
+<properties>
+    <montoya-api.version>2025.5</montoya-api.version>
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>net.portswigger.burp.extensions</groupId>
+            <artifactId>montoya-api</artifactId>
+            <version>${montoya-api.version}</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+#### 升级步骤
+
+1. **更新版本号**
+   ```bash
+   # 编辑 pom.xml
+   # 将 <montoya-api.version>2023.12.1</montoya-api.version>
+   # 改为 <montoya-api.version>2025.5</montoya-api.version>
+   ```
+
+2. **清理并重新构建**
+   ```bash
+   mvn clean compile
+   ```
+
+3. **验证依赖下载**
+   - 检查 Maven 是否成功从中央仓库下载 v2025.5
+   - 验证编译无错误
+
+4. **测试兼容性**
+   - 运行现有测试用例
+   - 验证插件功能正常
+   - 检查 API 变更影响
+
+#### API 兼容性确认
+
+根据 Montoya API 的设计原则，版本更新通常保持向后兼容。核心 API 方法在 v2025.5 中仍然可用：
+
+✅ **HttpRequestEditor**
+- `HttpRequest getRequest()`
+- `void setRequest(HttpRequest request)`
+- `Component uiComponent()`
+- `boolean isModified()`
+
+✅ **HttpResponseEditor**
+- `HttpResponse getResponse()`
+- `void setResponse(HttpResponse response)`
+- `Component uiComponent()`
+- `boolean isModified()`
+
+✅ **UserInterface**
+- `HttpRequestEditor createHttpRequestEditor(EditorOptions... options)`
+- `HttpResponseEditor createHttpResponseEditor(EditorOptions... options)`
+
+#### 参考资源
+- [Montoya API GitHub](https://github.com/portswigger/burp-extensions-montoya-api)
+- [Montoya API 文档](https://portswigger.github.io/burp-extensions-montoya-api/)
+- [Maven Central](https://central.sonatype.com/artifact/net.portswigger.burp.extensions/montoya-api)
+
+### 2. 其他依赖
+
+- 确保 Gson 依赖版本支持 pretty printing（当前 v2.10.1 支持）
+- 验证 SnakeYAML 依赖正常（用于 YAML 配置解析）
 
 ### 2. 配置迁移
 

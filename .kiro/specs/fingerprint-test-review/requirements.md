@@ -19,9 +19,51 @@
 - **TestSystem**: 指纹测试系统，包含FpTestWindow和相关组件的总称
 - **Montoya API**: Burp Suite的现代扩展API，目标版本v2025.5（当前最新稳定版本）
 
-## 需求
+## 需求概览
 
-### 需求 1: 指纹配置文件格式校验
+### 需求优先级
+
+| 需求ID | 需求名称 | 优先级 | 类型 | 依赖 |
+|--------|---------|--------|------|------|
+| REQ-001 | 指纹配置文件格式校验 | 高 | 功能 | - |
+| REQ-002 | Burp风格的HTTP消息编辑器 | 高 | UI | - |
+| REQ-003 | HTTP消息编辑器功能 | 高 | 功能 | REQ-002 |
+| REQ-004 | 测试窗口布局优化 | 中 | UI | REQ-002 |
+| REQ-005 | 测试结果展示 | 中 | UI | - |
+| REQ-006 | 测试功能交互 | 高 | 功能 | REQ-002, REQ-003 |
+| REQ-007 | 错误处理和用户反馈 | 中 | 功能 | - |
+
+### 需求关系图
+
+```mermaid
+graph LR
+    REQ001[REQ-001<br/>配置文件校验]
+    REQ002[REQ-002<br/>HTTP编辑器]
+    REQ003[REQ-003<br/>编辑器功能]
+    REQ004[REQ-004<br/>窗口布局]
+    REQ005[REQ-005<br/>结果展示]
+    REQ006[REQ-006<br/>功能交互]
+    REQ007[REQ-007<br/>错误处理]
+    
+    REQ002 --> REQ003
+    REQ002 --> REQ004
+    REQ002 --> REQ006
+    REQ003 --> REQ006
+    
+    style REQ001 fill:#ffcccc
+    style REQ002 fill:#ffcccc
+    style REQ003 fill:#ffcccc
+    style REQ004 fill:#ffffcc
+    style REQ005 fill:#ffffcc
+    style REQ006 fill:#ffcccc
+    style REQ007 fill:#ffffcc
+```
+
+**图例**: 🔴 高优先级 | 🟡 中优先级
+
+## 需求详细说明
+
+### REQ-001: 指纹配置文件格式校验
 
 **用户故事:** 作为插件维护者，我希望系统能够校验指纹配置文件的JSON格式正确性，但不压缩文件内容，以便用户可以直接编辑和阅读配置文件
 
@@ -33,7 +75,7 @@
 4. THE FpManager SHALL 保持JSON配置文件的可读性，每个字段独立成行
 5. THE FpManager SHALL 验证配置文件包含必需的字段（columns和list）
 
-### 需求 2: Burp风格的HTTP消息编辑器
+### REQ-002: Burp风格的HTTP消息编辑器
 
 **用户故事:** 作为安全研究人员，我希望指纹测试面板的HTTP消息编辑器与Burp Repeater保持一致的外观和交互方式，以便快速上手使用
 
@@ -46,7 +88,7 @@
 5. THE HttpRequestEditor SHALL 提供语法高亮显示HTTP请求内容
 6. THE HttpResponseEditor SHALL 提供语法高亮显示HTTP响应内容
 
-### 需求 3: HTTP消息编辑器功能
+### REQ-003: HTTP消息编辑器功能
 
 **用户故事:** 作为安全研究人员，我希望能够像在Burp Repeater中一样编辑和查看HTTP消息，以便方便地测试各种指纹规则
 
@@ -59,7 +101,7 @@
 5. THE HttpRequestEditor SHALL 自动识别和解析HTTP请求行、请求头和请求体
 6. THE HttpResponseEditor SHALL 自动识别和解析HTTP状态行、响应头和响应体
 
-### 需求 4: 测试窗口布局优化
+### REQ-004: 测试窗口布局优化
 
 **用户故事:** 作为安全研究人员，我希望测试窗口布局合理且易于使用，以便高效地进行指纹测试
 
@@ -71,7 +113,7 @@
 4. THE FpTestWindow SHALL 提供"测试"、"重置"、"关闭"三个操作按钮
 5. THE FpTestWindow SHALL 设置合理的初始窗口大小（建议1000x700），确保内容可读性
 
-### 需求 5: 测试结果展示
+### REQ-005: 测试结果展示
 
 **用户故事:** 作为安全研究人员，我希望测试结果能够清晰展示匹配到的指纹信息，以便快速了解识别效果
 
@@ -83,7 +125,7 @@
 4. WHEN 输入数据为空，THE FpTestResultPanel SHALL 显示"输入为空"提示信息
 5. THE FpTestResultPanel SHALL 使用流式布局展示指纹标签，自动换行适应窗口宽度
 
-### 需求 6: 测试功能交互
+### REQ-006: 测试功能交互
 
 **用户故事:** 作为安全研究人员，我希望测试功能交互流畅且符合直觉，以便快速验证指纹规则
 
@@ -95,7 +137,7 @@
 4. THE FpManager SHALL 在测试模式下禁用缓存机制，确保每次测试都重新执行匹配
 5. THE FpTestWindow SHALL 在测试完成后保持输入数据，方便用户调整后重新测试
 
-### 需求 7: 错误处理和用户反馈
+### REQ-007: 错误处理和用户反馈
 
 **用户故事:** 作为安全研究人员，我希望在测试过程中遇到错误时能够获得清晰的反馈，以便快速定位问题
 

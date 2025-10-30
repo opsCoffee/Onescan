@@ -1,9 +1,10 @@
 # 实现计划
 
 - [ ] 1. 配置Montoya API依赖和项目结构
-  - 验证montoya-api模块依赖配置正确
+  - 验证项目使用Maven中央仓库的montoya-api依赖（本地模块已移除）
   - 将Montoya API版本从v2023.12.1升级到v2025.5（当前最新稳定版本）
-  - 更新montoya-api/pom.xml中的版本号
+  - 更新根pom.xml中的montoya-api.version属性为2025.5
+  - 执行mvn clean compile验证依赖下载和编译成功
   - 检查Montoya API的HttpRequestEditor和HttpResponseEditor接口可用性
   - 检查Gson依赖是否支持pretty printing功能
   - _需求: 2.1, 2.2, 2.3_
