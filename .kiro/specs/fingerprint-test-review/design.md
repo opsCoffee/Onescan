@@ -816,8 +816,8 @@ flowchart LR
 
 ### 3. Java版本兼容性
 
-- 当前：Java 8 (JDK 1.8)
-- 未来：计划升级到Java 17
+- 当前：Java 17 (JDK 17)
+- 说明：为支持 Montoya API 2025.5，项目已从 Java 8 升级到 Java 17
 
 ## 部署注意事项
 
