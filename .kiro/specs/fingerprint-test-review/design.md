@@ -380,37 +380,128 @@ private static void loadConfig() {
 private void writeToFile() {
     new Thread(() -> {
         synchronized (FpConfig.class) {
-            String json = GsonUtils.toJson(this);  // 问题：压缩格式
+            String json = GsonUtils.toJson(this);  // 问题：压缩格式，总是 JSON
             FileUtils.writeFile(FpManager.getPath(), json);
         }
     }).start();
 }
 ```
 
-**改进后**：
+**问题**：
+1. ❌ 总是保存为 JSON，即使原文件是 YAML
+2. ❌ JSON 格式被压缩，难以阅读
+3. ❌ YAML 文件会被转换为 JSON（但文件名还是 .yaml）
+4. ❌ 不幂等：YAML → JSON 单向转换
+
+**改进后（方案 A - 保持原格式）**：
 ```java
 // FpConfig.java - 改进后的代码
 private void writeToFile() {
     new Thread(() -> {
         synchronized (FpConfig.class) {
-            // 使用专用的 Gson 实例，启用 pretty printing
-            Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .disableHtmlEscaping()
-                .create();
+            String filePath = FpManager.getPath();
+            String content;
             
-            String json = gson.toJson(this);
-            FileUtils.writeFile(FpManager.getPath(), json);
+            // 根据文件扩展名选择保存格式
+            if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
+                // 保存为 YAML 格式
+                DumperOptions options = new DumperOptions();
+                options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                options.setPrettyFlow(true);
+                options.setIndent(2);
+                Yaml yaml = new Yaml(options);
+                content = yaml.dump(this);
+            } else {
+                // 保存为 JSON 格式（默认）
+                Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .disableHtmlEscaping()
+                    .create();
+                content = gson.toJson(this);
+            }
+            
+            FileUtils.writeFile(filePath, content);
         }
     }).start();
 }
 ```
 
-**说明**：
-- 不修改 `GsonUtils`，避免影响其他使用该工具类的地方
-- 在 `FpConfig` 中使用专用的 Gson 实例
-- 启用 `setPrettyPrinting()` 保持 JSON 可读性
-- 保持 `disableHtmlEscaping()` 避免特殊字符转义
+**改进说明**：
+- ✅ 根据文件扩展名选择保存格式
+- ✅ YAML 文件保存为 YAML 格式（完全幂等）
+- ✅ JSON 文件保存为 JSON 格式（启用 pretty printing）
+- ✅ 尊重用户的格式选择
+- ✅ 文件扩展名与内容始终匹配
+
+**YAML 配置说明**：
+- `FlowStyle.BLOCK` - 使用块状风格（多行格式）
+- `setPrettyFlow(true)` - 启用美化输出
+- `setIndent(2)` - 使用 2 空格缩进
+
+**依赖**：
+- SnakeYAML 已存在（用于加载）
+- 需要使用 `org.yaml.snakeyaml.DumperOptions` 配置输出
+- 需要导入 `org.yaml.snakeyaml.Yaml`
+
+**完整导入**：
+```java
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+```
+
+**格式示例**：
+
+YAML 输出：
+```yaml
+columns:
+  - id: yPv
+    name: Notes
+list:
+  - params:
+      - k: yPv
+        v: Swagger-UI
+    color: red
+    rules:
+      - - ds: response
+          f: body
+          m: iContains
+          c: '"swagger":'
+```
+
+JSON 输出：
+```json
+{
+  "columns": [
+    {
+      "id": "yPv",
+      "name": "Notes"
+    }
+  ],
+  "list": [
+    {
+      "params": [
+        {
+          "k": "yPv",
+          "v": "Swagger-UI"
+        }
+      ],
+      "color": "red",
+      "rules": [
+        [
+          {
+            "ds": "response",
+            "f": "body",
+            "m": "iContains",
+            "c": "\"swagger\":"
+          }
+        ]
+      ]
+    }
+  ]
+}
+```
 
 ### 3. FingerprintTab 集成改进
 
@@ -582,6 +673,70 @@ try {
 }
 ```
 
+## 格式幂等性保证
+
+### 幂等性定义
+
+**幂等性**：加载配置 → 修改数据 → 保存配置 → 再加载，数据和格式都保持一致。
+
+### 当前问题（改进前）
+
+```mermaid
+flowchart LR
+    YAML[YAML 文件] -->|加载| Memory[内存对象]
+    Memory -->|保存| JSON[JSON 文件]
+    JSON -->|文件名还是 .yaml| Problem[❌ 扩展名不匹配]
+    
+    style YAML fill:#e1f5ff
+    style JSON fill:#ffe1e1
+    style Problem fill:#ff0000,color:#fff
+```
+
+**问题**：
+- ❌ YAML → JSON 单向转换
+- ❌ 文件扩展名与内容不匹配
+- ❌ 失去 YAML 的优势（注释、多行字符串等）
+
+### 改进后（方案 A）
+
+```mermaid
+flowchart LR
+    YAML[YAML 文件] -->|加载| Memory[内存对象]
+    Memory -->|保存| YAML2[YAML 文件]
+    YAML2 -->|✅ 格式一致| Success[✅ 完全幂等]
+    
+    JSON[JSON 文件] -->|加载| Memory2[内存对象]
+    Memory2 -->|保存| JSON2[JSON 文件]
+    JSON2 -->|✅ 格式一致| Success2[✅ 完全幂等]
+    
+    style YAML fill:#e1f5ff
+    style YAML2 fill:#e1f5ff
+    style JSON fill:#e1ffe1
+    style JSON2 fill:#e1ffe1
+    style Success fill:#00ff00,color:#000
+    style Success2 fill:#00ff00,color:#000
+```
+
+**优势**：
+- ✅ 完全幂等（格式和数据都保持一致）
+- ✅ 尊重用户的格式选择
+- ✅ 文件扩展名与内容始终匹配
+- ✅ 保留 YAML 的优势
+
+### 幂等性测试矩阵
+
+| 原始格式 | 保存后格式 | 数据幂等 | 格式幂等 | 扩展名匹配 | 总体评估 |
+|---------|-----------|---------|---------|-----------|---------|
+| JSON (格式化) | JSON (格式化) | ✅ | ✅ | ✅ | ✅ 完全幂等 |
+| JSON (压缩) | JSON (格式化) | ✅ | ⚠️ | ✅ | ⚠️ 格式改进 |
+| YAML | YAML | ✅ | ✅ | ✅ | ✅ 完全幂等 |
+
+### 详细分析
+
+完整的幂等性分析报告：
+- `.agent/idempotency-analysis.md` - 详细分析（含问题、方案、测试）
+- `.agent/idempotency-summary.md` - 快速总结
+
 ## 测试策略
 
 ### 1. 单元测试
@@ -594,8 +749,15 @@ try {
 
 - **FpManager配置保存测试**
   - 测试JSON格式输出
+  - 测试YAML格式输出
   - 测试格式可读性
   - 测试特殊字符处理
+
+- **格式幂等性测试**
+  - 测试JSON文件的幂等性（加载 → 保存 → 再加载）
+  - 测试YAML文件的幂等性（加载 → 保存 → 再加载）
+  - 测试格式保持（YAML保持YAML，JSON保持JSON）
+  - 测试文件扩展名与内容匹配
 
 ### 2. 集成测试
 

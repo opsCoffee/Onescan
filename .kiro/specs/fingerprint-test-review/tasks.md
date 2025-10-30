@@ -23,13 +23,15 @@
   - 添加文件路径到错误信息中
   - _需求: 1.1, 1.2, 7.1_
 
-- [ ] 2.3 改进配置文件保存功能
+- [ ] 2.3 改进配置文件保存功能（实现格式幂等性）
   - 修改FpConfig.writeToFile()方法（方法已存在）
-  - 创建专用的Gson实例，配置setPrettyPrinting()和disableHtmlEscaping()
-  - 替换GsonUtils.toJson()调用为专用Gson实例
-  - 确保保存的JSON文件格式化且可读
+  - 根据文件扩展名选择保存格式（.yaml/.yml → YAML，其他 → JSON）
+  - 配置YAML输出：使用DumperOptions设置BLOCK风格、pretty flow、2空格缩进
+  - 配置JSON输出：使用GsonBuilder设置setPrettyPrinting()和disableHtmlEscaping()
+  - 确保YAML文件保存为YAML格式（完全幂等）
+  - 确保JSON文件保存为格式化的JSON（可读性）
   - 不修改GsonUtils类，避免影响其他功能
-  - _需求: 1.3, 1.4_
+  - _需求: 1.3, 1.4, 格式幂等性_
 
 - [ ]* 2.4 编写FpManager配置处理单元测试
   - 测试JSON格式解析

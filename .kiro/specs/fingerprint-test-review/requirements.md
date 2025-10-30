@@ -71,9 +71,12 @@ graph LR
 
 1. WHEN 加载指纹配置文件，THE FpManager SHALL 解析JSON或YAML格式的配置文件
 2. WHEN JSON格式解析失败，THE FpManager SHALL 抛出IllegalArgumentException异常并提供详细错误信息
-3. WHEN 保存指纹配置文件，THE FpManager SHALL 使用缩进和换行格式化JSON内容
-4. THE FpManager SHALL 保持JSON配置文件的可读性，每个字段独立成行
-5. THE FpManager SHALL 验证配置文件包含必需的字段（columns和list）
+3. WHEN 保存指纹配置文件，THE FpManager SHALL 根据文件扩展名选择保存格式
+4. WHEN 文件扩展名为.yaml或.yml，THE FpManager SHALL 保存为YAML格式
+5. WHEN 文件扩展名为.json或其他，THE FpManager SHALL 保存为格式化的JSON
+6. THE FpManager SHALL 保持配置文件的可读性，使用缩进和换行
+7. THE FpManager SHALL 验证配置文件包含必需的字段（columns和list）
+8. THE FpManager SHALL 保持格式幂等性，加载后保存不改变文件格式
 
 ### REQ-002: Burp风格的HTTP消息编辑器
 
