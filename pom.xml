@@ -10,8 +10,6 @@
     <version>parent</version>
 
     <modules>
-        <module>montoya-api</module>
-        <module>burp-extender-api</module>
         <module>extender</module>
     </modules>
 

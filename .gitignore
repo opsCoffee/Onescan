@@ -26,6 +26,7 @@ hs_err_pid*
 .DS_Store
 .idea
 target
+.backup
 
 # Git commit message temporary file (used with -F parameter)
 commit.log
