@@ -1,5 +1,6 @@
 ---
-inclusion: always
+name: structure
+description: Project structure and directory layout for OneScan BurpSuite extension. Covers root directory layout, main module structure (extender/), package organization (burp.vaycore.onescan.*), key architecture components (BurpExtender entry point, FpManager, CollectManager, Config), UI components, configuration file locations, naming conventions (m prefix for members, s prefix for statics), and resource files. Use when navigating codebase, understanding architecture, or locating files.
 ---
 
 # Project Structure

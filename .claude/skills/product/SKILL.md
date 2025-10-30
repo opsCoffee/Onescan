@@ -1,5 +1,6 @@
 ---
-inclusion: always
+name: product
+description: OneScan product overview and core capabilities. Professional BurpSuite extension for recursive directory scanning and vulnerability discovery. Features include recursive scanning, fingerprint recognition, dynamic variables (30+), data collection, payload processing, and QPS control (1-9999). Target users are security researchers and penetration testers. Current version 2.1.9. Use when discussing product features, capabilities, or user requirements.
 ---
 
 # Product Overview
