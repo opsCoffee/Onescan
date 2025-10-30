@@ -3,6 +3,10 @@ package burp.vaycore.onescan.bean;
 import burp.vaycore.common.utils.FileUtils;
 import burp.vaycore.common.utils.GsonUtils;
 import burp.vaycore.onescan.manager.FpManager;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -195,8 +199,28 @@ public class FpConfig {
         // 后台保存
         new Thread(() -> {
             synchronized (FpConfig.class) {
-                String json = GsonUtils.toJson(this);
-                FileUtils.writeFile(FpManager.getPath(), json);
+                String filePath = FpManager.getPath();
+                String content;
+
+                // 根据文件扩展名选择保存格式
+                if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
+                    // 保存为 YAML 格式
+                    DumperOptions options = new DumperOptions();
+                    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                    options.setPrettyFlow(true);
+                    options.setIndent(2);
+                    Yaml yaml = new Yaml(options);
+                    content = yaml.dump(this);
+                } else {
+                    // 保存为 JSON 格式（默认）
+                    Gson gson = new GsonBuilder()
+                            .setPrettyPrinting()
+                            .disableHtmlEscaping()
+                            .create();
+                    content = gson.toJson(this);
+                }
+
+                FileUtils.writeFile(filePath, content);
             }
         }).start();
     }

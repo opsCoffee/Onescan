@@ -70,42 +70,80 @@ public class FpManager {
     private static void loadConfig() {
         String content = FileUtils.readFileToString(sFilePath);
         if (StringUtils.isEmpty(content)) {
-            throw new IllegalArgumentException("fingerprint config is empty.");
+            throw new IllegalArgumentException(
+                    "Fingerprint config file is empty: " + sFilePath
+            );
         }
 
-        // 判断文件格式
-        if (sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml")) {
-            // YAML 格式解析
-            try {
+        try {
+            // 判断文件格式
+            if (sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml")) {
+                // YAML 格式解析
                 LoaderOptions options = new LoaderOptions();
                 Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
                 sConfig = yaml.load(content);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("YAML config parsing failed: " + e.getMessage());
-            }
-        } else if (sFilePath.endsWith(".json")) {
-            // JSON 格式解析（向后兼容）
-            sConfig = GsonUtils.toObject(content, FpConfig.class);
-        } else {
-            // 自动检测格式：尝试JSON，失败后尝试YAML
-            content = content.trim();
-            if (content.startsWith("{") || content.startsWith("[")) {
-                // 看起来像JSON
+            } else if (sFilePath.endsWith(".json")) {
+                // JSON 格式解析（向后兼容）
                 sConfig = GsonUtils.toObject(content, FpConfig.class);
             } else {
-                // 尝试作为YAML解析
-                try {
+                // 自动检测格式：尝试JSON，失败后尝试YAML
+                content = content.trim();
+                if (content.startsWith("{") || content.startsWith("[")) {
+                    // 看起来像JSON
+                    sConfig = GsonUtils.toObject(content, FpConfig.class);
+                } else {
+                    // 尝试作为YAML解析
                     LoaderOptions options = new LoaderOptions();
                     Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
                     sConfig = yaml.load(content);
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("Config parsing failed (tried both JSON and YAML): " + e.getMessage());
                 }
             }
+        } catch (Exception e) {
+            throw new IllegalArgumentException(
+                    "Failed to parse fingerprint config from: " + sFilePath +
+                            ". Error: " + e.getMessage(), e
+            );
         }
 
         if (sConfig == null) {
-            throw new IllegalArgumentException("fingerprint config parsing failed.");
+            throw new IllegalArgumentException(
+                    "Fingerprint config parsing returned null for: " + sFilePath
+            );
+        }
+
+        // 校验配置文件格式
+        validateConfig(sConfig);
+    }
+
+    /**
+     * 校验配置文件格式
+     *
+     * @param config 配置实例
+     * @throws IllegalArgumentException 如果配置无效
+     */
+    private static void validateConfig(FpConfig config) {
+        if (config == null) {
+            throw new IllegalArgumentException("Fingerprint config is null");
+        }
+
+        if (config.getColumns() == null || config.getColumns().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Fingerprint config must have at least one column"
+            );
+        }
+
+        if (config.getList() == null) {
+            throw new IllegalArgumentException(
+                    "Fingerprint config list cannot be null"
+            );
+        }
+
+        // 验证每个指纹数据的完整性
+        for (int i = 0; i < config.getListSize(); i++) {
+            FpData data = config.getList().get(i);
+            if (data.getRules() == null || data.getRules().isEmpty()) {
+                System.err.println("Warning: Fingerprint data at index " + i + " has no rules");
+            }
         }
     }
 
