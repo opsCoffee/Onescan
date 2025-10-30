@@ -11,22 +11,24 @@
 
 - [ ] 2. 改进FpManager配置文件处理
 - [ ] 2.1 添加配置文件格式校验方法
-  - 实现validateConfig()方法，校验columns和list字段
+  - 在FpManager中实现validateConfig()方法，校验columns和list字段
   - 添加对每个FpData规则完整性的验证
   - 记录警告日志但不阻止加载
   - _需求: 1.1, 1.2, 1.5_
 
 - [ ] 2.2 优化配置文件加载逻辑
-  - 改进loadConfig()方法的异常处理
+  - 改进loadConfig()方法的异常处理（方法已存在）
   - 为JSON和YAML解析失败提供详细错误信息
   - 在加载完成后调用validateConfig()
+  - 添加文件路径到错误信息中
   - _需求: 1.1, 1.2, 7.1_
 
-- [ ] 2.3 实现配置文件保存功能
-  - 创建saveConfig()方法
-  - 使用GsonBuilder配置pretty printing和HTML转义
+- [ ] 2.3 改进配置文件保存功能
+  - 修改FpConfig.writeToFile()方法（方法已存在）
+  - 创建专用的Gson实例，配置setPrettyPrinting()和disableHtmlEscaping()
+  - 替换GsonUtils.toJson()调用为专用Gson实例
   - 确保保存的JSON文件格式化且可读
-  - 添加保存失败的异常处理
+  - 不修改GsonUtils类，避免影响其他功能
   - _需求: 1.3, 1.4_
 
 - [ ]* 2.4 编写FpManager配置处理单元测试

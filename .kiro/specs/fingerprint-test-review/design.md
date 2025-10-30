@@ -4,10 +4,56 @@
 
 本设计文档描述了OneScan插件指纹测试功能的改进方案。主要改进包括：
 
-1. **指纹配置文件处理优化** - 取消JSON压缩，保留格式校验，提高配置文件的可读性和可维护性
+1. **指纹配置文件处理优化** - 启用JSON pretty printing，添加格式校验，提高配置文件的可读性和可维护性
 2. **HTTP消息编辑器升级** - 使用Montoya API的标准组件替换现有的JTextArea，提供与Burp Repeater一致的用户体验
 
 这些改进将显著提升用户体验，使指纹规则的测试和调试更加高效。
+
+## 当前实现状态
+
+### 已实现的功能 ✅
+
+1. **配置文件加载**
+   - `FpManager.loadConfig()` - 支持 JSON 和 YAML 格式
+   - 自动格式检测（根据文件扩展名或内容）
+   - 基本的错误处理
+
+2. **配置文件保存**
+   - `FpConfig.writeToFile()` - 自动保存机制
+   - 后台线程异步处理
+   - 线程安全（使用同步锁）
+   - 数据修改时自动触发保存
+
+3. **数据管理**
+   - 字段（columns）的增删改查
+   - 指纹数据（list）的增删改查
+   - 缓存和历史记录管理
+
+### 需要改进的功能 ⚠️
+
+1. **配置文件格式**
+   - ❌ 保存时使用压缩格式（单行JSON）
+   - ❌ 缺少 pretty printing
+   - 影响：配置文件难以阅读和手动编辑
+
+2. **配置校验**
+   - ❌ 没有 `validateConfig()` 方法
+   - ❌ 不验证必需字段（columns, list）
+   - ❌ 不验证数据完整性
+   - 影响：可能加载不完整或无效的配置
+
+3. **错误处理**
+   - ⚠️ 错误信息较简单
+   - ⚠️ 缺少文件路径等上下文信息
+   - 影响：调试困难
+
+### 实现优先级
+
+| 优先级 | 功能 | 工作量 | 风险 |
+|--------|------|--------|------|
+| 🔴 高 | 启用 Pretty Printing | 1-2小时 | 低 |
+| 🔴 高 | 添加配置校验 | 2-4小时 | 低 |
+| 🟡 中 | 改进错误处理 | 1-2小时 | 低 |
 
 ## 架构
 
@@ -228,104 +274,143 @@ public void setRequestResponse(HttpRequest request, HttpResponse response) {
 
 **职责：** 管理指纹配置文件的加载、保存和校验
 
+**当前实现状态：**
+- ✅ `loadConfig()` 已实现 - 支持 JSON/YAML，有自动格式检测
+- ✅ 保存功能已实现 - 在 `FpConfig.writeToFile()` 中
+- ❌ `validateConfig()` 未实现 - 需要添加
+- ❌ Pretty printing 未启用 - 需要修改 `FpConfig.writeToFile()`
+
 **主要变更：**
 
-```java
-public class FpManager {
-    // 保存配置时保持JSON格式可读性
-    public static void saveConfig() {
-        checkInit();
-        try {
-            // 使用Gson的pretty printing
-            Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .disableHtmlEscaping()
-                .create();
-            
-            String json = gson.toJson(sConfig);
-            FileUtils.writeStringToFile(sFilePath, json, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to save fingerprint config: " + e.getMessage());
-        }
-    }
-    
-    // 校验配置文件格式
-    private static void validateConfig(FpConfig config) {
-        if (config == null) {
-            throw new IllegalArgumentException("Fingerprint config is null");
-        }
-        
-        if (config.getColumns() == null || config.getColumns().isEmpty()) {
-            throw new IllegalArgumentException("Fingerprint config must have at least one column");
-        }
-        
-        if (config.getList() == null) {
-            throw new IllegalArgumentException("Fingerprint config list cannot be null");
-        }
-        
-        // 验证每个指纹数据的完整性
-        for (int i = 0; i < config.getListSize(); i++) {
-            FpData data = config.getList().get(i);
-            if (data.getRules() == null || data.getRules().isEmpty()) {
-                Logger.warn("Fingerprint data at index %d has no rules", i);
-            }
-        }
-    }
-    
-    private static void loadConfig() {
-        String content = FileUtils.readFileToString(sFilePath);
-        if (StringUtils.isEmpty(content)) {
-            throw new IllegalArgumentException("fingerprint config is empty.");
-        }
+#### 2.1 添加配置校验方法（新增）
 
+```java
+// FpManager.java
+/**
+ * 校验配置文件格式
+ * 
+ * @param config 配置实例
+ * @throws IllegalArgumentException 如果配置无效
+ */
+private static void validateConfig(FpConfig config) {
+    if (config == null) {
+        throw new IllegalArgumentException("Fingerprint config is null");
+    }
+    
+    if (config.getColumns() == null || config.getColumns().isEmpty()) {
+        throw new IllegalArgumentException(
+            "Fingerprint config must have at least one column"
+        );
+    }
+    
+    if (config.getList() == null) {
+        throw new IllegalArgumentException(
+            "Fingerprint config list cannot be null"
+        );
+    }
+    
+    // 验证每个指纹数据的完整性
+    for (int i = 0; i < config.getListSize(); i++) {
+        FpData data = config.getList().get(i);
+        if (data.getRules() == null || data.getRules().isEmpty()) {
+            Logger.warn("Fingerprint data at index %d has no rules", i);
+        }
+    }
+}
+```
+
+#### 2.2 改进 loadConfig() 方法（已存在，需要增强）
+
+```java
+// FpManager.java
+private static void loadConfig() {
+    String content = FileUtils.readFileToString(sFilePath);
+    if (StringUtils.isEmpty(content)) {
+        throw new IllegalArgumentException(
+            "Fingerprint config file is empty: " + sFilePath
+        );
+    }
+
+    try {
         // 判断文件格式
         if (sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml")) {
             // YAML 格式解析
-            try {
-                LoaderOptions options = new LoaderOptions();
-                Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
-                sConfig = yaml.load(content);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("YAML config parsing failed: " + e.getMessage());
-            }
+            LoaderOptions options = new LoaderOptions();
+            Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
+            sConfig = yaml.load(content);
         } else if (sFilePath.endsWith(".json")) {
             // JSON 格式解析（向后兼容）
-            try {
-                sConfig = GsonUtils.toObject(content, FpConfig.class);
-            } catch (Exception e) {
-                throw new IllegalArgumentException("JSON config parsing failed: " + e.getMessage());
-            }
+            sConfig = GsonUtils.toObject(content, FpConfig.class);
         } else {
             // 自动检测格式：尝试JSON，失败后尝试YAML
             content = content.trim();
             if (content.startsWith("{") || content.startsWith("[")) {
                 // 看起来像JSON
-                try {
-                    sConfig = GsonUtils.toObject(content, FpConfig.class);
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("JSON config parsing failed: " + e.getMessage());
-                }
+                sConfig = GsonUtils.toObject(content, FpConfig.class);
             } else {
                 // 尝试作为YAML解析
-                try {
-                    LoaderOptions options = new LoaderOptions();
-                    Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
-                    sConfig = yaml.load(content);
-                } catch (Exception e) {
-                    throw new IllegalArgumentException("Config parsing failed (tried both JSON and YAML): " + e.getMessage());
-                }
+                LoaderOptions options = new LoaderOptions();
+                Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
+                sConfig = yaml.load(content);
             }
         }
-
-        if (sConfig == null) {
-            throw new IllegalArgumentException("fingerprint config parsing failed.");
-        }
-        
-        // 校验配置文件
-        validateConfig(sConfig);
+    } catch (Exception e) {
+        throw new IllegalArgumentException(
+            "Failed to parse fingerprint config from: " + sFilePath + 
+            ". Error: " + e.getMessage(), e
+        );
     }
+
+    if (sConfig == null) {
+        throw new IllegalArgumentException(
+            "Fingerprint config parsing returned null for: " + sFilePath
+        );
+    }
+    
+    // 添加配置校验
+    validateConfig(sConfig);
 }
 ```
+
+#### 2.3 改进 FpConfig.writeToFile() 方法（已存在，需要修改）
+
+**当前实现**：
+```java
+// FpConfig.java - 当前代码
+private void writeToFile() {
+    new Thread(() -> {
+        synchronized (FpConfig.class) {
+            String json = GsonUtils.toJson(this);  // 问题：压缩格式
+            FileUtils.writeFile(FpManager.getPath(), json);
+        }
+    }).start();
+}
+```
+
+**改进后**：
+```java
+// FpConfig.java - 改进后的代码
+private void writeToFile() {
+    new Thread(() -> {
+        synchronized (FpConfig.class) {
+            // 使用专用的 Gson 实例，启用 pretty printing
+            Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .disableHtmlEscaping()
+                .create();
+            
+            String json = gson.toJson(this);
+            FileUtils.writeFile(FpManager.getPath(), json);
+        }
+    }).start();
+}
+```
+
+**说明**：
+- 不修改 `GsonUtils`，避免影响其他使用该工具类的地方
+- 在 `FpConfig` 中使用专用的 Gson 实例
+- 启用 `setPrettyPrinting()` 保持 JSON 可读性
+- 保持 `disableHtmlEscaping()` 避免特殊字符转义
 
 ### 3. FingerprintTab 集成改进
 
@@ -664,6 +749,41 @@ try {
 - 更新用户手册，说明新的HTTP编辑器功能
 - 提供配置文件格式说明
 - 添加常见问题解答
+
+## 代码分析参考
+
+详细的代码分析报告：
+- `.agent/fingerprint-config-analysis.md` - 完整的配置文件处理逻辑分析
+- `.agent/config-analysis-summary.md` - 快速总结
+
+### 关键代码位置
+
+| 组件 | 文件路径 | 说明 |
+|------|---------|------|
+| FpManager | `extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java` | 指纹管理器 |
+| FpConfig | `extender/src/main/java/burp/vaycore/onescan/bean/FpConfig.java` | 配置数据模型 |
+| FpData | `extender/src/main/java/burp/vaycore/onescan/bean/FpData.java` | 指纹数据模型 |
+| FpColumn | `extender/src/main/java/burp/vaycore/onescan/bean/FpColumn.java` | 字段模型 |
+| GsonUtils | `extender/src/main/java/burp/vaycore/common/utils/GsonUtils.java` | JSON 工具类 |
+| 配置文件 | `extender/src/main/resources/fp_config.json` | 指纹配置文件 |
+
+### 当前实现的关键方法
+
+```java
+// FpManager.java
+private static void loadConfig()           // 加载配置（已实现）
+private static void checkInit()            // 检查初始化（已实现）
+public static List<FpData> check(...)      // 指纹识别（已实现）
+
+// FpConfig.java
+private void writeToFile()                 // 保存配置（已实现，需改进）
+public void addListItem(FpData data)       // 添加数据（已实现）
+public void setListItem(int, FpData)       // 更新数据（已实现）
+
+// 需要添加的方法
+// FpManager.java
+private static void validateConfig(FpConfig)  // 配置校验（待实现）
+```
 
 ## 未来改进
 
