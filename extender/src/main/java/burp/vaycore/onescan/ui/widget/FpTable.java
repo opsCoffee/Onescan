@@ -83,8 +83,8 @@ public class FpTable extends JTable {
     private int calculateColumnWidth(int columnIndex) {
         int columnCount = getColumnModel().getColumnCount();
         
-        // ID 列和 Color 列使用固定较小宽度
-        if (columnIndex == 0 || columnIndex == columnCount - 1) {
+        // ID 列、Enabled 列和 Color 列使用固定较小宽度
+        if (columnIndex == 0 || columnIndex == 1 || columnIndex == columnCount - 1) {
             return 80;
         }
         
@@ -216,6 +216,8 @@ public class FpTable extends JTable {
         Vector<String> result = new Vector<>();
         // 首列添加默认的 ID 字段名
         result.add(L.get("fingerprint_table_columns.id"));
+        // 启用状态列
+        result.add(L.get("fingerprint_table_columns.enabled"));
         // 中间添加自定义字段名
         List<String> columnNames = FpManager.getColumnNames();
         result.addAll(columnNames);
@@ -292,6 +294,10 @@ public class FpTable extends JTable {
             } else if (columnIndex == getColumnCount() - 1) {
                 return data.getColor();
             }
+            // 启用列为第2列
+            if (columnIndex == 1) {
+                return data.isEnabled();
+            }
             // 根据字段名，获取指纹字段 ID 值
             String columnId = FpManager.findColumnIdByName(columnName);
             if (columnId == null) {
@@ -314,7 +320,43 @@ public class FpTable extends JTable {
             if (columnIndex == 0) {
                 return Integer.class;
             }
+            if (columnIndex == 1) {
+                return Boolean.class;
+            }
             return String.class;
+        }
+
+        @Override
+        public boolean isCellEditable(int rowIndex, int columnIndex) {
+            // 仅允许编辑启用列
+            return columnIndex == 1;
+        }
+
+        @Override
+        public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+            if (rowIndex < 0 || rowIndex >= getRowCount()) {
+                return;
+            }
+            if (columnIndex != 1) {
+                return;
+            }
+            boolean enabled;
+            if (aValue instanceof Boolean) {
+                enabled = (Boolean) aValue;
+            } else if (aValue instanceof String) {
+                enabled = Boolean.parseBoolean((String) aValue);
+            } else {
+                return;
+            }
+            FpData data = mData.get(rowIndex);
+            if (data.isEnabled() == enabled) {
+                return;
+            }
+            data.setEnabled(enabled);
+            // 同步到配置
+            FpManager.setItem(rowIndex, data);
+            // 刷新单元格
+            fireTableCellUpdated(rowIndex, columnIndex);
         }
     }
 }

@@ -15,6 +15,11 @@ import java.util.Objects;
 public class FpData implements Serializable {
 
     /**
+     * 是否启用当前指纹
+     */
+    private Boolean enabled; // 兼容旧配置，默认视为启用
+
+    /**
      * 指纹数据参数
      */
     private ArrayList<Param> params;
@@ -28,6 +33,14 @@ public class FpData implements Serializable {
      * 指纹规则
      */
     private ArrayList<ArrayList<FpRule>> rules;
+
+    public boolean isEnabled() {
+        return enabled == null ? true : enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     public ArrayList<Param> getParams() {
         if (params == null) {
@@ -87,20 +100,23 @@ public class FpData implements Serializable {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         FpData fpData = (FpData) o;
-        return Objects.equals(params, fpData.params) &&
+        return this.isEnabled() == fpData.isEnabled() &&
+                Objects.equals(params, fpData.params) &&
                 Objects.equals(color, fpData.color) &&
                 Objects.equals(rules, fpData.rules);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(params, color, rules);
+        return Objects.hash(this.isEnabled(), params, color, rules);
     }
 
     /**
      * 指纹数据参数
      */
     public static class Param implements Serializable {
+
+        public Param() {}
 
         private String k;
         private String v;

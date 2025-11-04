@@ -35,6 +35,7 @@ public class FpDetailPanel extends JPanel implements ActionListener {
     private JPanel mParamsPanel;
     private JScrollPane mParamsScrollPanel;
     private Vector<String> mParamNameItems;
+    private JCheckBox mEnabledCheckBox;
 
     public FpDetailPanel() {
         this(null);
@@ -56,9 +57,19 @@ public class FpDetailPanel extends JPanel implements ActionListener {
     private void initView() {
         setLayout(new VLayout(3));
         setPreferredSize(new Dimension(400, 450));
+        addEnabledPanel();
         addParamsPanel();
         addColorPanel();
         addRulesPanel();
+    }
+
+    private void addEnabledPanel() {
+        JPanel panel = new JPanel(new HLayout(2, true));
+        panel.add(new JLabel(L.get("fingerprint_detail.enabled") + "："), "78px");
+        mEnabledCheckBox = new JCheckBox();
+        mEnabledCheckBox.setSelected(true);
+        panel.add(mEnabledCheckBox, "1w");
+        add(panel);
     }
 
     private void setupData() {
@@ -74,6 +85,8 @@ public class FpDetailPanel extends JPanel implements ActionListener {
         }
         // 填充颜色数据
         mColorComboBox.setSelectedItem(mData.getColor());
+        // 是否启用
+        mEnabledCheckBox.setSelected(mData.isEnabled());
         // 填充指纹规则
         ArrayList<ArrayList<FpRule>> rules = mData.getRules();
         for (ArrayList<FpRule> fpRules : rules) {
@@ -378,6 +391,8 @@ public class FpDetailPanel extends JPanel implements ActionListener {
         // 设置指纹颜色
         String color = String.valueOf(mColorComboBox.getSelectedItem());
         mData.setColor(color);
+        // 设置启用状态
+        mData.setEnabled(mEnabledCheckBox.isSelected());
         // 检测指纹规则是否为空
         if (mData.getRules().isEmpty()) {
             String message = L.get("fingerprint_detail.rules_empty_hint");

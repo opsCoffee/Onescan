@@ -36,6 +36,9 @@ public class FpRule implements Serializable {
      */
     private String c;
 
+    // 预编译后的正则缓存，仅当方法为 regex/iRegex 时使用
+    private transient java.util.regex.Pattern compiled;
+
     public String getDataSource() {
         return ds;
     }
@@ -66,6 +69,14 @@ public class FpRule implements Serializable {
 
     public void setContent(String content) {
         this.c = content;
+    }
+
+    public java.util.regex.Pattern getCompiled() {
+        return compiled;
+    }
+
+    public void setCompiled(java.util.regex.Pattern compiled) {
+        this.compiled = compiled;
     }
 
     /**

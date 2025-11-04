@@ -7,6 +7,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.NodeTuple;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.representer.Representer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -204,12 +208,27 @@ public class FpConfig {
 
                 // 根据文件扩展名选择保存格式
                 if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
-                    // 保存为 YAML 格式
+                    // 保存为 YAML 格式，跳过 FpRule 的 compiled 字段
                     DumperOptions options = new DumperOptions();
                     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                     options.setPrettyFlow(true);
                     options.setIndent(2);
-                    Yaml yaml = new Yaml(options);
+                    Representer representer = new Representer(options) {
+                        @Override
+                        protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
+                                                                      Object propertyValue, Tag customTag) {
+                            // 跳过空值字段，避免写出 null（如 enabled 兼容旧配置）
+                            if (propertyValue == null) {
+                                return null;
+                            }
+                            if (javaBean instanceof FpRule && "compiled".equals(property.getName())) {
+                                // 跳过不支持序列化/反序列化的正则缓存字段
+                                return null;
+                            }
+                            return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+                        }
+                    };
+                    Yaml yaml = new Yaml(representer, options);
                     content = yaml.dump(this);
                 } else {
                     // 保存为 JSON 格式（默认）

@@ -1,5 +1,6 @@
 package burp.vaycore.onescan.manager;
 
+import burp.vaycore.common.log.Logger;
 import burp.vaycore.common.utils.FileUtils;
 import burp.vaycore.common.utils.GsonUtils;
 import burp.vaycore.common.utils.StringUtils;
@@ -113,6 +114,103 @@ public class FpManager {
 
         // 校验配置文件格式
         validateConfig(sConfig);
+
+        // 预编译需要的正则
+        precompilePatterns(sConfig);
+    }
+
+    /**
+     * 预编译指纹规则中的正则模式
+     */
+    private static void precompilePatterns(FpConfig config) {
+        if (config == null || config.getList() == null) {
+            return;
+        }
+        for (FpData data : config.getList()) {
+            if (data == null || data.getRules() == null) continue;
+            List<ArrayList> groups = (List) data.getRules();
+            for (ArrayList group : groups) {
+                if (group == null) continue;
+                for (int i = 0; i < group.size(); i++) {
+                    Object obj = group.get(i);
+                    FpRule rule;
+                    if (obj instanceof FpRule) {
+                        rule = (FpRule) obj;
+                    } else if (obj instanceof java.util.Map) {
+                        rule = mapToRule((java.util.Map<?, ?>) obj);
+                        group.set(i, rule);
+                    } else {
+                        continue;
+                    }
+                    compileRule(rule);
+                }
+            }
+        }
+    }
+
+    /**
+     * 预编译单个指纹数据中的正则模式（用于增量更新）
+     */
+    private static void precompilePatterns(FpData data) {
+        if (data == null || data.getRules() == null) {
+            return;
+        }
+        List<ArrayList> groups = (List) data.getRules();
+        for (ArrayList group : groups) {
+            if (group == null) continue;
+            for (int i = 0; i < group.size(); i++) {
+                Object obj = group.get(i);
+                FpRule rule;
+                if (obj instanceof FpRule) {
+                    rule = (FpRule) obj;
+                } else if (obj instanceof java.util.Map) {
+                    rule = mapToRule((java.util.Map<?, ?>) obj);
+                    group.set(i, rule);
+                } else {
+                    continue;
+                }
+                compileRule(rule);
+            }
+        }
+    }
+
+    private static void compileRule(FpRule rule) {
+        if (rule == null) return;
+        String method = rule.getMethod();
+        String content = rule.getContent();
+        try {
+            if ("regex".equals(method)) {
+                rule.setCompiled(java.util.regex.Pattern.compile(content));
+            } else if ("iRegex".equals(method)) {
+                rule.setCompiled(java.util.regex.Pattern.compile(content, java.util.regex.Pattern.CASE_INSENSITIVE));
+            } else if ("notRegex".equals(method)) {
+                rule.setCompiled(java.util.regex.Pattern.compile(content));
+            } else if ("iNotRegex".equals(method)) {
+                rule.setCompiled(java.util.regex.Pattern.compile(content, java.util.regex.Pattern.CASE_INSENSITIVE));
+            } else {
+                rule.setCompiled(null);
+            }
+        } catch (Exception e) {
+            rule.setCompiled(null);
+            Logger.error("Regex precompile error: %s", e.getMessage());
+        }
+    }
+
+    private static FpRule mapToRule(java.util.Map<?, ?> map) {
+        FpRule r = new FpRule();
+        Object ds = map.get("ds");
+        if (ds == null) ds = map.get("dataSource");
+        Object f = map.get("f");
+        if (f == null) f = map.get("field");
+        Object m = map.get("m");
+        if (m == null) m = map.get("method");
+        Object c = map.get("c");
+        if (c == null) c = map.get("content");
+        if (ds != null) r.setDataSource(String.valueOf(ds));
+        if (f != null) r.setField(String.valueOf(f));
+        if (m != null) r.setMethod(String.valueOf(m));
+        if (c != null) r.setContent(String.valueOf(c));
+        return r;
     }
 
     /**
@@ -142,7 +240,7 @@ public class FpManager {
         for (int i = 0; i < config.getListSize(); i++) {
             FpData data = config.getList().get(i);
             if (data.getRules() == null || data.getRules().isEmpty()) {
-                System.err.println("Warning: Fingerprint data at index " + i + " has no rules");
+                Logger.error("Warning: Fingerprint data at index %d has no rules", i);
             }
         }
     }
@@ -205,8 +303,11 @@ public class FpManager {
         if (getCount() == 0) {
             return new ArrayList<>();
         }
-        // 匹配指纹数据
+        // 匹配指纹数据（仅启用的指纹）
         List<FpData> result = getList().parallelStream().filter((item) -> {
+            if (item == null || !item.isEnabled()) {
+                return false;
+            }
             // 可能在扫描过程中存在添加/修改/删除等操作，所以不能使用 item.getRules() 获取的实例进行遍历
             ArrayList<ArrayList<FpRule>> rules = new ArrayList<>(item.getRules());
             List<ArrayList<FpRule>> checkResults = rules.parallelStream().filter((ruleItems) -> {
@@ -219,7 +320,7 @@ public class FpManager {
                     String field = ruleItem.getField();
                     String method = ruleItem.getMethod();
                     String matchData = provider.getMatchData(dataSource, field);
-                    boolean state = invokeFpMethod(method, matchData, ruleItem.getContent());
+                    boolean state = invokeFpMethod(method, matchData, ruleItem);
                     // 里面为 and 运算，只要有一处为 false，表示规则不匹配
                     if (!state) {
                         return false;
@@ -273,6 +374,8 @@ public class FpManager {
     public static void addItem(FpData data) {
         checkInit();
         sConfig.addListItem(data);
+        // 增量预编译新加入的规则
+        precompilePatterns(data);
     }
 
     /**
@@ -294,6 +397,8 @@ public class FpManager {
     public static void setItem(int index, FpData data) {
         checkInit();
         sConfig.setListItem(index, data);
+        // 增量预编译修改后的规则
+        precompilePatterns(data);
     }
 
     /**
@@ -460,10 +565,20 @@ public class FpManager {
      * @param content    要匹配的内容
      * @return true=匹配；false=不匹配
      */
-    private static boolean invokeFpMethod(String methodName, String data, String content) {
+    private static boolean invokeFpMethod(String methodName, String data, FpRule rule) {
         try {
+            if (data == null) {
+                data = "";
+            }
+            // 优先走预编译正则的快速路径
+            if (("regex".equals(methodName) || "iRegex".equals(methodName)) && rule.getCompiled() != null) {
+                return rule.getCompiled().matcher(data).find();
+            }
+            if (("notRegex".equals(methodName) || "iNotRegex".equals(methodName)) && rule.getCompiled() != null) {
+                return !rule.getCompiled().matcher(data).find();
+            }
             Method method = FpMethodHandler.class.getDeclaredMethod(methodName, String.class, String.class);
-            return (Boolean) method.invoke(null, data, content);
+            return (Boolean) method.invoke(null, data, rule.getContent());
         } catch (Exception var4) {
             return false;
         }
