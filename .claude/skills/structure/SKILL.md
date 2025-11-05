@@ -119,7 +119,7 @@ Plugin configuration stored in:
 ## Resource Files
 
 Default configurations bundled in JAR:
-- Fingerprint rules (JSON)
+- Fingerprint rules (YAML)
 - Default payloads and headers
 - Host allow/block lists
 - User agent strings

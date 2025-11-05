@@ -294,7 +294,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: pprof-debug
+    v: PPROF-debug
   rules:
   - - content: '200'
       dataSource: response
@@ -321,7 +321,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: node-exporter-metrics
+    v: Node-Exporter-Metrics
   rules:
   - - content: '200'
       dataSource: response
@@ -335,7 +335,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: kubelet-metrics
+    v: Kubelet-Metrics
   rules:
   - - content: '200'
       dataSource: response
@@ -349,7 +349,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: Springboot-heapdump
+    v: Springboot-Heapdump
   rules:
   - - content: 1f8b080000000000
       dataSource: response
@@ -367,7 +367,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: debug-vars
+    v: Debug-Vars
   rules:
   - - content: '200'
       dataSource: response
@@ -381,7 +381,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: prometheus-metrics
+    v: Prometheus-Metrics
   rules:
   - - content: '200'
       dataSource: response
@@ -395,7 +395,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: Springboot-actuator
+    v: Springboot-Actuator
   rules:
   - - content: '200'
       dataSource: response
@@ -441,7 +441,15 @@ list:
       dataSource: response
       field: status
       method: equals
-    - content: (("timestamp":)|("traces":)|("method":))
+    - content: ("timestamp":)
+      dataSource: response
+      field: body
+      method: iRegex
+    - content: ("traces":)
+      dataSource: response
+      field: body
+      method: iRegex
+    - content: ("method":)
       dataSource: response
       field: body
       method: iRegex
@@ -453,7 +461,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: binary
+    v: Binary
   rules:
   - - content: '200'
       dataSource: response
@@ -637,7 +645,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: wsdl
+    v: WSDL
   rules:
   - - content: text/html
       dataSource: response
@@ -673,7 +681,7 @@ list:
   enabled: true
   params:
   - k: yPv
-    v: swagger-api
+    v: Swagger-API
   rules:
   - - content: '200'
       dataSource: response
@@ -699,7 +707,19 @@ list:
   - k: yPv
     v: Springboot-nacosconfig
   rules:
-  - - content: (("NacosConfigProperties":)|("serverAddr":)|("username":)|("password":))
+  - - content: ("NacosConfigProperties":)
+      dataSource: response
+      field: body
+      method: iRegex
+    - content: ("serverAddr":)
+      dataSource: response
+      field: body
+      method: iRegex
+    - content: ("username":)
+      dataSource: response
+      field: body
+      method: iRegex
+    - content: ("password":)
       dataSource: response
       field: body
       method: iRegex

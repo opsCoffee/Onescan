@@ -3,7 +3,7 @@
 ## 简介
 
 本文档定义OneScan插件指纹测试功能的改进需求。主要改进包括：
-1. 优化指纹配置文件的处理方式，取消JSON压缩，保留格式校验
+1. 优化指纹配置文件的处理方式，统一使用YAML格式并保留格式校验
 2. 改进指纹测试面板的用户界面，使其与Burp Repeater保持一致的交互体验
 
 ## 术语表
@@ -65,18 +65,15 @@ graph LR
 
 ### REQ-001: 指纹配置文件格式校验
 
-**用户故事:** 作为插件维护者，我希望系统能够校验指纹配置文件的JSON格式正确性，但不压缩文件内容，以便用户可以直接编辑和阅读配置文件
+**用户故事:** 作为插件维护者，我希望系统能够校验指纹配置文件的YAML格式正确性，并保持可读性，便于直接编辑和审阅配置文件
 
 #### 验收标准
 
-1. WHEN 加载指纹配置文件，THE FpManager SHALL 解析JSON或YAML格式的配置文件
-2. WHEN JSON格式解析失败，THE FpManager SHALL 抛出IllegalArgumentException异常并提供详细错误信息
-3. WHEN 保存指纹配置文件，THE FpManager SHALL 根据文件扩展名选择保存格式
-4. WHEN 文件扩展名为.yaml或.yml，THE FpManager SHALL 保存为YAML格式
-5. WHEN 文件扩展名为.json或其他，THE FpManager SHALL 保存为格式化的JSON
-6. THE FpManager SHALL 保持配置文件的可读性，使用缩进和换行
-7. THE FpManager SHALL 验证配置文件包含必需的字段（columns和list）
-8. THE FpManager SHALL 保持格式幂等性，加载后保存不改变文件格式
+1. WHEN 加载指纹配置文件，THE FpManager SHALL 解析YAML格式的配置文件
+2. WHEN YAML格式解析失败，THE FpManager SHALL 抛出IllegalArgumentException异常并提供详细错误信息
+3. THE FpManager SHALL 保持配置文件的可读性，使用缩进和换行
+4. THE FpManager SHALL 验证配置文件包含必需的字段（columns和list）
+5. THE FpManager SHALL 保持格式幂等性，加载后保存不改变文件格式（YAML）
 
 ### REQ-002: Burp风格的HTTP消息编辑器
 

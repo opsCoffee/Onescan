@@ -4,7 +4,7 @@
 
 本设计文档描述了OneScan插件指纹测试功能的改进方案。主要改进包括：
 
-1. **指纹配置文件处理优化** - 启用JSON pretty printing，添加格式校验，提高配置文件的可读性和可维护性
+1. **指纹配置文件处理优化** - 统一使用YAML格式，添加格式校验，提高配置文件的可读性和可维护性
 2. **HTTP消息编辑器升级** - 使用Montoya API的标准组件替换现有的JTextArea，提供与Burp Repeater一致的用户体验
 
 这些改进将显著提升用户体验，使指纹规则的测试和调试更加高效。
@@ -14,8 +14,8 @@
 ### 已实现的功能 ✅
 
 1. **配置文件加载**
-   - `FpManager.loadConfig()` - 支持 JSON 和 YAML 格式
-   - 自动格式检测（根据文件扩展名或内容）
+   - `FpManager.loadConfig()` - 支持 YAML 格式（.yaml/.yml）
+   - 基于文件扩展名的格式判断
    - 基本的错误处理
 
 2. **配置文件保存**
@@ -32,9 +32,8 @@
 ### 需要改进的功能 ⚠️
 
 1. **配置文件格式**
-   - ❌ 保存时使用压缩格式（单行JSON）
-   - ❌ 缺少 pretty printing
-   - 影响：配置文件难以阅读和手动编辑
+   - ✅ 统一 YAML 保存，采用 BLOCK 风格与 pretty flow
+   - 影响：配置文件可读性提升，便于手工编辑
 
 2. **配置校验**
    - ❌ 没有 `validateConfig()` 方法
@@ -86,8 +85,8 @@ graph TD
     B --> F[FpTestResultPanel<br/>结果展示]
     B --> G[操作按钮<br/>测试/重置/关闭]
     
-    H[FpManager<br/>指纹管理器] --> I[loadConfig<br/>支持JSON/YAML]
-    H --> J[saveConfig<br/>保持JSON可读]
+    H[FpManager<br/>指纹管理器] --> I[loadConfig<br/>仅支持YAML]
+    H --> J[saveConfig<br/>YAML持久化]
     H --> K[validateConfig<br/>格式校验]
     
     style A fill:#e1f5ff
@@ -338,21 +337,12 @@ private static void loadConfig() {
             LoaderOptions options = new LoaderOptions();
             Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
             sConfig = yaml.load(content);
-        } else if (sFilePath.endsWith(".json")) {
-            // JSON 格式解析（向后兼容）
-            sConfig = GsonUtils.toObject(content, FpConfig.class);
         } else {
-            // 自动检测格式：尝试JSON，失败后尝试YAML
-            content = content.trim();
-            if (content.startsWith("{") || content.startsWith("[")) {
-                // 看起来像JSON
-                sConfig = GsonUtils.toObject(content, FpConfig.class);
-            } else {
-                // 尝试作为YAML解析
-                LoaderOptions options = new LoaderOptions();
-                Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
-                sConfig = yaml.load(content);
-            }
+            // 非显式 YAML 路径：不进行格式自动检测
+            throw new IllegalArgumentException(
+                "Unsupported fingerprint config format: " + sFilePath +
+                ". Only .yaml/.yml supported."
+            );
         }
     } catch (Exception e) {
         throw new IllegalArgumentException(
@@ -380,7 +370,7 @@ private static void loadConfig() {
 private void writeToFile() {
     new Thread(() -> {
         synchronized (FpConfig.class) {
-            String json = GsonUtils.toJson(this);  // 问题：压缩格式，总是 JSON
+            String json = GsonUtils.toJson(this);  // 历史实现示例：压缩格式，总是 JSON
             FileUtils.writeFile(FpManager.getPath(), json);
         }
     }).start();
@@ -393,7 +383,7 @@ private void writeToFile() {
 3. ❌ YAML 文件会被转换为 JSON（但文件名还是 .yaml）
 4. ❌ 不幂等：YAML → JSON 单向转换
 
-**改进后（方案 A - 保持原格式）**：
+**改进后（统一 YAML）**：
 ```java
 // FpConfig.java - 改进后的代码
 private void writeToFile() {
@@ -402,24 +392,13 @@ private void writeToFile() {
             String filePath = FpManager.getPath();
             String content;
             
-            // 根据文件扩展名选择保存格式
-            if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
-                // 保存为 YAML 格式
-                DumperOptions options = new DumperOptions();
-                options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-                options.setPrettyFlow(true);
-                options.setIndent(2);
-                Yaml yaml = new Yaml(options);
-                content = yaml.dump(this);
-            } else {
-                // 保存为 JSON 格式（默认）
-                Gson gson = new GsonBuilder()
-                    .setPrettyPrinting()
-                    .disableHtmlEscaping()
-                    .create();
-                content = gson.toJson(this);
-            }
-            
+            // 统一保存为 YAML 格式
+            DumperOptions options = new DumperOptions();
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            options.setPrettyFlow(true);
+            options.setIndent(2);
+            Yaml yaml = new Yaml(options);
+            String content = yaml.dump(this);
             FileUtils.writeFile(filePath, content);
         }
     }).start();
@@ -427,11 +406,8 @@ private void writeToFile() {
 ```
 
 **改进说明**：
-- ✅ 根据文件扩展名选择保存格式
-- ✅ YAML 文件保存为 YAML 格式（完全幂等）
-- ✅ JSON 文件保存为 JSON 格式（启用 pretty printing）
-- ✅ 尊重用户的格式选择
-- ✅ 文件扩展名与内容始终匹配
+- ✅ 统一 YAML 保存（完全幂等）
+- ✅ 提升可读性（BLOCK + pretty flow）
 
 **YAML 配置说明**：
 - `FlowStyle.BLOCK` - 使用块状风格（多行格式）
@@ -443,13 +419,7 @@ private void writeToFile() {
 - 需要使用 `org.yaml.snakeyaml.DumperOptions` 配置输出
 - 需要导入 `org.yaml.snakeyaml.Yaml`
 
-**完整导入**：
-```java
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.Yaml;
-```
+（移除 JSON 相关依赖示例）
 
 **格式示例**：
 
@@ -470,14 +440,7 @@ list:
           c: '"swagger":'
 ```
 
-JSON 输出：
-```json
-{
-  "columns": [
-    {
-      "id": "yPv",
-      "name": "Notes"
-    }
+（JSON 输出示例已移除）
   ],
   "list": [
     {

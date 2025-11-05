@@ -1,10 +1,7 @@
 package burp.onescan.bean;
 
 import burp.common.utils.FileUtils;
-import burp.common.utils.GsonUtils;
 import burp.onescan.manager.FpManager;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.introspector.Property;
@@ -204,47 +201,34 @@ public class FpConfig {
         new Thread(() -> {
             synchronized (FpConfig.class) {
                 String filePath = FpManager.getPath();
-                String content;
-
-                // 根据文件扩展名选择保存格式
-                if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
-                    // 保存为 YAML 格式，跳过 FpRule 的 compiled 字段
-                    DumperOptions options = new DumperOptions();
-                    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-                    options.setPrettyFlow(true);
-                    options.setIndent(2);
-                    Representer representer = new Representer(options) {
-                        @Override
-                        protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
-                                                                      Object propertyValue, Tag customTag) {
-                            // 跳过空值字段，避免写出 null（如 enabled 兼容旧配置）
-                            if (propertyValue == null) {
-                                return null;
-                            }
-                            if (javaBean instanceof FpRule && "compiled".equals(property.getName())) {
-                                // 跳过不支持序列化/反序列化的正则缓存字段
-                                return null;
-                            }
-                            return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+                // 统一保存为 YAML 格式，跳过 FpRule 的 compiled 字段
+                DumperOptions options = new DumperOptions();
+                options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                options.setPrettyFlow(true);
+                options.setIndent(2);
+                Representer representer = new Representer(options) {
+                    @Override
+                    protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
+                                                                  Object propertyValue, Tag customTag) {
+                        // 跳过空值字段，避免写出 null（如 enabled 兼容旧配置）
+                        if (propertyValue == null) {
+                            return null;
                         }
-                    };
-                    // 禁用所有 Bean 类的类型标签，避免输出 !!burp.onescan.bean.XXX
-                    representer.addClassTag(FpConfig.class, Tag.MAP);
-                    representer.addClassTag(FpColumn.class, Tag.MAP);
-                    representer.addClassTag(FpData.class, Tag.MAP);
-                    representer.addClassTag(FpData.Param.class, Tag.MAP);
-                    representer.addClassTag(FpRule.class, Tag.MAP);
-                    Yaml yaml = new Yaml(representer, options);
-                    content = yaml.dump(this);
-                } else {
-                    // 保存为 JSON 格式（默认）
-                    Gson gson = new GsonBuilder()
-                            .setPrettyPrinting()
-                            .disableHtmlEscaping()
-                            .create();
-                    content = gson.toJson(this);
-                }
-
+                        if (javaBean instanceof FpRule && "compiled".equals(property.getName())) {
+                            // 跳过不支持序列化/反序列化的正则缓存字段
+                            return null;
+                        }
+                        return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+                    }
+                };
+                // 禁用所有 Bean 类的类型标签，避免输出 !!burp.onescan.bean.XXX
+                representer.addClassTag(FpConfig.class, Tag.MAP);
+                representer.addClassTag(FpColumn.class, Tag.MAP);
+                representer.addClassTag(FpData.class, Tag.MAP);
+                representer.addClassTag(FpData.Param.class, Tag.MAP);
+                representer.addClassTag(FpRule.class, Tag.MAP);
+                Yaml yaml = new Yaml(representer, options);
+                String content = yaml.dump(this);
                 FileUtils.writeFile(filePath, content);
             }
         }).start();

@@ -2,7 +2,6 @@ package burp.onescan.manager;
 
 import burp.common.log.Logger;
 import burp.common.utils.FileUtils;
-import burp.common.utils.GsonUtils;
 import burp.common.utils.StringUtils;
 import burp.common.utils.Utils;
 import burp.onescan.bean.*;
@@ -87,14 +86,11 @@ public class FpManager {
                 options.setNestingDepthLimit(50);
                 Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
                 sConfig = yaml.load(content);
-            } else if (sFilePath.endsWith(".json")) {
-                // JSON 格式解析（仅当用户显式指定 .json 路径时）
-                sConfig = GsonUtils.toObject(content, FpConfig.class);
             } else {
-                // 非显式 JSON 或 YAML 路径：不进行格式自动检测，避免误解析
+                // 非显式 YAML 路径：不进行格式自动检测，避免误解析
                 throw new IllegalArgumentException(
                         "Unsupported fingerprint config format: " + sFilePath +
-                                ". Only .yaml/.yml or explicit .json path supported."
+                                ". Only .yaml/.yml supported."
                 );
             }
         } catch (Exception e) {

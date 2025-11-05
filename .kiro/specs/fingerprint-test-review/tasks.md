@@ -19,23 +19,23 @@
 
 - [x] 2.2 优化配置文件加载逻辑
   - 改进loadConfig()方法的异常处理（方法已存在）
-  - 为JSON和YAML解析失败提供详细错误信息
+  - 为YAML解析失败提供详细错误信息
   - 在加载完成后调用validateConfig()
   - 添加文件路径到错误信息中
   - _需求: 1.1, 1.2, 7.1_
 
 - [x] 2.3 改进配置文件保存功能（实现格式幂等性）
   - 修改FpConfig.writeToFile()方法（方法已存在）
-  - 根据文件扩展名选择保存格式（.yaml/.yml → YAML，其他 → JSON）
+  - 统一保存为YAML格式
   - 配置YAML输出：使用DumperOptions设置BLOCK风格、pretty flow、2空格缩进
-  - 配置JSON输出：使用GsonBuilder设置setPrettyPrinting()和disableHtmlEscaping()
+  
   - 确保YAML文件保存为YAML格式（完全幂等）
   - 确保JSON文件保存为格式化的JSON（可读性）
   - 不修改GsonUtils类，避免影响其他功能
   - _需求: 1.3, 1.4, 格式幂等性_
 
 - [ ]* 2.4 编写FpManager配置处理单元测试
-  - 测试JSON格式解析
+  
   - 测试YAML格式解析
   - 测试格式校验逻辑
   - 测试错误处理和异常信息
@@ -157,5 +157,5 @@
   - 测试"重置"按钮清空编辑器和结果
   - 测试"关闭"按钮关闭窗口
   - 验证指纹匹配结果正确展示在结果面板
-  - 修改指纹配置，保存后检查文件格式是否可读（JSON或YAML）
+  - 修改指纹配置，保存后检查文件格式是否可读（YAML）
   - _需求: 所有需求_
