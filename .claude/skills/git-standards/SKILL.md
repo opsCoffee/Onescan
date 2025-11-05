@@ -1,6 +1,6 @@
 ---
 name: git-standards
-description: Git 命令规范和最佳实践，包括查看命令必须使用 --no-pager 避免交互模式、Windows 环境下使用 -F 参数提交（通过 fsWrite 创建 commit.log）、Conventional Commits 格式（必须中文、禁止 AI 标识）、分支管理（--no-ff 合并）、Git 别名使用。适用于执行 Git 命令、提交代码、合并分支、查看历史、处理 Git 操作时使用。
+description: Git 命令规范和最佳实践。强调 --no-pager 参数必须放在 git 命令后面（git --no-pager <子命令>），而非子命令选项后。包括 Windows 环境下使用 -F 参数提交（通过 fsWrite 创建 commit.log）、Conventional Commits 格式（必须中文、禁止 AI 标识）、分支管理（--no-ff 合并）、Git 别名使用。适用于执行 Git 命令、提交代码、合并分支、查看历史、处理 Git 操作时使用。
 ---
 
 # Git 命令规范
@@ -11,12 +11,28 @@ description: Git 命令规范和最佳实践，包括查看命令必须使用 --
 
 **原因**：避免进入交互式分页模式，导致工作流程卡顿
 
+**⚠️ 重要：--no-pager 参数的位置**
+
+`--no-pager` 是 git 命令本身的选项，**必须紧跟在 git 后面**，不能放在子命令的选项后面：
+
+```cmd
+REM ✅ 正确位置：git --no-pager <子命令> [选项]
+git --no-pager log --oneline
+git --no-pager diff HEAD~1 HEAD
+git --no-pager show abc123
+
+REM ❌ 错误位置：git <子命令> --no-pager [选项]
+git log --no-pager --oneline     # 虽然某些版本可能工作，但不规范
+git diff --no-pager HEAD~1       # 不规范的写法
+```
+
 **适用命令**：
-- `git diff` - 必须添加 `--no-pager`
-- `git show` - 必须添加 `--no-pager`
-- `git log` - 必须添加 `--no-pager`，推荐使用 `--oneline` 获得简洁输出
-- `git blame` - 必须添加 `--no-pager`
-- `git status` - 推荐使用 `--short` 获得简洁输出
+- `git --no-pager diff` - 查看文件差异
+- `git --no-pager show` - 查看提交详情
+- `git --no-pager log` - 查看提交历史，推荐使用 `--oneline` 获得简洁输出
+- `git --no-pager blame` - 查看文件修改历史
+- `git --no-pager branch` - 列出分支（带 `-v` 或 `-vv` 时）
+- `git status` - 推荐使用 `--short` 获得简洁输出（status 不需要 --no-pager）
 
 **示例**：
 
@@ -25,24 +41,27 @@ REM ❌ 错误：可能进入交互模式
 git log
 git diff
 
-REM ✅ 正确：直接输出所有内容
-git log --no-pager --oneline
-git diff --no-pager
+REM ✅ 正确：直接输出所有内容（注意 --no-pager 的位置）
+git --no-pager log --oneline
+git --no-pager diff
 
-REM 查看状态（简洁输出）
+REM 查看状态（简洁输出，不需要 --no-pager）
 git status --short
 
 REM 查看最近5次提交
-git log --no-pager --oneline -5
+git --no-pager log --oneline -5
 
 REM 查看文件差异
-git diff --no-pager HEAD~1 HEAD
+git --no-pager diff HEAD~1 HEAD
 
 REM 查看特定提交
-git show --no-pager abc123
+git --no-pager show abc123
 
 REM 查看文件修改历史
-git blame --no-pager src/main/java/burp/BurpExtender.java
+git --no-pager blame src/main/java/burp/BurpExtender.java
+
+REM 查看分支详情
+git --no-pager branch -vv
 ```
 
 ### 2. Windows 环境下提交必须使用 -F 参数
@@ -141,16 +160,16 @@ REM 查看工作区状态（详细输出）
 git status
 
 REM 查看最近提交（简洁格式）
-git log --no-pager --oneline -10
+git --no-pager log --oneline -10
 
 REM 查看分支图
-git log --no-pager --graph --oneline --all -20
+git --no-pager log --graph --oneline --all -20
 
 REM 查看文件修改
-git diff --no-pager
+git --no-pager diff
 
 REM 查看暂存区修改
-git diff --no-pager --cached
+git --no-pager diff --cached
 ```
 
 ### 提交代码
@@ -189,7 +208,7 @@ del commit.log
 
 ```cmd
 REM 查看分支
-git branch --no-pager
+git --no-pager branch
 
 REM 创建并切换分支
 git checkout -b feature/fingerprint-test
@@ -389,11 +408,11 @@ git co -b feature/new-feature
 REM 查看分支
 git b
 
-REM 查看美化的提交历史
-git lg -10
+REM 查看美化的提交历史（仍需在 git 后添加 --no-pager）
+git --no-pager lg -10
 
-REM 查看差异（仍需添加 --no-pager）
-git d --no-pager
+REM 查看差异（仍需在 git 后添加 --no-pager）
+git --no-pager d
 
 REM 合并分支
 git m feature/branch --no-ff --no-edit
@@ -414,8 +433,8 @@ Agent 在执行 Git 命令时：
    - `git lg` 替代复杂的 log 命令
 
 2. **需要补充参数的别名**：
-   - `git d --no-pager` - diff 别名仍需添加 --no-pager
-   - `git l --no-pager --oneline` - log 别名仍需添加参数
+   - `git --no-pager d` - diff 别名仍需在 git 后添加 --no-pager
+   - `git --no-pager l --oneline` - log 别名仍需在 git 后添加 --no-pager 和其他参数
 
 ### 别名使用示例
 
@@ -468,11 +487,11 @@ Agent 在处理 Git 提交时应该：
 ```javascript
 // 1. 查看修改（使用简洁输出）
 executePwsh({ command: "git status --short" });
-executePwsh({ command: "git diff --no-pager" });
+executePwsh({ command: "git --no-pager diff" });
 
 // 2. 添加文件
-executePwsh({ 
-  command: "git add src/main/java/burp/onescan/manager/FpManager.java" 
+executePwsh({
+  command: "git add src/main/java/burp/onescan/manager/FpManager.java"
 });
 
 // 3. 使用 fsWrite 创建提交消息（Conventional Commits 格式，中文）
@@ -500,7 +519,7 @@ executePwsh({ command: "git push origin main" });
 ```cmd
 REM 1. 查看修改
 git status --short
-git diff --no-pager
+git --no-pager diff
 
 REM 2. 添加文件
 git add src/main/java/burp/onescan/manager/FpManager.java
