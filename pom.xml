@@ -6,14 +6,11 @@
 
     <groupId>burp.vaycore</groupId>
     <artifactId>onescan</artifactId>
-    <packaging>pom</packaging>
-    <version>parent</version>
-
-    <modules>
-        <module>extender</module>
-    </modules>
+    <version>2.1.9</version>
+    <packaging>jar</packaging>
 
     <properties>
+        <plugin.name>OneScan</plugin.name>
         <jdk.version>17</jdk.version>
         <java.version>${jdk.version}</java.version>
         <maven.compiler.source>${jdk.version}</maven.compiler.source>
@@ -25,30 +22,64 @@
         <snakeyaml.version>2.2</snakeyaml.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>net.portswigger.burp.extender</groupId>
-                <artifactId>burp-extender-api</artifactId>
-                <version>${burp-extender-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.portswigger.burp.extensions</groupId>
-                <artifactId>montoya-api</artifactId>
-                <version>${montoya-api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>${gson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.yaml</groupId>
-                <artifactId>snakeyaml</artifactId>
-                <version>${snakeyaml.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>net.portswigger.burp.extender</groupId>
+            <artifactId>burp-extender-api</artifactId>
+            <version>${burp-extender-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.portswigger.burp.extensions</groupId>
+            <artifactId>montoya-api</artifactId>
+            <version>${montoya-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>${gson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
+        </dependency>
+    </dependencies>
 
-
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <finalName>${plugin.name}-v${project.version}</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <!--to get Version from pom.xml -->
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
