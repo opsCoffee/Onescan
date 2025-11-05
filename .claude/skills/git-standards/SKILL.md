@@ -113,7 +113,7 @@ Remove-Item commit.log
    git add commit.log
    
    REM ✅ 正确：只添加实际修改的文件
-   git add extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java
+   git add src/main/java/burp/onescan/manager/FpManager.java
    ```
 
 2. ⚠️ **提交后必须删除 commit.log**：
@@ -159,7 +159,7 @@ git diff --no-pager --cached
 ```javascript
 // 1. 添加文件
 executePwsh({ 
-  command: "git add extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java" 
+  command: "git add src/main/java/burp/onescan/manager/FpManager.java" 
 });
 
 // 2. 使用 fsWrite 创建提交消息
@@ -178,7 +178,7 @@ deleteFile({ targetFile: "commit.log" });
 **用户手动操作**：
 ```cmd
 REM 添加文件
-git add extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java
+git add src/main/java/burp/onescan/manager/FpManager.java
 
 REM 使用编辑器创建 commit.log，然后提交
 git commit -F commit.log
@@ -429,7 +429,7 @@ REM 2. 查看状态
 git status --short
 
 REM 3. 添加文件
-git add extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java
+git add src/main/java/burp/onescan/manager/FpManager.java
 
 REM 4. 提交（使用标准流程，不使用别名）
 REM 创建 commit.log
@@ -472,7 +472,7 @@ executePwsh({ command: "git diff --no-pager" });
 
 // 2. 添加文件
 executePwsh({ 
-  command: "git add extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java" 
+  command: "git add src/main/java/burp/onescan/manager/FpManager.java" 
 });
 
 // 3. 使用 fsWrite 创建提交消息（Conventional Commits 格式，中文）
@@ -503,7 +503,7 @@ git status --short
 git diff --no-pager
 
 REM 2. 添加文件
-git add extender/src/main/java/burp/vaycore/onescan/manager/FpManager.java
+git add src/main/java/burp/onescan/manager/FpManager.java
 
 REM 3. 使用文本编辑器创建 commit.log 文件
 REM    格式：<类型>: <描述>（必须使用中文）

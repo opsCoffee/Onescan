@@ -85,12 +85,12 @@ int row_index = 0;
 ### 包名
 ```java
 // ✅ 正确：全小写，使用点分隔
-package burp.vaycore.onescan.manager;
-package burp.vaycore.onescan.ui.tab;
+package burp.onescan.manager;
+package burp.onescan.ui.tab;
 
 // ❌ 错误
-package burp.vaycore.oneScan.Manager;
-package burp.vaycore.onescan.UI.Tab;
+package burp.onescan.oneScan.Manager;
+package burp.onescan.onescan.UI.Tab;
 ```
 
 ## 代码格式

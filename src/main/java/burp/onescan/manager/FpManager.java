@@ -332,9 +332,13 @@ public class FpManager {
                     } else if (obj instanceof java.util.Map) {
                         java.util.Map map = (java.util.Map) obj;
                         Object ods = map.get("ds");
+                        if (ods == null) ods = map.get("dataSource");
                         Object of = map.get("f");
+                        if (of == null) of = map.get("field");
                         Object om = map.get("m");
+                        if (om == null) om = map.get("method");
                         Object oc = map.get("c");
+                        if (oc == null) oc = map.get("content");
                         ds = ods == null ? null : String.valueOf(ods);
                         f = of == null ? null : String.valueOf(of);
                         m = om == null ? null : String.valueOf(om);

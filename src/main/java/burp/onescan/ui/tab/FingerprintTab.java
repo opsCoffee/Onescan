@@ -221,9 +221,18 @@ public class FingerprintTab extends BaseTab implements ActionListener, KeyListen
      * 重新加载
      */
     private void doReload() {
-        mFpTable.reloadData();
-        refreshCount();
-        UIHelper.showTipsDialog(L.get("reload_success"));
+        try {
+            mFpTable.reloadData();
+            refreshCount();
+            UIHelper.showTipsDialog(L.get("reload_success"));
+        } catch (Exception ex) {
+            String msg = ex.getMessage();
+            if (msg == null || msg.isEmpty()) {
+                msg = "Unknown error";
+            }
+            // 显示错误提示，帮助定位 YAML/JSON 配置校验问题
+            UIHelper.showTipsDialog(String.format(L.get("error_hint"), msg));
+        }
     }
 
     /**

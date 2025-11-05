@@ -42,23 +42,21 @@ extender/
     ├── main/
     │   └── java/
     │       └── burp/
-    │           └── vaycore/
-    │               └── onescan/
-    │                   ├── manager/
-    │                   │   └── FpManager.java
-    │                   └── ui/
-    │                       └── widget/
-    │                           └── FpTestWindow.java
+    │           └── onescan/
+                    ├── manager/
+                    │   └── FpManager.java
+                    └── ui/
+                        └── widget/
+                            └── FpTestWindow.java
     └── test/
         └── java/
             └── burp/
-                └── vaycore/
-                    └── onescan/
-                        ├── manager/
-                        │   └── FpManagerTest.java
-                        └── ui/
-                            └── widget/
-                                └── FpTestWindowTest.java
+                └── onescan/
+                    ├── manager/
+                    │   └── FpManagerTest.java
+                    └── ui/
+                        └── widget/
+                            └── FpTestWindowTest.java
 ```
 
 **命名规范**：

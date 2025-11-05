@@ -104,6 +104,10 @@ public class Config {
         }
         // 不存在：写入打包的基础规则（首启落地）
         InputStream is = Config.class.getClassLoader().getResourceAsStream("fp_config.yaml");
+        if (is == null) {
+            Logger.error("Init fingerprint failed: resource fp_config.yaml not found in classpath");
+            throw new IllegalStateException("fp_config.yaml resource missing. Please reinstall or check package integrity.");
+        }
         String content = FileUtils.readStreamToString(is);
         FileUtils.writeFile(path, content);
         FpManager.init(path);
