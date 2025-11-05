@@ -15,7 +15,7 @@ description: Technology stack and build system constraints. Java 17 compilation 
 ## Maven Single-Module Structure
 
 ```
-onescan/                    # Single module project (v2.1.9)
+onescan/                    # Single module project (v2.2.0)
 ├── src/                    # Source code
 │   ├── main/
 │   └── test/
@@ -102,7 +102,7 @@ var result = calculateSomething();
 String json = """
     {
         "name": "OneScan",
-        "version": "2.1.9"
+        "version": "2.2.0"
     }
     """;
 ```

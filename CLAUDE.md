@@ -58,7 +58,7 @@ onescan/
 │   │   └── resources/                 # 资源文件
 │   └── test/                          # 测试代码
 ├── target/             # 构建输出目录
-└── pom.xml             # Maven 配置文件 (v2.1.9)
+└── pom.xml             # Maven 配置文件 (v2.2.0)
 ```
 
 ### 插件架构设计
@@ -210,7 +210,7 @@ mvn clean test jacoco:report
 
 ## 版本管理
 
-更新版本时修改根目录 `pom.xml` 中的 `<version>` 标签，当前版本为 2.1.9。
+更新版本时修改根目录 `pom.xml` 中的 `<version>` 标签，当前版本为 2.2.0。
 
 ## 插件特性深度解析
 
