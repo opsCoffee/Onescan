@@ -927,7 +927,7 @@ flowchart LR
 | FpData | `extender/src/main/java/burp/vaycore/onescan/bean/FpData.java` | 指纹数据模型 |
 | FpColumn | `extender/src/main/java/burp/vaycore/onescan/bean/FpColumn.java` | 字段模型 |
 | GsonUtils | `extender/src/main/java/burp/vaycore/common/utils/GsonUtils.java` | JSON 工具类 |
-| 配置文件 | `extender/src/main/resources/fp_config.json` | 指纹配置文件 |
+| 配置文件 | `src/main/resources/fp_config.yaml` | 指纹配置文件（YAML 格式）|
 
 ### 当前实现的关键方法
 

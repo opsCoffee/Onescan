@@ -113,7 +113,7 @@ public class FpManagerTest {
     @Test
     public void testCheck_MatchingRule_ReturnsResult() {
         // Arrange
-        FpManager.init("src/test/resources/fp_config.json");
+        FpManager.init("src/test/resources/fp_config.yaml");
         String request = "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n";
         String response = "HTTP/1.1 200 OK\r\n\r\n{\"swagger\":\"2.0\"}";
         
@@ -164,7 +164,7 @@ public class FpIntegrationTest {
     @Test
     public void testFingerprintRecognition_EndToEnd() {
         // 1. 初始化配置
-        FpManager.init("src/test/resources/fp_config.json");
+        FpManager.init("src/test/resources/fp_config.yaml");
         
         // 2. 准备测试数据
         byte[] request = loadTestRequest("swagger-request.txt");
@@ -193,7 +193,7 @@ public class FpIntegrationTest {
 
 ```
 src/test/resources/
-├── fp_config.json              # 测试用指纹配置
+├── fp_config.yaml              # 测试用指纹配置
 ├── fp_config_invalid.json      # 无效配置（用于异常测试）
 ├── requests/
 │   ├── swagger-request.txt     # 测试请求样本
@@ -349,7 +349,7 @@ public class FpManagerTest {
     @Before
     public void setUp() {
         // 每个测试前执行
-        configPath = "src/test/resources/fp_config.json";
+        configPath = "src/test/resources/fp_config.yaml";
         FpManager.init(configPath);
     }
     

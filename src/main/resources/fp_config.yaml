@@ -1,0 +1,663 @@
+columns:
+- id: yPv
+  name: Notes
+list:
+- enabled: true
+  params:
+  - k: yPv
+    v: Swagger-UI
+  color: red
+  rules:
+  - - ds: response
+      f: body
+      m: iContains
+      c: '"swagger":'
+  - - ds: response
+      f: body
+      m: iContains
+      c: '"swaggerVersion":'
+  - - ds: response
+      f: title
+      m: contains
+      c: Swagger UI
+- params:
+  - k: yPv
+    v: OpenAPI
+  color: red
+  rules:
+  - - ds: response
+      f: header
+      m: contains
+      c: 'Content-Type: application/json'
+    - ds: response
+      f: body
+      m: contains
+      c: '"openapi":'
+- params:
+  - k: yPv
+    v: UEditor
+  color: green
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: header
+      m: regex
+      c: ueditor.*?\.js
+  - - ds: response
+      f: header
+      m: contains
+      c: javascript
+    - ds: response
+      f: body
+      m: contains
+      c: UEditor
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: iContains
+      c: /ueditor/php/
+- params:
+  - k: yPv
+    v: Shiro
+  color: green
+  rules:
+  - - ds: response
+      f: header
+      m: iContains
+      c: rememberMe=
+  - - ds: response
+      f: header
+      m: iContains
+      c: =deleteMe
+- params:
+  - k: yPv
+    v: SpringBoot
+  color: gray
+  rules:
+  - - ds: response
+      f: bodyMd5
+      m: equals
+      c: 0488faca4c19046b94d07c3ee83cf9d6
+    - ds: response
+      f: status
+      m: equals
+      c: '200'
+  - - ds: response
+      f: bodyHash
+      m: equals
+      c: '116323821'
+    - ds: response
+      f: status
+      m: equals
+      c: '200'
+  - - ds: response
+      f: body
+      m: iContains
+      c: Whitelabel Error Page
+    - ds: response
+      f: status
+      m: equals
+      c: '200'
+- params:
+  - k: yPv
+    v: Tomcat
+  color: gray
+  rules:
+  - - ds: response
+      f: server
+      m: iContains
+      c: Tomcat
+  - - ds: response
+      f: server
+      m: iContains
+      c: Apache-Coyote
+  - - ds: response
+      f: body
+      m: iContains
+      c: Apache Tomcat
+  - - ds: response
+      f: bodyHash
+      m: equals
+      c: '-297069493'
+- params:
+  - k: yPv
+    v: Struts2
+  color: gray
+  rules:
+  - - ds: request
+      f: url
+      m: contains
+      c: .do
+  - - ds: request
+      f: url
+      m: contains
+      c: .action
+- enabled: false
+  params:
+  - k: yPv
+    v: JSON Web Token
+  color: green
+  rules:
+  - - ds: response
+      f: body
+      m: regex
+      c: (eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|eyJ[A-Za-z0-9_\/+-]{10,}\.[A-Za-z0-9._\/+-]{10,})
+- params:
+  - k: yPv
+    v: Java Deserialization
+  color: yellow
+  rules:
+  - - ds: response
+      f: body
+      m: contains
+      c: javax.faces.ViewState
+- enabled: false
+  params:
+  - k: yPv
+    v: Upload Form
+  color: yellow
+  rules:
+  - - ds: response
+      f: body
+      m: iContains
+      c: type="file"
+- params:
+  - k: yPv
+    v: Druid
+  color: orange
+  rules:
+  - - ds: response
+      f: body
+      m: iContains
+      c: Druid Stat Index
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: iContains
+      c: com.alibaba.druid
+    - ds: response
+      f: body
+      m: iContains
+      c: DbType
+    - ds: response
+      f: body
+      m: iContains
+      c: DriverClassName
+    - ds: response
+      f: body
+      m: iContains
+      c: 'jdbc:'
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: iContains
+      c: Content
+    - ds: response
+      f: body
+      m: iContains
+      c: Version
+    - ds: response
+      f: body
+      m: iContains
+      c: Drivers
+    - ds: response
+      f: body
+      m: iContains
+      c: com.alibaba.druid.
+    - ds: response
+      f: body
+      m: iContains
+      c: JavaVMName
+    - ds: response
+      f: body
+      m: iContains
+      c: JavaVersion
+    - ds: response
+      f: body
+      m: iContains
+      c: JavaClassPath
+    - ds: response
+      f: body
+      m: iContains
+      c: StartTime
+- params:
+  - k: yPv
+    v: PDF.js Viewer
+  color: green
+  rules:
+  - - ds: response
+      f: body
+      m: iContains
+      c: pdf.worker
+- params:
+  - k: yPv
+    v: Vite DevMode
+  color: red
+  rules:
+  - - ds: response
+      f: body
+      m: contains
+      c: /@vite/client
+- params:
+  - k: yPv
+    v: Debug Logic Parameters
+  color: cyan
+  rules:
+  - - ds: request
+      f: data
+      m: iRegex
+      c: ((access=)|(adm=)|(admin=)|(alter=)|(cfg=)|(clone=)|(config=)|(create=)|(dbg=)|(debug=)|(delete=)|(disable=)|(edit=)|(enable=)|(exec=)|(execute=)|(grant=)|(load=)|(make=)|(modify=)|(rename=)|(reset=)|(root=)|(shell=)|(test=)|(toggl=))
+- params:
+  - k: yPv
+    v: Passwd File
+  color: red
+  rules:
+  - - ds: response
+      f: body
+      m: contains
+      c: /root:/bin/bash
+- params:
+  - k: yPv
+    v: Win.ini File
+  color: red
+  rules:
+  - - ds: response
+      f: body
+      m: contains
+      c: for 16-bit app
+- params:
+  - k: yPv
+    v: pprof-debug
+  color: yellow
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: data
+      m: iRegex
+      c: ((heap profile:)|(Alloc))
+    - ds: response
+      f: header
+      m: iRegex
+      c: (text/plain)
+  - - ds: response
+      f: data
+      m: iRegex
+      c: '((Types of profiles available:)|(Profile Descriptions)|(goroutine profile: total))'
+    - ds: response
+      f: status
+      m: equals
+      c: '200'
+- params:
+  - k: yPv
+    v: node-exporter-metrics
+  color: yellow
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: data
+      m: iRegex
+      c: ((node_cooling_device)|(node_network))
+- params:
+  - k: yPv
+    v: kubelet-metrics
+  color: pink
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: data
+      m: iRegex
+      c: ((<title>kube metrics server</title>)|(kube_configmap_)|(kube_pod_)|(kube_secret_)|(kube_deployment_)|(kube_namespace_)|(kube_service_))
+- params:
+  - k: yPv
+    v: springboot-heapdump
+  color: red
+  rules:
+  - - ds: response
+      f: bodyHex
+      m: iContains
+      c: 1f8b080000000000
+  - - ds: response
+      f: bodyHex
+      m: iRegex
+      c: 4a4156412050524f46494c45
+  - - ds: response
+      f: bodyHex
+      m: iRegex
+      c: 4850524f46
+- params:
+  - k: yPv
+    v: debug-vars
+  color: gray
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: data
+      m: iRegex
+      c: (("memstats":)|("cmdline":))
+- params:
+  - k: yPv
+    v: prometheus-metrics
+  color: gray
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: data
+      m: iRegex
+      c: ^(?!.*(?:lvm_|kube|namedprocess|mysqld|collectd_|libvirt_|mongodb|blackbox_|haproxy_|rabbitmq_)).*(?:cpu_seconds_total|http_request_duration_seconds|process_virtual_memory_bytes|process_start_time_seconds)
+- params:
+  - k: yPv
+    v: springboot-actuator
+  color: yellow
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: data
+      m: iRegex
+      c: (("_links":)|("self":))
+    - ds: response
+      f: header
+      m: iRegex
+      c: ((application/json)|(application/vnd.spring-boot.actuator)|(.spring-boot.actuator.))
+- params:
+  - k: yPv
+    v: springboot-env
+  color: yellow
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: iRegex
+      c: ((server.port)|(local.server.port))
+    - ds: response
+      f: status
+      m: iRegex
+      c: ((application/json)|(application/vnd.spring-boot.actuator))
+- params:
+  - k: yPv
+    v: springboot-httptrace
+  color: yellow
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: iRegex
+      c: (("timestamp":)|("traces":)|("method":))
+    - ds: response
+      f: header
+      m: iRegex
+      c: ((application/json)|(application/vnd.spring-boot.actuator))
+- params:
+  - k: yPv
+    v: binary
+  color: gray
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: ((7573746172003030)|(7573746172202000))
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (377ABCAF271C)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (314159265359)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (53514c69746520666f726d6174203300)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (1f8b)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: ((526172211A0700)|(526172211A070100))
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (FD377A585A0000)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: ((1F9D)|(1FA0))
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (4C5A4950)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (504B0304)
+    - ds: response
+      f: header
+      m: regex
+      c: application/[-\w.]+
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (000100005374616E64617264204A657420444200)
+    - ds: response
+      f: header
+      m: regex
+      c: application/x-msaccess
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (54415045)
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (D0CF11E0A1B11AE1)
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: bodyHex
+      m: iRegex
+      c: (000100005374616E64617264204A657420444200)
+    - ds: response
+      f: header
+      m: regex
+      c: application/x-msaccess
+- params:
+  - k: yPv
+    v: OSS-ListBucket
+  color: yellow
+  rules:
+  - - ds: response
+      f: body
+      m: iRegex
+      c: ((xml)|(version)|(encoding)|(ListBucketResult)|(Name)|(Prefix)|(Marker)|(MaxKeys)|(Delimiter)|(IsTruncated)|(Contents)|(Key)|(LastModified)|(ETag)|(Type)|(Size)|(StorageClass)|(Owner)|(ID)|(DisplayName))
+    - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: header
+      m: contains
+      c: application/xml
+- params:
+  - k: yPv
+    v: wsdl
+  color: magenta
+  rules:
+  - - ds: response
+      f: header
+      m: contains
+      c: text/html
+    - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: contains
+      c: Available SOAP services
+    - ds: response
+      f: body
+      m: contains
+      c: -//W3C//DTD
+    - ds: response
+      f: body
+      m: contains
+      c: Endpoint address
+- params:
+  - k: yPv
+    v: Chinese IDCard
+  color: orange
+  rules:
+  - - ds: response
+      f: body
+      m: regex
+      c: '[^0-9]((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))[^0-9]'
+- params:
+  - k: yPv
+    v: swagger-api
+  color: red
+  rules:
+  - - ds: response
+      f: status
+      m: equals
+      c: '200'
+    - ds: response
+      f: body
+      m: iRegex
+      c: (?i)(?:swagger:|Swagger 2\\.0|\"swagger\":|Swagger UI|loadSwaggerUI|id=\"swagger-ui)
+- enabled: true
+  params:
+  - k: yPv
+    v: JDBC Connection
+  color: yellow
+  rules:
+  - - ds: response
+      f: body
+      m: iRegex
+      c: (jdbc:[a-z]+[0-9]?:\/\/[a-z0-9.\-_:;=/@?,&]+)

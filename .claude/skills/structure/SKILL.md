@@ -54,7 +54,7 @@ src/
 │   │               └── widget/          # UI widgets
 │   └── resources/
 │       ├── i18n/                        # Internationalization
-│       ├── fp_config.json               # Fingerprint rules
+│       ├── fp_config.yaml               # Fingerprint rules (YAML format)
 │       ├── header.txt                   # Default headers
 │       ├── host_allowlist.txt           # Host whitelist
 │       ├── host_blocklist.txt           # Host blacklist

@@ -96,9 +96,9 @@ public class Config {
     }
 
     private static void initFpManager() {
-        String path = getWorkDir() + "fp_config.json";
+        String path = getWorkDir() + "fp_config.yaml";
         if (!FileUtils.isFile(path)) {
-            InputStream is = Config.class.getClassLoader().getResourceAsStream("fp_config.json");
+            InputStream is = Config.class.getClassLoader().getResourceAsStream("fp_config.yaml");
             String content = FileUtils.readStreamToString(is);
             FileUtils.writeFile(path, content);
         }

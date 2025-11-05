@@ -228,6 +228,12 @@ public class FpConfig {
                             return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
                         }
                     };
+                    // 禁用所有 Bean 类的类型标签，避免输出 !!burp.onescan.bean.XXX
+                    representer.addClassTag(FpConfig.class, Tag.MAP);
+                    representer.addClassTag(FpColumn.class, Tag.MAP);
+                    representer.addClassTag(FpData.class, Tag.MAP);
+                    representer.addClassTag(FpData.Param.class, Tag.MAP);
+                    representer.addClassTag(FpRule.class, Tag.MAP);
                     Yaml yaml = new Yaml(representer, options);
                     content = yaml.dump(this);
                 } else {
