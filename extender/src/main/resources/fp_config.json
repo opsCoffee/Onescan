@@ -7,6 +7,7 @@
 	],
 	"list": [
 		{
+			"enabled": true,
 			"params": [
 				{
 					"k": "yPv",
@@ -270,6 +271,7 @@
 			]
 		},
 		{
+			"enabled": false,
 			"params": [
 				{
 					"k": "yPv",
@@ -308,6 +310,7 @@
 			]
 		},
 		{
+			"enabled": false,
 			"params": [
 				{
 					"k": "yPv",
@@ -1193,7 +1196,27 @@
 						"ds": "response",
 						"f": "body",
 						"m": "iRegex",
-						"c": "(?i)(?:swagger:|Swagger 2\\\\.0|\\\"swagger\\\":|Swagger UI|loadSwaggerUI|\\\\*\\\\*token\\\\*\\\\*:|id=\\\"swagger-ui)"
+						"c": "(?i)(?:swagger:|Swagger 2\\\\.0|\\\"swagger\\\":|Swagger UI|loadSwaggerUI|id=\\\"swagger-ui)"
+					}
+				]
+			]
+		},
+		{
+			"enabled": true,
+			"params": [
+				{
+					"k": "yPv",
+					"v": "JDBC Connection"
+				}
+			],
+			"color": "yellow",
+			"rules": [
+				[
+					{
+						"ds": "response",
+						"f": "body",
+						"m": "iRegex",
+						"c": "(jdbc:[a-z]+[0-9]?:\\/\\/[a-z0-9.\\-_:;=/@?,&]+)"
 					}
 				]
 			]
