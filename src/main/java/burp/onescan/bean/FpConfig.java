@@ -197,11 +197,10 @@ public class FpConfig {
      * 写入配置到文件中
      */
     private void writeToFile() {
-        // 后台保存
+        // 后台保存（输出为新 YAML 格式：name + list(matchers)）
         new Thread(() -> {
             synchronized (FpConfig.class) {
                 String filePath = FpManager.getPath();
-                // 统一保存为 YAML 格式，跳过 FpRule 的 compiled 字段
                 DumperOptions options = new DumperOptions();
                 options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                 options.setPrettyFlow(true);
@@ -210,25 +209,62 @@ public class FpConfig {
                     @Override
                     protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
                                                                   Object propertyValue, Tag customTag) {
-                        // 跳过空值字段，避免写出 null（如 enabled 兼容旧配置）
                         if (propertyValue == null) {
-                            return null;
-                        }
-                        if (javaBean instanceof FpRule && "compiled".equals(property.getName())) {
-                            // 跳过不支持序列化/反序列化的正则缓存字段
                             return null;
                         }
                         return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
                     }
                 };
-                // 禁用所有 Bean 类的类型标签，避免输出 !!burp.onescan.bean.XXX
-                representer.addClassTag(FpConfig.class, Tag.MAP);
-                representer.addClassTag(FpColumn.class, Tag.MAP);
-                representer.addClassTag(FpData.class, Tag.MAP);
-                representer.addClassTag(FpData.Param.class, Tag.MAP);
-                representer.addClassTag(FpRule.class, Tag.MAP);
                 Yaml yaml = new Yaml(representer, options);
-                String content = yaml.dump(this);
+
+                // 组装新格式数据结构
+                java.util.Map<String, Object> root = new java.util.LinkedHashMap<>();
+                String columnName = columns != null && !columns.isEmpty() ? columns.get(0).getName() : "Notes";
+                String columnId = columns != null && !columns.isEmpty() ? columns.get(0).getId() : "npv";
+                root.put("name", columnName);
+
+                java.util.List<java.util.Map<String, Object>> items = new java.util.ArrayList<>();
+                if (list != null) {
+                    for (FpData data : list) {
+                        if (data == null || data.getRules() == null || data.getRules().isEmpty()) {
+                            continue;
+                        }
+                        // 从 params 中读取条目名称
+                        String itemName = null;
+                        if (data.getParams() != null) {
+                            for (FpData.Param p : data.getParams()) {
+                                if (p != null && columnId.equals(p.getK())) {
+                                    itemName = p.getV();
+                                    break;
+                                }
+                            }
+                        }
+                        // 将 OR 的每个 AND 组拆分为独立条目，保持语义一致
+                        for (java.util.ArrayList<FpRule> group : data.getRules()) {
+                            if (group == null || group.isEmpty()) continue;
+                            java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
+                            if (itemName != null) item.put("name", itemName);
+                            item.put("enabled", data.isEnabled());
+                            if (data.getColor() != null) item.put("color", data.getColor());
+                            item.put("matchers-condition", "and");
+                            java.util.List<java.util.Map<String, Object>> matchers = new java.util.ArrayList<>();
+                            for (FpRule r : group) {
+                                if (r == null) continue;
+                                java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+                                m.put("dataSource", r.getDataSource());
+                                m.put("field", r.getField());
+                                m.put("method", r.getMethod());
+                                m.put("content", r.getContent());
+                                matchers.add(m);
+                            }
+                            item.put("matchers", matchers);
+                            items.add(item);
+                        }
+                    }
+                }
+                root.put("list", items);
+
+                String content = yaml.dump(root);
                 FileUtils.writeFile(filePath, content);
             }
         }).start();

@@ -75,42 +75,213 @@ public class FpManager {
             );
         }
 
+        // 仅支持 .yaml/.yml
+        if (!(sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml"))) {
+            throw new IllegalArgumentException(
+                    "Unsupported fingerprint config format: " + sFilePath +
+                            ". Only .yaml/.yml supported."
+            );
+        }
+
+        // 解析新格式：
+        // name: <ColumnName>
+        // list: [ { name, enabled, color, matchers-condition, matchers: [...] }, ... ]
+        Map<String, Object> root;
         try {
-            // 判断文件格式
-            if (sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml")) {
-                // YAML 格式解析（仅在路径显式为 .yaml/.yml 时支持）
-                LoaderOptions options = new LoaderOptions();
-                options.setMaxAliasesForCollections(50);
-                options.setAllowDuplicateKeys(false);
-                options.setCodePointLimit(2_000_000);
-                options.setNestingDepthLimit(50);
-                Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
-                sConfig = yaml.load(content);
-            } else {
-                // 非显式 YAML 路径：不进行格式自动检测，避免误解析
-                throw new IllegalArgumentException(
-                        "Unsupported fingerprint config format: " + sFilePath +
-                                ". Only .yaml/.yml supported."
-                );
+            LoaderOptions options = new LoaderOptions();
+            options.setMaxAliasesForCollections(50);
+            options.setAllowDuplicateKeys(false);
+            options.setCodePointLimit(2_000_000);
+            options.setNestingDepthLimit(50);
+            Yaml yaml = new Yaml(options);
+            Object obj = yaml.load(content);
+            if (!(obj instanceof Map)) {
+                throw new IllegalArgumentException("YAML root must be a mapping");
             }
+            root = (Map<String, Object>) obj;
         } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "Failed to parse fingerprint config from: " + sFilePath +
-                            ". Error: " + e.getMessage(), e
-            );
+            throw new IllegalArgumentException("Failed to parse YAML: " + e.getMessage(), e);
         }
 
-        if (sConfig == null) {
-            throw new IllegalArgumentException(
-                    "Fingerprint config parsing returned null for: " + sFilePath
-            );
+        String columnName = valueAsString(root.get("name"));
+        if (StringUtils.isEmpty(columnName)) {
+            throw new IllegalArgumentException("Missing top-level 'name' for column name");
+        }
+        String columnId = genStableColumnId(columnName);
+
+        Object items = root.get("list");
+        if (!(items instanceof List)) {
+            throw new IllegalArgumentException("Top-level 'list' must be an array");
         }
 
-        // 校验配置文件格式
+        // 构建内部运行时配置（仍使用现有 FpConfig/FpData/FpRule 以保持引擎与 UI 稳定）
+        FpConfig config = new FpConfig();
+        ArrayList<FpColumn> columns = new ArrayList<>();
+        FpColumn fpCol = new FpColumn();
+        fpCol.setId(columnId);
+        fpCol.setName(columnName);
+        columns.add(fpCol);
+        config.setColumns(columns);
+
+        List<FpData> dataList = new ArrayList<>();
+        for (Object it : (List<?>) items) {
+            if (!(it instanceof Map)) continue;
+            Map<String, Object> m = (Map<String, Object>) it;
+            String itemName = valueAsString(m.get("name"));
+            Boolean enabled = valueAsBoolean(m.get("enabled"), Boolean.TRUE);
+            String color = valueAsString(m.get("color"));
+            String matchersCondition = valueAsString(m.get("matchers-condition"));
+            if (StringUtils.isEmpty(matchersCondition)) matchersCondition = "and"; // 默认 and
+            Object matchersObj = m.get("matchers");
+            if (!(matchersObj instanceof List)) {
+                throw new IllegalArgumentException("'matchers' must be an array for item: " + itemName);
+            }
+            List<Map<String, Object>> matchers = new ArrayList<>();
+            for (Object mm : (List<?>) matchersObj) {
+                if (!(mm instanceof Map)) {
+                    throw new IllegalArgumentException("matcher must be a mapping for item: " + itemName);
+                }
+                matchers.add((Map<String, Object>) mm);
+            }
+
+            FpData data = new FpData();
+            data.setEnabled(enabled);
+            data.setColor(color);
+            // 将条目名称写入列
+            ArrayList<FpData.Param> params = new ArrayList<>();
+            if (!StringUtils.isEmpty(itemName)) {
+                params.add(new FpData.Param(columnId, itemName));
+            }
+            data.setParams(params);
+            // 转换 matchers -> rules （外层 OR，组内 AND）
+            ArrayList<ArrayList<FpRule>> rules = convertMatchersToRules(matchers, matchersCondition);
+            if (rules == null || rules.isEmpty()) {
+                throw new IllegalArgumentException("rules generated from matchers is empty for item: " + itemName);
+            }
+            data.setRules(rules);
+            dataList.add(data);
+        }
+        config.setList(dataList);
+
+        sConfig = config;
+
+        // 校验配置并预编译
         validateConfig(sConfig);
-
-        // 预编译需要的正则
         precompilePatterns(sConfig);
+    }
+
+    private static String valueAsString(Object v) {
+        return v == null ? null : String.valueOf(v);
+    }
+
+    private static Boolean valueAsBoolean(Object v, Boolean defVal) {
+        if (v == null) return defVal;
+        if (v instanceof Boolean) return (Boolean) v;
+        String s = String.valueOf(v);
+        if ("true".equalsIgnoreCase(s)) return Boolean.TRUE;
+        if ("false".equalsIgnoreCase(s)) return Boolean.FALSE;
+        return defVal;
+    }
+
+    private static String genStableColumnId(String name) {
+        // 生成 3 位稳定 ID：基于名称计算哈希后编码为 [a-zA-Z] 范围
+        int h = Math.abs(name.hashCode());
+        char a = (char) ('a' + (h % 26));
+        char b = (char) ('a' + ((h / 26) % 26));
+        char c = (char) ('a' + ((h / (26 * 26)) % 26));
+        return new String(new char[]{a, b, c});
+    }
+
+    /**
+     * 将新格式 matchers 转换为内部 rules（外层 OR、组内 AND）
+     */
+    private static ArrayList<ArrayList<FpRule>> convertMatchersToRules(List<Map<String, Object>> matchers,
+                                                                       String matchersCondition) {
+        boolean topAnd = "and".equalsIgnoreCase(matchersCondition);
+        if (topAnd) {
+            // 从一个空组开始，逐步扩展
+            ArrayList<ArrayList<FpRule>> groups = new ArrayList<>();
+            groups.add(new ArrayList<>());
+            for (Map<String, Object> m : matchers) {
+                groups = andMerge(groups, buildGroupsFromMatcher(m));
+            }
+            return groups;
+        } else {
+            // 顶层 OR：各 matcher 独立产生 OR 组，最后合并
+            ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
+            for (Map<String, Object> m : matchers) {
+                result.addAll(buildGroupsFromMatcher(m));
+            }
+            return result;
+        }
+    }
+
+    // 将 matcher 构造成若干 AND 组（当 content 列表且 condition=or 时产生多个组；=and 时为单一组内多条规则）
+    private static ArrayList<ArrayList<FpRule>> buildGroupsFromMatcher(Map<String, Object> m) {
+        String ds = valueAsString(m.get("dataSource"));
+        String field = valueAsString(m.get("field"));
+        String method = valueAsString(m.get("method"));
+        Object contentObj = m.get("content");
+        String condition = valueAsString(m.get("condition")); // and|or，仅在列表时生效
+
+        if (StringUtils.isEmpty(ds) || StringUtils.isEmpty(field) || StringUtils.isEmpty(method)) {
+            throw new IllegalArgumentException("matcher missing required fields: dataSource/field/method");
+        }
+
+        List<String> contents = new ArrayList<>();
+        if (contentObj instanceof List) {
+            for (Object v : (List<?>) contentObj) {
+                contents.add(valueAsString(v));
+            }
+        } else if (contentObj != null) {
+            contents.add(valueAsString(contentObj));
+        } else {
+            throw new IllegalArgumentException("matcher content is empty");
+        }
+
+        boolean listAnd = "and".equalsIgnoreCase(condition);
+
+        ArrayList<ArrayList<FpRule>> groups = new ArrayList<>();
+        if (contents.size() == 1 || listAnd) {
+            // 单组：组内 AND 多条规则
+            ArrayList<FpRule> group = new ArrayList<>();
+            for (String c : contents) {
+                group.add(newRule(ds, field, method, c));
+            }
+            groups.add(group);
+        } else {
+            // 列表且默认 OR：为每个内容生成一个独立组
+            for (String c : contents) {
+                ArrayList<FpRule> group = new ArrayList<>();
+                group.add(newRule(ds, field, method, c));
+                groups.add(group);
+            }
+        }
+        return groups;
+    }
+
+    // 现有组（AND 组集合） 与 新 matcher 组集合（每元素是 AND 组）做笛卡尔乘积并合并（组内 AND）
+    private static ArrayList<ArrayList<FpRule>> andMerge(ArrayList<ArrayList<FpRule>> base,
+                                                         ArrayList<ArrayList<FpRule>> addon) {
+        ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
+        for (ArrayList<FpRule> g1 : base) {
+            for (ArrayList<FpRule> g2 : addon) {
+                ArrayList<FpRule> merged = new ArrayList<>();
+                merged.addAll(g1);
+                merged.addAll(g2);
+                result.add(merged);
+            }
+        }
+        return result;
+    }
+
+    private static FpRule newRule(String ds, String field, String method, String content) {
+        FpRule r = new FpRule();
+        r.setDataSource(ds);
+        r.setField(field);
+        r.setMethod(method);
+        r.setContent(content);
+        return r;
     }
 
     /**

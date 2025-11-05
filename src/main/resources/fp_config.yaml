@@ -1,733 +1,802 @@
-columns:
-- id: yPv
-  name: Notes
+name: Notes
 list:
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: Swagger-UI
-  rules:
-  - - content: '"swagger":'
-      dataSource: response
-      field: body
-      method: iContains
-  - - content: '"swaggerVersion":'
-      dataSource: response
-      field: body
-      method: iContains
-  - - content: Swagger UI
-      dataSource: response
-      field: title
-      method: contains
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: OpenAPI
-  rules:
-  - - content: 'Content-Type: application/json'
-      dataSource: response
-      field: header
-      method: contains
-    - content: '"openapi":'
-      dataSource: response
-      field: body
-      method: contains
-- color: green
-  enabled: true
-  params:
-  - k: yPv
-    v: UEditor
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ueditor.*?\.js
-      dataSource: response
-      field: header
-      method: regex
-  - - content: javascript
-      dataSource: response
-      field: header
-      method: contains
-    - content: UEditor
-      dataSource: response
-      field: body
-      method: contains
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: /ueditor/php/
-      dataSource: response
-      field: body
-      method: iContains
-- color: green
-  enabled: true
-  params:
-  - k: yPv
-    v: Shiro
-  rules:
-  - - content: rememberMe=
-      dataSource: response
-      field: header
-      method: iContains
-  - - content: =deleteMe
-      dataSource: response
-      field: header
-      method: iContains
-- color: gray
-  enabled: true
-  params:
-  - k: yPv
-    v: Springboot
-  rules:
-  - - content: 0488faca4c19046b94d07c3ee83cf9d6
-      dataSource: response
-      field: bodyMd5
-      method: equals
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-  - - content: '116323821'
-      dataSource: response
-      field: bodyHash
-      method: equals
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-  - - content: Whitelabel Error Page
-      dataSource: response
-      field: body
-      method: iContains
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-- color: gray
-  enabled: true
-  params:
-  - k: yPv
-    v: Tomcat
-  rules:
-  - - content: Tomcat
-      dataSource: response
-      field: server
-      method: iContains
-  - - content: Apache-Coyote
-      dataSource: response
-      field: server
-      method: iContains
-  - - content: Apache Tomcat
-      dataSource: response
-      field: body
-      method: iContains
-  - - content: '-297069493'
-      dataSource: response
-      field: bodyHash
-      method: equals
-- color: gray
-  enabled: true
-  params:
-  - k: yPv
-    v: Struts2
-  rules:
-  - - content: .do
-      dataSource: request
-      field: url
-      method: contains
-  - - content: .action
-      dataSource: request
-      field: url
-      method: contains
-- color: green
-  enabled: false
-  params:
-  - k: yPv
-    v: JSON Web Token
-  rules:
-  - - content: (eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|eyJ[A-Za-z0-9_\/+-]{10,}\.[A-Za-z0-9._\/+-]{10,})
-      dataSource: response
-      field: body
-      method: regex
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: Java Deserialization
-  rules:
-  - - content: javax.faces.ViewState
-      dataSource: response
-      field: body
-      method: contains
-- color: yellow
-  enabled: false
-  params:
-  - k: yPv
-    v: Upload Form
-  rules:
-  - - content: type="file"
-      dataSource: response
-      field: body
-      method: iContains
-- color: orange
-  enabled: true
-  params:
-  - k: yPv
-    v: Druid
-  rules:
-  - - content: Druid Stat Index
-      dataSource: response
-      field: body
-      method: iContains
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: com.alibaba.druid
-      dataSource: response
-      field: body
-      method: iContains
-    - content: DbType
-      dataSource: response
-      field: body
-      method: iContains
-    - content: DriverClassName
-      dataSource: response
-      field: body
-      method: iContains
-    - content: 'jdbc:'
-      dataSource: response
-      field: body
-      method: iContains
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: Content
-      dataSource: response
-      field: body
-      method: iContains
-    - content: Version
-      dataSource: response
-      field: body
-      method: iContains
-    - content: Drivers
-      dataSource: response
-      field: body
-      method: iContains
-    - content: com.alibaba.druid.
-      dataSource: response
-      field: body
-      method: iContains
-    - content: JavaVMName
-      dataSource: response
-      field: body
-      method: iContains
-    - content: JavaVersion
-      dataSource: response
-      field: body
-      method: iContains
-    - content: JavaClassPath
-      dataSource: response
-      field: body
-      method: iContains
-    - content: StartTime
-      dataSource: response
-      field: body
-      method: iContains
-- color: green
-  enabled: true
-  params:
-  - k: yPv
-    v: PDF.js Viewer
-  rules:
-  - - content: pdf.worker
-      dataSource: response
-      field: body
-      method: iContains
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: Vite DevMode
-  rules:
-  - - content: /@vite/client
-      dataSource: response
-      field: body
-      method: contains
-- color: cyan
-  enabled: true
-  params:
-  - k: yPv
-    v: Debug Logic Parameters
-  rules:
-  - - content: ((access=)|(adm=)|(admin=)|(alter=)|(cfg=)|(clone=)|(config=)|(create=)|(dbg=)|(debug=)|(delete=)|(disable=)|(edit=)|(enable=)|(exec=)|(execute=)|(grant=)|(load=)|(make=)|(modify=)|(rename=)|(reset=)|(root=)|(shell=)|(test=)|(toggl=))
-      dataSource: request
-      field: data
-      method: iRegex
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: Passwd File
-  rules:
-  - - content: /root:/bin/bash
-      dataSource: response
-      field: body
-      method: contains
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: Win.ini File
-  rules:
-  - - content: for 16-bit app
-      dataSource: response
-      field: body
-      method: contains
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: PPROF-debug
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((heap profile:)|(Alloc))
-      dataSource: response
-      field: data
-      method: iRegex
-    - content: (text/plain)
-      dataSource: response
-      field: header
-      method: iRegex
-  - - content: '((Types of profiles available:)|(Profile Descriptions)|(goroutine
-        profile: total))'
-      dataSource: response
-      field: data
-      method: iRegex
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: Node-Exporter-Metrics
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((node_cooling_device)|(node_network))
-      dataSource: response
-      field: data
-      method: iRegex
-- color: pink
-  enabled: true
-  params:
-  - k: yPv
-    v: Kubelet-Metrics
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((<title>kube metrics server</title>)|(kube_configmap_)|(kube_pod_)|(kube_secret_)|(kube_deployment_)|(kube_namespace_)|(kube_service_))
-      dataSource: response
-      field: data
-      method: iRegex
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: Springboot-Heapdump
-  rules:
-  - - content: 1f8b080000000000
-      dataSource: response
-      field: bodyHex
-      method: iContains
-  - - content: 4a4156412050524f46494c45
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-  - - content: 4850524f46
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-- color: gray
-  enabled: true
-  params:
-  - k: yPv
-    v: Debug-Vars
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (("memstats":)|("cmdline":))
-      dataSource: response
-      field: data
-      method: iRegex
-- color: gray
-  enabled: true
-  params:
-  - k: yPv
-    v: Prometheus-Metrics
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ^(?!.*(?:lvm_|kube|namedprocess|mysqld|collectd_|libvirt_|mongodb|blackbox_|haproxy_|rabbitmq_)).*(?:cpu_seconds_total|http_request_duration_seconds|process_virtual_memory_bytes|process_start_time_seconds)
-      dataSource: response
-      field: data
-      method: iRegex
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: Springboot-Actuator
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (("_links":)|("self":))
-      dataSource: response
-      field: data
-      method: iRegex
-    - content: ((application/json)|(application/vnd.spring-boot.actuator)|(.spring-boot.actuator.))
-      dataSource: response
-      field: header
-      method: iRegex
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: Springboot-env
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((server.port)|(local.server.port))
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ((application/json)|(application/vnd.spring-boot.actuator))
-      dataSource: response
-      field: header
-      method: iRegex
-    - content: ((applicationConfig)|(activeProfiles))
-      dataSource: response
-      field: body
-      method: iRegex
-- color: yellow
-  enabled: false
-  params:
-  - k: yPv
-    v: Springboot-httptrace
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ("timestamp":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ("traces":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ("method":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ((application/json)|(application/vnd.spring-boot.actuator))
-      dataSource: response
-      field: header
-      method: iRegex
-- color: gray
-  enabled: true
-  params:
-  - k: yPv
-    v: Binary
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((7573746172003030)|(7573746172202000))
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (377ABCAF271C)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (314159265359)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (53514c69746520666f726d6174203300)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (1f8b)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((526172211A0700)|(526172211A070100))
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (FD377A585A0000)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((1F9D)|(1FA0))
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (4C5A4950)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (504B0304)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/[-\w.]+
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (000100005374616E64617264204A657420444200)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/x-msaccess
-      dataSource: response
-      field: header
-      method: regex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (54415045)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (D0CF11E0A1B11AE1)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (000100005374616E64617264204A657420444200)
-      dataSource: response
-      field: bodyHex
-      method: iRegex
-    - content: application/x-msaccess
-      dataSource: response
-      field: header
-      method: regex
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: OSS-ListBucket
-  rules:
-  - - content: ((xml)|(version)|(encoding)|(ListBucketResult)|(Name)|(Prefix)|(Marker)|(MaxKeys)|(Delimiter)|(IsTruncated)|(Contents)|(Key)|(LastModified)|(ETag)|(Type)|(Size)|(StorageClass)|(Owner)|(ID)|(DisplayName))
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: application/xml
-      dataSource: response
-      field: header
-      method: contains
-- color: magenta
-  enabled: true
-  params:
-  - k: yPv
-    v: WSDL
-  rules:
-  - - content: text/html
-      dataSource: response
-      field: header
-      method: contains
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: Available SOAP services
-      dataSource: response
-      field: body
-      method: contains
-    - content: -//W3C//DTD
-      dataSource: response
-      field: body
-      method: contains
-    - content: Endpoint address
-      dataSource: response
-      field: body
-      method: contains
-- color: orange
-  enabled: true
-  params:
-  - k: yPv
-    v: Chinese IDCard
-  rules:
-  - - content: '[^0-9]((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))[^0-9]'
-      dataSource: response
-      field: body
-      method: regex
-- color: red
-  enabled: true
-  params:
-  - k: yPv
-    v: Swagger-API
-  rules:
-  - - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: (?i)(?:swagger:|Swagger 2\\.0|\"swagger\":|Swagger UI|loadSwaggerUI|id=\"swagger-ui)
-      dataSource: response
-      field: body
-      method: iRegex
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: JDBC Connection
-  rules:
-  - - content: (jdbc:[a-z]+[0-9]?:\/\/[a-z0-9.\-_:;=/@?,&]+)
-      dataSource: response
-      field: body
-      method: iRegex
-- color: yellow
-  enabled: true
-  params:
-  - k: yPv
-    v: Springboot-nacosconfig
-  rules:
-  - - content: ("NacosConfigProperties":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ("serverAddr":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ("username":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: ("password":)
-      dataSource: response
-      field: body
-      method: iRegex
-    - content: '200'
-      dataSource: response
-      field: status
-      method: equals
-    - content: ((application/json)|(application/vnd.spring-boot.actuator))
-      dataSource: response
-      field: header
-      method: iRegex
+  - name: Swagger-UI
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: '"swagger":'
+  - name: Swagger-UI
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: '"swaggerVersion":'
+  - name: Swagger-UI
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: title
+        method: contains
+        content: Swagger UI
+  - name: OpenAPI
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: header
+        method: contains
+        content: 'Content-Type: application/json'
+      - dataSource: response
+        field: body
+        method: contains
+        content: '"openapi":'
+  - name: UEditor
+    enabled: true
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: header
+        method: regex
+        content: ueditor.*?\.js
+  - name: UEditor
+    enabled: true
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: header
+        method: contains
+        content: javascript
+      - dataSource: response
+        field: body
+        method: contains
+        content: UEditor
+  - name: UEditor
+    enabled: true
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: iContains
+        content: /ueditor/php/
+  - name: Shiro
+    enabled: true
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: header
+        method: iContains
+        content: rememberMe=
+  - name: Shiro
+    enabled: true
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: header
+        method: iContains
+        content: =deleteMe
+  - name: Springboot
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: bodyMd5
+        method: equals
+        content: 0488faca4c19046b94d07c3ee83cf9d6
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+  - name: Springboot
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: bodyHash
+        method: equals
+        content: '116323821'
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+  - name: Springboot
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: Whitelabel Error Page
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+  - name: Tomcat
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: server
+        method: iContains
+        content: Tomcat
+  - name: Tomcat
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: server
+        method: iContains
+        content: Apache-Coyote
+  - name: Tomcat
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: Apache Tomcat
+  - name: Tomcat
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: bodyHash
+        method: equals
+        content: '-297069493'
+  - name: Struts2
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: request
+        field: url
+        method: contains
+        content: .do
+  - name: Struts2
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: request
+        field: url
+        method: contains
+        content: .action
+  - name: JSON Web Token
+    enabled: false
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: regex
+        content: (eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|eyJ[A-Za-z0-9_\/+-]{10,}\.[A-Za-z0-9._\/+-]{10,})
+  - name: Java Deserialization
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: contains
+        content: javax.faces.ViewState
+  - name: Upload Form
+    enabled: false
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: type="file"
+  - name: Druid
+    enabled: true
+    color: orange
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: Druid Stat Index
+  - name: Druid
+    enabled: true
+    color: orange
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: iContains
+        condition: and
+        content:
+          - com.alibaba.druid
+          - DbType
+          - DriverClassName
+          - 'jdbc:'
+  - name: Druid
+    enabled: true
+    color: orange
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: iContains
+        condition: and
+        content:
+          - Content
+          - Version
+          - Drivers
+          - com.alibaba.druid.
+          - JavaVMName
+          - JavaVersion
+          - JavaClassPath
+          - StartTime
+  - name: PDF.js Viewer
+    enabled: true
+    color: green
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iContains
+        content: pdf.worker
+  - name: Vite DevMode
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: contains
+        content: /@vite/client
+  - name: Debug Logic Parameters
+    enabled: true
+    color: cyan
+    matchers-condition: and
+    matchers:
+      - dataSource: request
+        field: data
+        method: iRegex
+        content: ((access=)|(adm=)|(admin=)|(alter=)|(cfg=)|(clone=)|(config=)|(create=)|(dbg=)|(debug=)|(delete=)|(disable=)|(edit=)|(enable=)|(exec=)|(execute=)|(grant=)|(load=)|(make=)|(modify=)|(rename=)|(reset=)|(root=)|(shell=)|(test=)|(toggl=))
+  - name: Passwd File
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: contains
+        content: /root:/bin/bash
+  - name: Win.ini File
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: contains
+        content: for 16-bit app
+  - name: PPROF-debug
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: ((heap profile:)|(Alloc))
+      - dataSource: response
+        field: header
+        method: iRegex
+        content: (text/plain)
+  - name: PPROF-debug
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: '((Types of profiles available:)|(Profile Descriptions)|(goroutine
+          profile: total))'
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+  - name: Node-Exporter-Metrics
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: ((node_cooling_device)|(node_network))
+  - name: Kubelet-Metrics
+    enabled: true
+    color: pink
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: ((<title>kube metrics server</title>)|(kube_configmap_)|(kube_pod_)|(kube_secret_)|(kube_deployment_)|(kube_namespace_)|(kube_service_))
+  - name: Springboot-Heapdump
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: bodyHex
+        method: iContains
+        content: 1f8b080000000000
+  - name: Springboot-Heapdump
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: 4a4156412050524f46494c45
+  - name: Springboot-Heapdump
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: 4850524f46
+  - name: Debug-Vars
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: (("memstats":)|("cmdline":))
+  - name: Prometheus-Metrics
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: ^(?!.*(?:lvm_|kube|namedprocess|mysqld|collectd_|libvirt_|mongodb|blackbox_|haproxy_|rabbitmq_)).*(?:cpu_seconds_total|http_request_duration_seconds|process_virtual_memory_bytes|process_start_time_seconds)
+  - name: Springboot-Actuator
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: data
+        method: iRegex
+        content: (("_links":)|("self":))
+      - dataSource: response
+        field: header
+        method: iRegex
+        content: ((application/json)|(application/vnd.spring-boot.actuator)|(.spring-boot.actuator.))
+  - name: Springboot-env
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: iRegex
+        condition: and
+        content:
+          - ((server.port)|(local.server.port))
+          - ((applicationConfig)|(activeProfiles))
+      - dataSource: response
+        field: header
+        method: iRegex
+        content: ((application/json)|(application/vnd.spring-boot.actuator))
+  - name: Springboot-httptrace
+    enabled: false
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: iRegex
+        condition: and
+        content:
+          - ("timestamp":)
+          - ("traces":)
+          - ("method":)
+      - dataSource: response
+        field: header
+        method: iRegex
+        content: ((application/json)|(application/vnd.spring-boot.actuator))
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: ((7573746172003030)|(7573746172202000))
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (377ABCAF271C)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (314159265359)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (53514c69746520666f726d6174203300)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (1f8b)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: ((526172211A0700)|(526172211A070100))
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (FD377A585A0000)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: ((1F9D)|(1FA0))
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (4C5A4950)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (504B0304)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/[-\w.]+
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (000100005374616E64617264204A657420444200)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/x-msaccess
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (54415045)
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (D0CF11E0A1B11AE1)
+  - name: Binary
+    enabled: true
+    color: gray
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: bodyHex
+        method: iRegex
+        content: (000100005374616E64617264204A657420444200)
+      - dataSource: response
+        field: header
+        method: regex
+        content: application/x-msaccess
+  - name: OSS-ListBucket
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iRegex
+        content: ((xml)|(version)|(encoding)|(ListBucketResult)|(Name)|(Prefix)|(Marker)|(MaxKeys)|(Delimiter)|(IsTruncated)|(Contents)|(Key)|(LastModified)|(ETag)|(Type)|(Size)|(StorageClass)|(Owner)|(ID)|(DisplayName))
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: header
+        method: contains
+        content: application/xml
+  - name: WSDL
+    enabled: true
+    color: magenta
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: header
+        method: contains
+        content: text/html
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: contains
+        condition: and
+        content:
+          - Available SOAP services
+          - -//W3C//DTD
+          - Endpoint address
+  - name: Chinese IDCard
+    enabled: true
+    color: orange
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: regex
+        content: '[^0-9]((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))[^0-9]'
+  - name: Swagger-API
+    enabled: true
+    color: red
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: body
+        method: iRegex
+        content: (?i)(?:swagger:|Swagger 2\\.0|\"swagger\":|Swagger UI|loadSwaggerUI|id=\"swagger-ui)
+  - name: JDBC Connection
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iRegex
+        content: (jdbc:[a-z]+[0-9]?:\/\/[a-z0-9.\-_:;=/@?,&]+)
+  - name: Springboot-nacosconfig
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iRegex
+        condition: and
+        content:
+          - ("NacosConfigProperties":)
+          - ("serverAddr":)
+          - ("username":)
+          - ("password":)
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: header
+        method: iRegex
+        content: ((application/json)|(application/vnd.spring-boot.actuator))

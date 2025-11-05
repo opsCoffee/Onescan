@@ -265,6 +265,57 @@ Other配置界面如下
 
 #### 指纹规则说明
 
+自 v2.x 起，指纹配置采用新的 YAML 模板格式，更清晰表达与/或关系，靠近 nuclei 风格：
+
+- 顶层：
+  - `name`: 条目名称写入的列名（如 Notes）
+  - `list`: 指纹条目数组
+- 条目：
+  - `name`: 指纹条目名（界面 Name），会写入上面的列
+  - `enabled`: 是否启用
+  - `color`: 命中后的标色（red/orange/yellow/green/cyan/blue/pink/magenta/gray 或 #RRGGBB）
+  - `matchers-condition`: and|or（控制所有 matcher 之间是 AND 还是 OR）
+  - `matchers`: 规则块数组；每个 matcher 支持：
+    - `dataSource`: request|response
+    - `field`: url|header|body|bodyHex|bodyMd5|bodyHash|status|title|server|data
+    - `method`: equals|contains|iContains|regex|iRegex|notRegex|iNotRegex
+    - `content`: 字符串或字符串列表；当为列表时可配 `condition: and|or` 指定列表内匹配关系（默认 or）
+
+示例（与 Springboot Actuator env 的检测等价）：
+
+```
+name: Notes
+list:
+  - name: Springboot-env
+    enabled: true
+    color: yellow
+    matchers-condition: and
+    matchers:
+      - dataSource: response
+        field: body
+        method: iRegex
+        condition: and
+        content:
+          - '((server.port)|(local.server.port))'
+          - '((applicationConfig)|(activeProfiles))'
+      - dataSource: response
+        field: status
+        method: equals
+        content: '200'
+      - dataSource: response
+        field: header
+        method: iRegex
+        content: '((application/json)|(application/vnd.spring-boot.actuator))'
+```
+
+说明：
+- 组间 OR，组内 AND。`matchers-condition: and` 表示所有 matcher 合并为单一 AND 组；当某个 matcher 的 `content` 是多个且 `condition: or`，会展开为多个 OR 组。
+- 界面已提供 Name 输入框（对应列名 Notes）与规则表达式预览，直观展示 “(r1 && r2) OR (r3 && r4)”。
+
+迁移：
+- 提供 `scripts/migrate_fp_config.py` 脚本，可将旧版 `columns+list+rules` 迁移为新格式。
+- 使用方法：`python3 scripts/migrate_fp_config.py src/main/resources/fp_config.yaml /path/to/fp_config.new.yaml`
+
 包含 HTTP 通用字段如下：
 
 - `firstLine` HTTP 首行（格式示例：`GET / HTTP/1.1` 、 `HTTP/1.1 200 OK`）
