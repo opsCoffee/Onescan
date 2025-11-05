@@ -8,9 +8,7 @@ import burp.onescan.bean.*;
 import burp.onescan.common.FpMethodHandler;
 import burp.onescan.common.OnFpColumnModifyListener;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.LoaderOptions;
-
 import java.awt.*;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -301,9 +299,6 @@ public class FpManager {
                     FpRule rule;
                     if (obj instanceof FpRule) {
                         rule = (FpRule) obj;
-                    } else if (obj instanceof java.util.Map) {
-                        rule = mapToRule((java.util.Map<?, ?>) obj);
-                        group.set(i, rule);
                     } else {
                         continue;
                     }
@@ -328,9 +323,6 @@ public class FpManager {
                 FpRule rule;
                 if (obj instanceof FpRule) {
                     rule = (FpRule) obj;
-                } else if (obj instanceof java.util.Map) {
-                    rule = mapToRule((java.util.Map<?, ?>) obj);
-                    group.set(i, rule);
                 } else {
                     continue;
                 }
@@ -361,22 +353,7 @@ public class FpManager {
         }
     }
 
-    private static FpRule mapToRule(java.util.Map<?, ?> map) {
-        FpRule r = new FpRule();
-        Object ds = map.get("ds");
-        if (ds == null) ds = map.get("dataSource");
-        Object f = map.get("f");
-        if (f == null) f = map.get("field");
-        Object m = map.get("m");
-        if (m == null) m = map.get("method");
-        Object c = map.get("c");
-        if (c == null) c = map.get("content");
-        if (ds != null) r.setDataSource(String.valueOf(ds));
-        if (f != null) r.setField(String.valueOf(f));
-        if (m != null) r.setMethod(String.valueOf(m));
-        if (c != null) r.setContent(String.valueOf(c));
-        return r;
-    }
+    
 
     /**
      * 校验配置文件格式
@@ -496,20 +473,6 @@ public class FpManager {
                         f = rule.getField();
                         m = rule.getMethod();
                         ctn = rule.getContent();
-                    } else if (obj instanceof java.util.Map) {
-                        java.util.Map map = (java.util.Map) obj;
-                        Object ods = map.get("ds");
-                        if (ods == null) ods = map.get("dataSource");
-                        Object of = map.get("f");
-                        if (of == null) of = map.get("field");
-                        Object om = map.get("m");
-                        if (om == null) om = map.get("method");
-                        Object oc = map.get("c");
-                        if (oc == null) oc = map.get("content");
-                        ds = ods == null ? null : String.valueOf(ods);
-                        f = of == null ? null : String.valueOf(of);
-                        m = om == null ? null : String.valueOf(om);
-                        ctn = oc == null ? null : String.valueOf(oc);
                     } else {
                         errors.add("Unknown rule type at data index " + i + ", group " + g + ", rule " + r);
                         continue;
