@@ -79,25 +79,23 @@ public class FpManager {
         try {
             // 判断文件格式
             if (sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml")) {
-                // YAML 格式解析
+                // YAML 格式解析（仅在路径显式为 .yaml/.yml 时支持）
                 LoaderOptions options = new LoaderOptions();
+                options.setMaxAliasesForCollections(50);
+                options.setAllowDuplicateKeys(false);
+                options.setCodePointLimit(2_000_000);
+                options.setNestingDepthLimit(50);
                 Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
                 sConfig = yaml.load(content);
             } else if (sFilePath.endsWith(".json")) {
-                // JSON 格式解析（向后兼容）
+                // JSON 格式解析（仅当用户显式指定 .json 路径时）
                 sConfig = GsonUtils.toObject(content, FpConfig.class);
             } else {
-                // 自动检测格式：尝试JSON，失败后尝试YAML
-                content = content.trim();
-                if (content.startsWith("{") || content.startsWith("[")) {
-                    // 看起来像JSON
-                    sConfig = GsonUtils.toObject(content, FpConfig.class);
-                } else {
-                    // 尝试作为YAML解析
-                    LoaderOptions options = new LoaderOptions();
-                    Yaml yaml = new Yaml(new Constructor(FpConfig.class, options));
-                    sConfig = yaml.load(content);
-                }
+                // 非显式 JSON 或 YAML 路径：不进行格式自动检测，避免误解析
+                throw new IllegalArgumentException(
+                        "Unsupported fingerprint config format: " + sFilePath +
+                                ". Only .yaml/.yml or explicit .json path supported."
+                );
             }
         } catch (Exception e) {
             throw new IllegalArgumentException(
@@ -224,25 +222,177 @@ public class FpManager {
             throw new IllegalArgumentException("Fingerprint config is null");
         }
 
-        if (config.getColumns() == null || config.getColumns().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Fingerprint config must have at least one column"
-            );
+        List<FpColumn> columns = config.getColumns();
+        if (columns == null || columns.isEmpty()) {
+            throw new IllegalArgumentException("Fingerprint config must have at least one column");
         }
 
-        if (config.getList() == null) {
-            throw new IllegalArgumentException(
-                    "Fingerprint config list cannot be null"
-            );
-        }
+        List<String> errors = new ArrayList<>();
 
-        // 验证每个指纹数据的完整性
-        for (int i = 0; i < config.getListSize(); i++) {
-            FpData data = config.getList().get(i);
-            if (data.getRules() == null || data.getRules().isEmpty()) {
-                Logger.error("Warning: Fingerprint data at index %d has no rules", i);
+        // 校验列：非空与唯一
+        Set<String> colIds = new HashSet<>();
+        Set<String> colNames = new HashSet<>();
+        for (int i = 0; i < columns.size(); i++) {
+            FpColumn c = columns.get(i);
+            if (c == null) {
+                errors.add("Column at index " + i + " is null");
+                continue;
+            }
+            if (c.getId() == null || c.getId().trim().isEmpty()) {
+                errors.add("Column id is empty at index " + i);
+            } else if (!colIds.add(c.getId())) {
+                errors.add("Duplicate column id: " + c.getId());
+            }
+            if (c.getName() == null || c.getName().trim().isEmpty()) {
+                errors.add("Column name is empty for id " + c.getId());
+            } else if (!colNames.add(c.getName())) {
+                errors.add("Duplicate column name: " + c.getName());
             }
         }
+
+        List<FpData> list = config.getList();
+        if (list == null) {
+            throw new IllegalArgumentException("Fingerprint config list cannot be null");
+        }
+
+        // 可用颜色集合（名称与十六进制）
+        Set<String> colorNames = new HashSet<>(Arrays.asList(sColorNames));
+        Set<String> colorHex = new HashSet<>(Arrays.asList(sColorHex));
+
+        // 规则方法、数据源校验集合
+        List<String> methods = FpRule.getMethods();
+        List<String> dataSources = FpRule.getDataSources();
+
+        // 列 id 集合
+        Set<String> columnIdSet = columns.stream().filter(Objects::nonNull).map(FpColumn::getId).collect(Collectors.toSet());
+
+        for (int i = 0; i < list.size(); i++) {
+            FpData data = list.get(i);
+            if (data == null) {
+                errors.add("Fingerprint data at index " + i + " is null");
+                continue;
+            }
+
+            // 校验颜色
+            String color = data.getColor();
+            if (color != null && !color.trim().isEmpty()) {
+                boolean ok = colorNames.contains(color)
+                        || colorHex.contains(color)
+                        || color.matches("#[0-9a-fA-F]{6}");
+                if (!ok) {
+                    errors.add("Invalid color at data index " + i + ": " + color);
+                }
+            }
+
+            // 校验参数
+            List<FpData.Param> params = data.getParams();
+            if (params != null) {
+                Set<String> seen = new HashSet<>();
+                for (int p = 0; p < params.size(); p++) {
+                    FpData.Param param = params.get(p);
+                    if (param == null) {
+                        errors.add("Null param at data index " + i + ", param index " + p);
+                        continue;
+                    }
+                    String k = param.getK();
+                    if (k == null || k.trim().isEmpty()) {
+                        errors.add("Empty param key at data index " + i + ", param index " + p);
+                    } else {
+                        if (!columnIdSet.contains(k)) {
+                            errors.add("Unknown param key '" + k + "' at data index " + i + ", not in columns");
+                        }
+                        if (!seen.add(k)) {
+                            errors.add("Duplicate param key '" + k + "' at data index " + i);
+                        }
+                    }
+                }
+            }
+
+            // 校验规则
+            List<ArrayList> groups = (List) data.getRules();
+            if (groups == null || groups.isEmpty()) {
+                errors.add("Fingerprint data at index " + i + " has no rules");
+                continue;
+            }
+            for (int g = 0; g < groups.size(); g++) {
+                ArrayList group = groups.get(g);
+                if (group == null || group.isEmpty()) {
+                    errors.add("Empty rule group at data index " + i + ", group index " + g);
+                    continue;
+                }
+                for (int r = 0; r < group.size(); r++) {
+                    Object obj = group.get(r);
+                    String ds = null, f = null, m = null, ctn = null;
+                    if (obj instanceof FpRule) {
+                        FpRule rule = (FpRule) obj;
+                        ds = rule.getDataSource();
+                        f = rule.getField();
+                        m = rule.getMethod();
+                        ctn = rule.getContent();
+                    } else if (obj instanceof java.util.Map) {
+                        java.util.Map map = (java.util.Map) obj;
+                        Object ods = map.get("ds");
+                        Object of = map.get("f");
+                        Object om = map.get("m");
+                        Object oc = map.get("c");
+                        ds = ods == null ? null : String.valueOf(ods);
+                        f = of == null ? null : String.valueOf(of);
+                        m = om == null ? null : String.valueOf(om);
+                        ctn = oc == null ? null : String.valueOf(oc);
+                    } else {
+                        errors.add("Unknown rule type at data index " + i + ", group " + g + ", rule " + r);
+                        continue;
+                    }
+
+                    if (ds == null || ds.trim().isEmpty()) {
+                        errors.add(loc(i,g,r) + "dataSource(ds) is empty");
+                    } else if (!dataSources.contains(ds)) {
+                        errors.add(loc(i,g,r) + "Unknown dataSource '" + ds + "'");
+                    } else {
+                        // 字段校验
+                        List<String> fields = FpRule.getFieldsByDataSource(ds);
+                        if (f == null || f.trim().isEmpty()) {
+                            errors.add(loc(i,g,r) + "field(f) is empty");
+                        } else if (!fields.contains(f)) {
+                            errors.add(loc(i,g,r) + "Unknown field '" + f + "' for dataSource '" + ds + "'");
+                        }
+                    }
+
+                    if (m == null || m.trim().isEmpty()) {
+                        errors.add(loc(i,g,r) + "method(m) is empty");
+                    } else if (!methods.contains(m)) {
+                        errors.add(loc(i,g,r) + "Unknown method '" + m + "'");
+                    }
+
+                    if (ctn == null) {
+                        errors.add(loc(i,g,r) + "content(c) is null");
+                    } else if (ctn.isEmpty()) {
+                        errors.add(loc(i,g,r) + "content(c) is empty");
+                    }
+
+                    // 正则方法内容合法性
+                    if ("regex".equals(m) || "iRegex".equals(m) || "notRegex".equals(m) || "iNotRegex".equals(m)) {
+                        try {
+                            if ("iRegex".equals(m) || "iNotRegex".equals(m)) {
+                                java.util.regex.Pattern.compile(ctn, java.util.regex.Pattern.CASE_INSENSITIVE);
+                            } else {
+                                java.util.regex.Pattern.compile(ctn);
+                            }
+                        } catch (Exception e) {
+                            errors.add(loc(i,g,r) + "invalid regex: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException("Fingerprint config validation failed: \n - " + String.join("\n - ", errors));
+        }
+    }
+
+    private static String loc(int i, int g, int r) {
+        return "data index " + i + ", group " + g + ", rule " + r + ": ";
     }
 
     /**

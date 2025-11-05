@@ -97,11 +97,15 @@ public class Config {
 
     private static void initFpManager() {
         String path = getWorkDir() + "fp_config.yaml";
-        if (!FileUtils.isFile(path)) {
-            InputStream is = Config.class.getClassLoader().getResourceAsStream("fp_config.yaml");
-            String content = FileUtils.readStreamToString(is);
-            FileUtils.writeFile(path, content);
+        // 用户目录已存在 yaml：直接使用用户配置，避免被内置基础规则覆盖
+        if (FileUtils.isFile(path)) {
+            FpManager.init(path);
+            return;
         }
+        // 不存在：写入打包的基础规则（首启落地）
+        InputStream is = Config.class.getClassLoader().getResourceAsStream("fp_config.yaml");
+        String content = FileUtils.readStreamToString(is);
+        FileUtils.writeFile(path, content);
         FpManager.init(path);
     }
 
