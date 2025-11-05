@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-OneScan 是一款专业的 BurpSuite 插件，用于递归目录扫描和漏洞发现。插件采用 Java 17 开发，使用 Maven 多模块架构构建。
+OneScan 是一款专业的 BurpSuite 插件，用于递归目录扫描和漏洞发现。插件采用 Java 17 开发，使用 Maven 单模块架构构建。
 
 ## 项目文件说明
 
@@ -18,11 +18,8 @@ OneScan 是一款专业的 BurpSuite 插件，用于递归目录扫描和漏洞�
 
 ### 构建项目
 ```bash
-# 完整构建（包含所有模块和依赖）
+# 完整构建（生成 OneScan-vX.X.X.jar）
 mvn clean package
-
-# 仅构建插件（快速构建，生成 OneScan-vX.X.X.jar）
-cd extender && mvn clean package
 
 # 跳过测试构建
 mvn clean package -DskipTests
@@ -48,12 +45,20 @@ mvn surefire-report:report
 
 ## 核心架构
 
-### Maven 模块结构
+### 项目结构
 ```
 onescan/
-├── burp-extender-api/  # Burp 扩展 API 接口 (v2.3)
-├── montoya-api/        # Montoya API 接口 (v2023.12.1)
-└── extender/           # 主插件实现 (v2.1.9)
+├── src/                # 源代码目录
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── burp/
+│   │   │       ├── BurpExtender.java  # 插件入口
+│   │   │       ├── common/            # 通用工具和组件
+│   │   │       └── onescan/           # OneScan 核心功能
+│   │   └── resources/                 # 资源文件
+│   └── test/                          # 测试代码
+├── target/             # 构建输出目录
+└── pom.xml             # Maven 配置文件 (v2.1.9)
 ```
 
 ### 插件架构设计
@@ -134,7 +139,7 @@ HTTP请求/响应 -> 异步识别线程 -> 规则匹配 -> 缓存结果 -> UI更
 - 成员变量：`m` 前缀（如 `mCallbacks`）
 - 静态变量：`s` 前缀（如 `sRepeatFilter`）
 - 常量：全大写下划线分隔（如 `TASK_THREAD_COUNT`）
-- 包结构：`burp.vaycore.onescan.*`
+- 包结构：`burp.onescan.*` 和 `burp.common.*`
 
 ### 异常处理原则
 - 网络请求必须处理超时
@@ -205,7 +210,7 @@ mvn clean test jacoco:report
 
 ## 版本管理
 
-更新版本时修改 `extender/pom.xml` 中的 `<version>` 标签，当前版本为 2.1.9。
+更新版本时修改根目录 `pom.xml` 中的 `<version>` 标签，当前版本为 2.1.9。
 
 ## 插件特性深度解析
 
@@ -237,8 +242,7 @@ mvn clean test jacoco:report
 - SnakeYAML: YAML 配置文件支持
 
 ### Shade 插件配置
-- 重定位 Gson 避免冲突：`burp.vaycore.shaded.gson`
-- 重定位 SnakeYAML：`burp.vaycore.shaded.yaml`
+- 打包所有依赖到单个 JAR 文件
 - 排除签名文件和 META-INF
 
 ## Burp 插件开发规范

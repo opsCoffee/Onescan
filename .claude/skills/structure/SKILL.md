@@ -1,6 +1,6 @@
 ---
 name: structure
-description: Project structure and directory layout for OneScan BurpSuite extension. Covers root directory layout, main module structure (extender/), package organization (burp.vaycore.onescan.*), key architecture components (BurpExtender entry point, FpManager, CollectManager, Config), UI components, configuration file locations, naming conventions (m prefix for members, s prefix for statics), and resource files. Use when navigating codebase, understanding architecture, or locating files.
+description: Project structure and directory layout for OneScan BurpSuite extension. Single-module Maven project with simplified package structure. Covers root directory layout, source structure (src/), package organization (burp.common.*, burp.onescan.*), key architecture components (BurpExtender entry point, FpManager, CollectManager, Config), UI components, configuration file locations, naming conventions (m prefix for members, s prefix for statics), and resource files. Use when navigating codebase, understanding architecture, or locating files.
 ---
 
 # Project Structure
@@ -13,56 +13,77 @@ onescan/
 ├── .claude/                # Claude Code skills
 ├── .git/                   # Git repository
 ├── .kiro/                  # Kiro IDE configuration and steering
-├── burp-extender-api/      # Burp legacy API module
-├── extender/               # Main plugin implementation
 ├── imgs/                   # Documentation images
-├── montoya-api/            # Montoya API module
+├── src/                    # Source code directory
+│   ├── main/
+│   │   ├── java/
+│   │   └── resources/
+│   └── test/
+├── target/                 # Build output directory
 ├── CLAUDE.md               # Development guidelines for Claude
 ├── LICENSE                 # Project license
-├── pom.xml                 # Parent Maven POM
+├── pom.xml                 # Maven POM (single module)
 ├── prompt.md               # Project requirements (do not delete)
 └── README.md               # User documentation (Chinese)
 ```
 
-## Main Module Structure (extender/)
+## Source Structure (src/)
 
 ```
-extender/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── burp/                    # Root package
-│   │   │       ├── BurpExtender.java    # Plugin entry point
-│   │   │       └── vaycore/
-│   │   │           └── onescan/         # Main package
-│   │   │               ├── bean/        # Data models
-│   │   │               ├── common/      # Common utilities
-│   │   │               ├── manager/     # Core managers (FpManager, CollectManager, etc.)
-│   │   │               └── ui/          # UI components
-│   │   └── resources/
-│   │       ├── i18n/                    # Internationalization
-│   │       ├── fp_config.json           # Fingerprint rules
-│   │       ├── header.txt               # Default headers
-│   │       ├── host_allowlist.txt       # Host whitelist
-│   │       ├── host_blocklist.txt       # Host blacklist
-│   │       ├── payload.txt              # Default payloads
-│   │       ├── public_suffix_list.json  # Domain suffix list
-│   │       ├── remove_header.txt        # Headers to remove
-│   │       └── user_agent.txt           # User agent list
-│   └── test/
-│       └── java/
-│           └── burp/                    # Test classes
-├── pom.xml                              # Module POM
-└── target/                              # Build output
+src/
+├── main/
+│   ├── java/
+│   │   └── burp/                        # Root package
+│   │       ├── BurpExtender.java        # Plugin entry point
+│   │       ├── common/                  # Common utilities and components
+│   │       │   ├── config/              # Configuration management
+│   │       │   ├── filter/              # Data filtering
+│   │       │   ├── helper/              # Helper utilities
+│   │       │   ├── layout/              # Custom layout managers
+│   │       │   ├── log/                 # Logging
+│   │       │   ├── utils/               # Utility classes
+│   │       │   └── widget/              # Common UI widgets
+│   │       └── onescan/                 # OneScan core functionality
+│   │           ├── bean/                # Data models
+│   │           ├── common/              # OneScan-specific utilities
+│   │           ├── info/                # Info tab components
+│   │           ├── manager/             # Core managers (FpManager, etc.)
+│   │           └── ui/                  # UI components
+│   │               ├── base/            # Base UI classes
+│   │               ├── tab/             # Tab panels
+│   │               └── widget/          # UI widgets
+│   └── resources/
+│       ├── i18n/                        # Internationalization
+│       ├── fp_config.json               # Fingerprint rules
+│       ├── header.txt                   # Default headers
+│       ├── host_allowlist.txt           # Host whitelist
+│       ├── host_blocklist.txt           # Host blacklist
+│       ├── payload.txt                  # Default payloads
+│       ├── public_suffix_list.json      # Domain suffix list
+│       ├── remove_header.txt            # Headers to remove
+│       └── user_agent.txt               # User agent list
+└── test/
+    └── java/
+        └── burp/                        # Test classes
 ```
 
 ## Package Organization
 
+### Common Packages (burp.common.*)
+- **burp.common.config** - Configuration context and management
+- **burp.common.filter** - Table filtering and rules
+- **burp.common.helper** - Helper utilities (Domain, QPS, UI, etc.)
+- **burp.common.layout** - Custom layout managers (VLayout, HLayout)
+- **burp.common.log** - Logging utilities
+- **burp.common.utils** - General utility classes
+- **burp.common.widget** - Reusable UI widgets
+
+### OneScan Packages (burp.onescan.*)
 - **burp.BurpExtender** - Plugin entry implementing IBurpExtender and other Burp interfaces
-- **burp.vaycore.onescan.bean** - Data transfer objects and models
-- **burp.vaycore.onescan.common** - Utilities, constants, helpers
-- **burp.vaycore.onescan.manager** - Business logic managers (fingerprint, collection, config)
-- **burp.vaycore.onescan.ui** - Swing UI components and panels
+- **burp.onescan.bean** - Data transfer objects and models
+- **burp.onescan.common** - OneScan-specific utilities, constants, helpers
+- **burp.onescan.manager** - Business logic managers (fingerprint, collection, config)
+- **burp.onescan.ui** - Swing UI components and panels
 
 ## Key Architecture Components
 
@@ -93,7 +114,7 @@ Plugin configuration stored in:
 - **Member variables**: `m` prefix (e.g., `mCallbacks`)
 - **Static variables**: `s` prefix (e.g., `sRepeatFilter`)
 - **Constants**: UPPER_SNAKE_CASE (e.g., `TASK_THREAD_COUNT`)
-- **Packages**: `burp.vaycore.onescan.*`
+- **Packages**: `burp.common.*` and `burp.onescan.*`
 
 ## Resource Files
 

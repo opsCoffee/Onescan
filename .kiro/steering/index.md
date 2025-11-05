@@ -76,8 +76,8 @@ inclusion: always
 
 ### 7. structure
 **项目结构和目录布局**
-- 根目录布局、主模块结构（extender/）
-- 包组织（burp.vaycore.onescan.*）
+- 根目录布局、单模块结构（src/）
+- 包组织（burp.common.*、burp.onescan.*）
 - 关键架构组件（BurpExtender、FpManager、CollectManager）
 - 命名约定（m 前缀、s 前缀）
 
@@ -85,13 +85,13 @@ inclusion: always
 
 ### 8. tech
 **技术栈和构建系统约束**
-- 严格 Java 8（JDK 1.8）编译目标
+- Java 17（JDK 17）编译目标
 - 仅使用 Maven（禁止 Gradle）
 - 专用 Montoya API（禁止旧版 Burp Extender API）
 - Windows 平台（cmd 兼容命令）
-- Maven 多模块结构、核心依赖
+- Maven 单模块结构、核心依赖
 
-**使用时机**：设置构建、管理依赖、确保 Java 8 兼容性
+**使用时机**：设置构建、管理依赖、确保 Java 17 兼容性
 
 ## 技能使用指南
 
