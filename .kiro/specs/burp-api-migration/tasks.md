@@ -14,7 +14,7 @@
 ### 1.1 准备工作 (1 天)
 
 #### Task 1.1.1: 创建迁移分支
-- [ ] 创建新分支 `feat/migrate-to-montoya-api`
+- [-] 创建新分支 `feat/migrate-to-montoya-api`
 - [ ] 确保当前代码已提交
 - [ ] 备份当前版本 JAR 文件
 
