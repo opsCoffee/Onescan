@@ -307,7 +307,11 @@ public class Config {
 
     public static String getWorkDir() {
         if (StringUtils.isNotEmpty(sWorkDir) && FileUtils.isDir(sWorkDir)) {
-            return sWorkDir;
+            // 保证以文件分隔符结尾，避免路径拼接异常
+            if (sWorkDir.endsWith(File.separator)) {
+                return sWorkDir;
+            }
+            return sWorkDir + File.separator;
         }
         return PathUtils.getUserHome() + ".config" + File.separator + "OneScan" + File.separator;
     }

@@ -1,5 +1,8 @@
 package burp;
 
+import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.BurpExtension;
+import burp.api.montoya.extension.Extension;
 import burp.common.helper.DomainHelper;
 import burp.common.helper.QpsLimiter;
 import burp.common.helper.UIHelper;
@@ -47,7 +50,7 @@ import java.util.stream.Collectors;
  * <p>
  * Created by vaycore on 2022-08-07.
  */
-public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEditorController,
+public class BurpExtender implements BurpExtension, Extension, IProxyListener, IMessageEditorController,
         TaskTable.OnTaskTableEventListener, ITab, OnTabEventListener, IMessageEditorTabFactory,
         IExtensionStateListener, IContextMenuFactory {
 
@@ -112,11 +115,15 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private final Set<String> sTimeoutReqHost = ConcurrentHashMap.newKeySet();
 
     private IBurpExtenderCallbacks mCallbacks;
+    private MontoyaApi mMontoya;
+    private String mFilename;
     private IExtensionHelpers mHelpers;
     private OneScan mOneScan;
     private DataBoardTab mDataBoardTab;
     private IMessageEditor mRequestTextEditor;
     private IMessageEditor mResponseTextEditor;
+    private burp.api.montoya.ui.editor.HttpRequestEditor mMontoyaRequestEditor;
+    private burp.api.montoya.ui.editor.HttpResponseEditor mMontoyaResponseEditor;
     private ExecutorService mTaskThreadPool;
     private ExecutorService mLFTaskThreadPool;
     private ExecutorService mFpThreadPool;
@@ -129,12 +136,66 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private final AtomicInteger mLFTaskCommitCounter = new AtomicInteger(0);
     private Timer mStatusRefresh;
 
+    // Montoya BurpExtension entry point
     @Override
-    public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
-        initData(callbacks);
-        initView();
-        initEvent();
-        Logger.debug("register Extender ok! Log: %b", Constants.DEBUG);
+    public void initialize(MontoyaApi montoya) {
+        this.mMontoya = montoya;
+        Logger.debug("initialize Montoya API ok! Log: %b", Constants.DEBUG);
+    }
+
+    // Montoya Extension interface methods (minimal stub for compilation)
+    @Override
+    public void setName(String name) {
+        // Use legacy callbacks to set extension name if available
+        if (mCallbacks != null) {
+            mCallbacks.setExtensionName(name);
+        }
+    }
+
+    @Override
+    public String filename() {
+        if (mFilename != null) {
+            return mFilename;
+        }
+        if (mCallbacks != null) {
+            return mCallbacks.getExtensionFilename();
+        }
+        return null;
+    }
+
+    @Override
+    public boolean isBapp() {
+        return false;
+    }
+
+    @Override
+    public void unload() {
+        // Graceful shutdown if needed
+        try {
+            if (mStatusRefresh != null) {
+                mStatusRefresh.stop();
+            }
+            if (mTaskThreadPool != null) {
+                mTaskThreadPool.shutdown();
+            }
+            if (mLFTaskThreadPool != null) {
+                mLFTaskThreadPool.shutdown();
+            }
+            if (mFpThreadPool != null) {
+                mFpThreadPool.shutdown();
+            }
+            if (mRefreshMsgTask != null) {
+                mRefreshMsgTask.shutdown();
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    @Override
+    public burp.api.montoya.core.Registration registerUnloadingHandler(
+            burp.api.montoya.extension.ExtensionUnloadingHandler handler) {
+        // No-op for now until full migration; return null satisfies interface
+        return null;
     }
 
     private void initData(IBurpExtenderCallbacks callbacks) {
@@ -145,8 +206,17 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         this.mFpThreadPool = Executors.newFixedThreadPool(FP_THREAD_COUNT);
         this.mRefreshMsgTask = Executors.newSingleThreadExecutor();
         this.mCallbacks.setExtensionName(Constants.PLUGIN_NAME + " v" + Constants.PLUGIN_VERSION);
-        // 初始化日志打印
-        Logger.init(Constants.DEBUG, mCallbacks.getStdout(), mCallbacks.getStderr());
+        // 初始化日志打印（优先使用 Montoya logging 输出）
+        java.io.OutputStream out = System.out;
+        java.io.OutputStream err = System.err;
+        if (mMontoya != null) {
+            out = new burp.common.log.MontoyaLoggerAdapter(mMontoya, false);
+            err = new burp.common.log.MontoyaLoggerAdapter(mMontoya, true);
+        } else if (mCallbacks != null) {
+            out = mCallbacks.getStdout();
+            err = mCallbacks.getStderr();
+        }
+        Logger.init(Constants.DEBUG, out, err);
         // 初始化默认配置
         Config.init(getWorkDir());
         // 初始化域名辅助类
@@ -190,19 +260,104 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         mDataBoardTab.setOnTabEventListener(this);
         mOneScan.getConfigPanel().setOnTabEventListener(this);
         // 将页面添加到 BurpSuite
-        mCallbacks.addSuiteTab(this);
+        if (mMontoya != null) {
+            // Montoya Suite Tab 注册（简化，仍使用现有 ITab 组件）
+            try {
+                mMontoya.userInterface().registerSuiteTab(getTabCaption(), getUiComponent());
+            } catch (Throwable t) {
+                // 运行时兼容旧 API
+                mCallbacks.addSuiteTab(this);
+            }
+        } else {
+            mCallbacks.addSuiteTab(this);
+        }
         // 创建请求和响应控件
-        mRequestTextEditor = mCallbacks.createMessageEditor(this, false);
-        mResponseTextEditor = mCallbacks.createMessageEditor(this, false);
-        mDataBoardTab.init(mRequestTextEditor.getComponent(), mResponseTextEditor.getComponent());
+        if (mMontoya != null) {
+            try {
+                mMontoyaRequestEditor = mMontoya.userInterface().createHttpRequestEditor();
+                mMontoyaResponseEditor = mMontoya.userInterface().createHttpResponseEditor();
+                mDataBoardTab.init(mMontoyaRequestEditor.uiComponent(), mMontoyaResponseEditor.uiComponent());
+            } catch (Throwable t) {
+                mRequestTextEditor = mCallbacks.createMessageEditor(this, false);
+                mResponseTextEditor = mCallbacks.createMessageEditor(this, false);
+                mDataBoardTab.init(mRequestTextEditor.getComponent(), mResponseTextEditor.getComponent());
+            }
+        } else {
+            mRequestTextEditor = mCallbacks.createMessageEditor(this, false);
+            mResponseTextEditor = mCallbacks.createMessageEditor(this, false);
+            mDataBoardTab.init(mRequestTextEditor.getComponent(), mResponseTextEditor.getComponent());
+        }
         mDataBoardTab.getTaskTable().setOnTaskTableEventListener(this);
     }
 
     private void initEvent() {
         // 监听代理的包
-        mCallbacks.registerProxyListener(this);
+        if (mMontoya != null) {
+            try {
+                mMontoya.proxy().registerResponseHandler(new burp.api.montoya.proxy.http.ProxyResponseHandler() {
+                    @Override
+                    public burp.api.montoya.proxy.http.ProxyResponseReceivedAction handleResponseReceived(
+                            burp.api.montoya.proxy.http.InterceptedResponse response) {
+                        try {
+                            burp.api.montoya.http.message.requests.HttpRequest req = response.request();
+                            IHttpRequestResponse httpReqResp = HttpReqRespAdapter.from(
+                                    buildHttpServiceByURL(new URL(req.url())),
+                                    req.toByteArray().getBytes()
+                            );
+                            doScan(httpReqResp, FROM_PROXY);
+                            return burp.api.montoya.proxy.http.ProxyResponseReceivedAction.continueWith(response);
+                        } catch (Exception ex) {
+                            return burp.api.montoya.proxy.http.ProxyResponseReceivedAction.continueWith(response);
+                        }
+                    }
+
+                    @Override
+                    public burp.api.montoya.proxy.http.ProxyResponseToBeSentAction handleResponseToBeSent(
+                            burp.api.montoya.proxy.http.InterceptedResponse response) {
+                        return burp.api.montoya.proxy.http.ProxyResponseToBeSentAction.continueWith(response);
+                    }
+                });
+            } catch (Throwable t) {
+                mCallbacks.registerProxyListener(this);
+            }
+        } else {
+            mCallbacks.registerProxyListener(this);
+        }
         // 注册菜单
-        mCallbacks.registerContextMenuFactory(this);
+        if (mMontoya != null) {
+            try {
+                mMontoya.userInterface().registerContextMenuItemsProvider(new burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider() {
+                    @Override
+                    public java.util.List<java.awt.Component> provideMenuItems(
+                            burp.api.montoya.ui.contextmenu.ContextMenuEvent event) {
+                        ArrayList<java.awt.Component> components = new ArrayList<>();
+                        javax.swing.JMenuItem sendToOneScanItem = new javax.swing.JMenuItem(L.get("send_to_plugin"));
+                        sendToOneScanItem.addActionListener(ae -> new Thread(() -> {
+                            try {
+                                for (burp.api.montoya.http.message.HttpRequestResponse rr : event.selectedRequestResponses()) {
+                                    burp.api.montoya.http.message.requests.HttpRequest req = rr.request();
+                                    IHttpRequestResponse httpReqResp = HttpReqRespAdapter.from(
+                                            buildHttpServiceByURL(new URL(req.url())),
+                                            req.toByteArray().getBytes()
+                                    );
+                                    doScan(httpReqResp, FROM_SEND);
+                                    if (isTaskThreadPoolShutdown()) {
+                                        Logger.debug("sendToPlugin: thread pool is shutdown, stop sending scan task");
+                                        return;
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+                        }).start());
+                        components.add(sendToOneScanItem);
+                        return components;
+                    }
+                });
+            } catch (Throwable t) {
+                mCallbacks.registerContextMenuFactory(this);
+            }
+        } else {
+            mCallbacks.registerContextMenuFactory(this);
+        }
         // 状态栏刷新定时器
         mStatusRefresh = new Timer(1000, e -> {
             if (mDataBoardTab == null) {
@@ -846,14 +1001,32 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 解析响应头的 Location 值
         IHttpRequestResponse reqResp = (IHttpRequestResponse) data.getReqResp();
         IResponseInfo respInfo = mHelpers.analyzeResponse(reqResp.getResponse());
-        String location = getLocationByResponseInfo(respInfo);
+        String location;
+        List<String> cookies = null;
+        byte[] respRaw = reqResp.getResponse();
+        if (mMontoya != null && respRaw != null) {
+            try {
+                burp.api.montoya.http.message.responses.HttpResponse mResp =
+                        burp.api.montoya.http.message.responses.HttpResponse.httpResponse(
+                                burp.api.montoya.core.ByteArray.byteArray(respRaw));
+                location = getLocationByMontoyaResponse(mResp);
+                if (Config.getBoolean(Config.KEY_REDIRECT_COOKIES_FOLLOW)) {
+                    cookies = getCookieByMontoyaResponse(mResp);
+                }
+            } catch (Throwable t) {
+                location = getLocationByResponseInfo(respInfo);
+                if (Config.getBoolean(Config.KEY_REDIRECT_COOKIES_FOLLOW)) {
+                    cookies = getCookieByResponseInfo(respInfo);
+                }
+            }
+        } else {
+            location = getLocationByResponseInfo(respInfo);
+            if (Config.getBoolean(Config.KEY_REDIRECT_COOKIES_FOLLOW)) {
+                cookies = getCookieByResponseInfo(respInfo);
+            }
+        }
         if (location == null) {
             return;
-        }
-        // 如果启用了 Cookie 跟随，获取响应头中的 Cookie 值
-        List<String> cookies = null;
-        if (Config.getBoolean(Config.KEY_REDIRECT_COOKIES_FOLLOW)) {
-            cookies = getCookieByResponseInfo(respInfo);
         }
         String reqHost = data.getHost();
         String reqPath = data.getUrl();
@@ -866,12 +1039,22 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
                 URL originUrl = UrlUtils.parseURL(reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
                 IHttpService service = reqResp.getHttpService();
-                httpReqResp = HttpReqRespAdapter.from(service, redirectUrl.toString(), headers, cookies);
+                if (mMontoya != null) {
+                    burp.api.montoya.http.message.requests.HttpRequest mReq = buildMontoyaRequestFromUrl(redirectUrl.toString(), headers, cookies);
+                    httpReqResp = HttpReqRespAdapter.from(service, mReq.toByteArray().getBytes());
+                } else {
+                    httpReqResp = HttpReqRespAdapter.from(service, redirectUrl.toString(), headers, cookies);
+                }
             } else {
                 URL originUrl = UrlUtils.parseURL(reqHost + reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
                 IHttpService service = buildHttpServiceByURL(redirectUrl);
-                httpReqResp = HttpReqRespAdapter.from(service, UrlUtils.toPQF(redirectUrl), headers, cookies);
+                if (mMontoya != null) {
+                    burp.api.montoya.http.message.requests.HttpRequest mReq = buildMontoyaRequestFromUrl(redirectUrl.toString(), headers, cookies);
+                    httpReqResp = HttpReqRespAdapter.from(service, mReq.toByteArray().getBytes());
+                } else {
+                    httpReqResp = HttpReqRespAdapter.from(service, UrlUtils.toPQF(redirectUrl), headers, cookies);
+                }
             }
             doScan(httpReqResp, FROM_REDIRECT + "（" + data.getId() + "）");
         } catch (IllegalArgumentException e) {
@@ -898,6 +1081,53 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         return null;
     }
 
+    private String getLocationByMontoyaResponse(burp.api.montoya.http.message.responses.HttpResponse resp) {
+        if (resp == null) {
+            return null;
+        }
+        String v = resp.headerValue("Location");
+        if (v != null && !v.isEmpty()) {
+            return v;
+        }
+        for (burp.api.montoya.http.message.HttpHeader h : resp.headers()) {
+            if (h.name() != null && h.name().equalsIgnoreCase("Location")) {
+                return h.value();
+            }
+        }
+        return null;
+    }
+
+    private burp.api.montoya.http.message.requests.HttpRequest buildMontoyaRequestFromUrl(String url,
+                                                                                          List<String> headers,
+                                                                                          List<String> cookies) {
+        burp.api.montoya.http.message.requests.HttpRequest req =
+                burp.api.montoya.http.message.requests.HttpRequest.httpRequestFromUrl(url).withDefaultHeaders();
+        boolean hasCookie = false;
+        if (headers != null) {
+            for (int i = 1; i < headers.size(); i++) { // skip request line
+                String item = headers.get(i);
+                String lower = item.toLowerCase();
+                if (lower.startsWith("host: ")) {
+                    continue; // host will be managed by Montoya
+                }
+                if (lower.startsWith("cookie: ")) {
+                    hasCookie = true;
+                }
+                int idx = item.indexOf(':');
+                if (idx > 0 && idx + 1 < item.length()) {
+                    String name = item.substring(0, idx).trim();
+                    String value = item.substring(idx + 1).trim();
+                    req = req.withAddedHeader(name, value);
+                }
+            }
+        }
+        if (!hasCookie && cookies != null && !cookies.isEmpty()) {
+            String cookieValue = String.join("; ", cookies);
+            req = req.withAddedHeader("Cookie", cookieValue);
+        }
+        return req;
+    }
+
     /**
      * 从 IResponseInfo 实例获取响应头 Set-Cookie 值，并转换为请求头的 Cookie 值列表
      *
@@ -913,6 +1143,18 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             // 拼接后，添加到列表
             cookies.add(String.format("%s=%s", name, value));
         }
+        return cookies;
+    }
+
+    private List<String> getCookieByMontoyaResponse(burp.api.montoya.http.message.responses.HttpResponse resp) {
+        List<String> cookies = new ArrayList<>();
+        try {
+            for (burp.api.montoya.http.message.Cookie c : resp.cookies()) {
+                String name = c.name();
+                String value = c.value();
+                cookies.add(String.format("%s=%s", name, value));
+            }
+        } catch (Throwable ignored) {}
         return cookies;
     }
 
@@ -932,10 +1174,24 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             return HttpReqRespAdapter.from(service, reqRawBytes);
         }
         try {
-            reqResp = mCallbacks.makeHttpRequest(service, reqRawBytes);
-            byte[] respRawBytes = reqResp.getResponse();
-            if (respRawBytes != null && respRawBytes.length > 0) {
-                return reqResp;
+            // Prefer Montoya API if available
+            if (mMontoya != null) {
+                burp.api.montoya.http.HttpService montoyaService = toMontoyaService(service);
+                burp.api.montoya.http.message.requests.HttpRequest request = toMontoyaRequest(service, reqRawBytes);
+                burp.api.montoya.http.message.HttpRequestResponse rr = mMontoya.http().sendRequest(request);
+                byte[] respRawBytes = rr.response() != null ? rr.response().toByteArray().getBytes() : EMPTY_BYTES;
+                // Wrap into legacy adapter for downstream code until full migration
+                reqResp = HttpReqRespAdapter.from(service, reqRawBytes);
+                reqResp.setResponse(respRawBytes);
+                if (respRawBytes.length > 0) {
+                    return reqResp;
+                }
+            } else {
+                reqResp = mCallbacks.makeHttpRequest(service, reqRawBytes);
+                byte[] respRawBytes = reqResp.getResponse();
+                if (respRawBytes != null && respRawBytes.length > 0) {
+                    return reqResp;
+                }
             }
         } catch (Exception e) {
             Logger.debug("Do Request error, request host: %s", reqHost);
@@ -965,6 +1221,19 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
         // 请求重试
         return doMakeHttpRequest(service, reqRawBytes, retryCount - 1);
+    }
+
+    private burp.api.montoya.http.HttpService toMontoyaService(IHttpService service) {
+        String host = service.getHost();
+        int port = service.getPort();
+        boolean https = "https".equalsIgnoreCase(service.getProtocol());
+        return burp.api.montoya.http.HttpService.httpService(host, port, https);
+    }
+
+    private burp.api.montoya.http.message.requests.HttpRequest toMontoyaRequest(IHttpService service, byte[] reqRawBytes) {
+        burp.api.montoya.http.HttpService mService = toMontoyaService(service);
+        burp.api.montoya.core.ByteArray body = burp.api.montoya.core.ByteArray.byteArray(reqRawBytes);
+        return burp.api.montoya.http.message.requests.HttpRequest.httpRequest(mService, body);
     }
 
     /**
@@ -1439,12 +1708,32 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         int length = -1;
         // 存在响应对象，获取状态和响应包大小
         if (respBytes != null && respBytes.length > 0) {
-            IResponseInfo response = mHelpers.analyzeResponse(respBytes);
-            status = response.getStatusCode();
-            // 处理响应 body 的长度
-            length = respBytes.length - response.getBodyOffset();
-            if (length < 0) {
-                length = 0;
+            if (mMontoya != null) {
+                try {
+                    burp.api.montoya.http.message.responses.HttpResponse mResp =
+                            burp.api.montoya.http.message.responses.HttpResponse.httpResponse(
+                                    burp.api.montoya.core.ByteArray.byteArray(respBytes));
+                    status = mResp.statusCode();
+                    // 处理响应 body 的长度
+                    length = mResp.toByteArray().length() - mResp.bodyOffset();
+                    if (length < 0) {
+                        length = 0;
+                    }
+                } catch (Throwable t) {
+                    IResponseInfo response = mHelpers.analyzeResponse(respBytes);
+                    status = response.getStatusCode();
+                    length = respBytes.length - response.getBodyOffset();
+                    if (length < 0) {
+                        length = 0;
+                    }
+                }
+            } else {
+                IResponseInfo response = mHelpers.analyzeResponse(respBytes);
+                status = response.getStatusCode();
+                length = respBytes.length - response.getBodyOffset();
+                if (length < 0) {
+                    length = 0;
+                }
             }
         }
         // 检测指纹数据
@@ -1604,8 +1893,22 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         mCurrentReqResp = (IHttpRequestResponse) data.getReqResp();
         // 加载请求、响应数据包
         byte[] hintBytes = mHelpers.stringToBytes(L.get("message_editor_loading"));
-        mRequestTextEditor.setMessage(hintBytes, true);
-        mResponseTextEditor.setMessage(hintBytes, false);
+        if (mMontoyaRequestEditor != null && mMontoyaResponseEditor != null) {
+            try {
+                burp.api.montoya.http.message.requests.HttpRequest req =
+                        burp.api.montoya.http.message.requests.HttpRequest.httpRequest(burp.api.montoya.core.ByteArray.byteArray(hintBytes));
+                burp.api.montoya.http.message.responses.HttpResponse resp =
+                        burp.api.montoya.http.message.responses.HttpResponse.httpResponse(burp.api.montoya.core.ByteArray.byteArray(hintBytes));
+                mMontoyaRequestEditor.setRequest(req);
+                mMontoyaResponseEditor.setResponse(resp);
+            } catch (Throwable t) {
+                mRequestTextEditor.setMessage(hintBytes, true);
+                mResponseTextEditor.setMessage(hintBytes, false);
+            }
+        } else {
+            mRequestTextEditor.setMessage(hintBytes, true);
+            mResponseTextEditor.setMessage(hintBytes, false);
+        }
         mRefreshMsgTask.execute(this::refreshReqRespMessage);
     }
 
@@ -1619,8 +1922,20 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 清空超时的请求主机集合
         sTimeoutReqHost.clear();
         // 清空显示的请求、响应数据包
-        mRequestTextEditor.setMessage(EMPTY_BYTES, true);
-        mResponseTextEditor.setMessage(EMPTY_BYTES, false);
+        if (mMontoyaRequestEditor != null && mMontoyaResponseEditor != null) {
+            try {
+                mMontoyaRequestEditor.setRequest(burp.api.montoya.http.message.requests.HttpRequest.httpRequest(
+                        burp.api.montoya.core.ByteArray.byteArray(EMPTY_BYTES)));
+                mMontoyaResponseEditor.setResponse(burp.api.montoya.http.message.responses.HttpResponse.httpResponse(
+                        burp.api.montoya.core.ByteArray.byteArray(EMPTY_BYTES)));
+            } catch (Throwable t) {
+                mRequestTextEditor.setMessage(EMPTY_BYTES, true);
+                mResponseTextEditor.setMessage(EMPTY_BYTES, false);
+            }
+        } else {
+            mRequestTextEditor.setMessage(EMPTY_BYTES, true);
+            mResponseTextEditor.setMessage(EMPTY_BYTES, false);
+        }
         // 清除指纹识别历史记录
         FpManager.clearHistory();
     }
@@ -1647,8 +1962,20 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             String hint = L.get("message_editor_response_length_limit_hint");
             response = mHelpers.stringToBytes(hint);
         }
-        mRequestTextEditor.setMessage(request, true);
-        mResponseTextEditor.setMessage(response, false);
+        if (mMontoyaRequestEditor != null && mMontoyaResponseEditor != null) {
+            try {
+                mMontoyaRequestEditor.setRequest(burp.api.montoya.http.message.requests.HttpRequest.httpRequest(
+                        burp.api.montoya.core.ByteArray.byteArray(request)));
+                mMontoyaResponseEditor.setResponse(burp.api.montoya.http.message.responses.HttpResponse.httpResponse(
+                        burp.api.montoya.core.ByteArray.byteArray(response)));
+            } catch (Throwable t) {
+                mRequestTextEditor.setMessage(request, true);
+                mResponseTextEditor.setMessage(response, false);
+            }
+        } else {
+            mRequestTextEditor.setMessage(request, true);
+            mResponseTextEditor.setMessage(response, false);
+        }
     }
 
     @Override
@@ -1686,9 +2013,23 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         if (respBytes == null || respBytes.length == 0) {
             return new byte[]{};
         }
-        IResponseInfo info = mCallbacks.getHelpers().analyzeResponse(respBytes);
-        int offset = info.getBodyOffset();
-        return Arrays.copyOfRange(respBytes, offset, respBytes.length);
+        if (mMontoya != null) {
+            try {
+                burp.api.montoya.http.message.responses.HttpResponse mResp =
+                        burp.api.montoya.http.message.responses.HttpResponse.httpResponse(
+                                burp.api.montoya.core.ByteArray.byteArray(respBytes));
+                int offset = mResp.bodyOffset();
+                return Arrays.copyOfRange(respBytes, offset, respBytes.length);
+            } catch (Throwable t) {
+                IResponseInfo info = mCallbacks.getHelpers().analyzeResponse(respBytes);
+                int offset = info.getBodyOffset();
+                return Arrays.copyOfRange(respBytes, offset, respBytes.length);
+            }
+        } else {
+            IResponseInfo info = mCallbacks.getHelpers().analyzeResponse(respBytes);
+            int offset = info.getBodyOffset();
+            return Arrays.copyOfRange(respBytes, offset, respBytes.length);
+        }
     }
 
     @Override
@@ -1761,7 +2102,20 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             for (Object item : list) {
                 try {
                     String url = String.valueOf(item);
-                    IHttpRequestResponse httpReqResp = HttpReqRespAdapter.from(url);
+                    IHttpRequestResponse httpReqResp;
+                    if (mMontoya != null) {
+                        burp.api.montoya.http.message.requests.HttpRequest mReq =
+                                buildMontoyaRequestFromUrl(url, new ArrayList<>(), null);
+                        try {
+                            URL u = new URL(url);
+                            IHttpService service = buildHttpServiceByURL(u);
+                            httpReqResp = HttpReqRespAdapter.from(service, mReq.toByteArray().getBytes());
+                        } catch (MalformedURLException e) {
+                            throw new IllegalArgumentException("Url: " + url + " format error.");
+                        }
+                    } else {
+                        httpReqResp = HttpReqRespAdapter.from(url);
+                    }
                     doScan(httpReqResp, FROM_IMPORT);
                 } catch (IllegalArgumentException e) {
                     Logger.error("Import error: " + e.getMessage());

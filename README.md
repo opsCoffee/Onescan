@@ -1,7 +1,8 @@
 <div align="center">
 <h1>OneScan</h1>
-<p>智能递归目录扫描 BurpSuite 插件</p>
+<p>智能递归目录扫描 Burp Suite 插件</p>
 <p><em>深度挖掘隐藏资产，发现更多安全风险</em></p>
+<p><strong>当前版本</strong>: v2.3.0（Montoya API）</p>
 </div>
 
 ## 插件介绍
@@ -37,7 +38,7 @@ https://www.xxxxxx.com/a/b/c/api-docs
 https://www.xxxxxx.com/a/b/c/xxxxxx.zip
 ```
 
-## 插件安装
+## 插件安装（v2.3.0）
 
 BurpSuite 安装流程如下（不同版本可能有所差异）：
 
@@ -72,7 +73,7 @@ C:\Users\<用户名>\.config\OneScan\
 
 ![](imgs/use_payload_scan.png)
 
-### 辅助面板
+### 辅助面板（指纹与 JSON 提取）
 
 提取请求和响应包中 **JSON** 格式的字段（插件 `1.0.0` 版本新增 `Fingerprint` 指纹信息展示）
 
@@ -381,4 +382,3 @@ Connection: close
 面板展示如下：
 
 ![](imgs/main_panel_test.png)
-

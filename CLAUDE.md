@@ -58,14 +58,14 @@ onescan/
 │   │   └── resources/                 # 资源文件
 │   └── test/                          # 测试代码
 ├── target/             # 构建输出目录
-└── pom.xml             # Maven 配置文件 (v2.2.0)
+└── pom.xml             # Maven 配置文件 (v2.3.0)
 ```
 
 ### 插件架构设计
 
 #### 1. 入口与生命周期管理
 **核心类**: `burp.BurpExtender`
-- 实现接口：IBurpExtender, IProxyListener, ITab, IContextMenuFactory 等
+- 实现接口：Montoya `BurpExtension` + `extension.Extension`（最小桩），保留兼容型回退接口
 - 线程池管理：
   - 任务线程池：50 个线程处理扫描任务
   - 低频任务线程池：25 个线程处理 Proxy/Send/Redirect 任务
@@ -175,12 +175,12 @@ HTTP请求/响应 -> 异步识别线程 -> 规则匹配 -> 缓存结果 -> UI更
 4. 缓存识别结果（避免重复）
 5. 更新 UI 显示和颜色标记
 
-### 重定向处理机制
+### 重定向处理机制（Montoya 优先）
 1. 检测 30x 响应码
 2. 解析 Location 头
 3. 可选 Cookie 跟随
 4. 黑白名单过滤
-5. 递归扫描重定向目标
+ 5. 递归扫描重定向目标（构建 Montoya `HttpRequest`）
 
 ## 测试与调试
 
@@ -198,6 +198,7 @@ mvn clean test jacoco:report
 
 ### 调试技巧
 - 启用 `Constants.DEBUG = true` 查看详细日志
+- Montoya API 工厂在非 Burp 运行时不可用，相关测试做了跳过处理
 - 使用 Burp 的 Extender 标签查看输出
 - 监控线程池状态：`getActiveCount()`, `getQueueSize()`
 - 内存分析：关注去重集合大小
