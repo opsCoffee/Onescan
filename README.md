@@ -1,25 +1,19 @@
 <div align="center">
 <h1>OneScan</h1>
-<p>OneScan 是一款用于递归目录扫描的 BurpSuite 插件，为发现更深层次目录下隐藏的漏洞赋能</p>
-<div align="center">
-
-[![Repo stars](https://img.shields.io/github/stars/vaycore/OneScan)](https://github.com/vaycore/OneScan/stargazers)
-[![Downloads total](https://img.shields.io/github/downloads/vaycore/OneScan/total?label=Downloads)](https://github.com/vaycore/OneScan/releases)
-[![Repo tags](https://img.shields.io/github/v/tag/vaycore/OneScan?label=Latest)](https://github.com/vaycore/OneScan/tags)
-[![Downloads latest total](https://img.shields.io/github/downloads/vaycore/OneScan/latest/total?label=Downloads@latest)](https://github.com/vaycore/OneScan/releases)
-
-</div>
+<p>智能递归目录扫描 BurpSuite 插件</p>
+<p><em>深度挖掘隐藏资产，发现更多安全风险</em></p>
 </div>
 
 ## 插件介绍
 
-OneScan 插件的思路由 One 哥提供，我负责将 One 哥的思路进行编码变现。插件起初是为了发现站点深层目录下的 `Swagger-API` 接口文档，后面随着功能的完善和使用姿势的增加，目前可以完成：发现隐藏接口、发现敏感信息泄漏、测试未授权、越权接口等测试工作
+OneScan 是一款专业的递归目录扫描 BurpSuite 插件，采用智能指纹识别和动态变量技术，能够：
 
-> 参与开发人员：
->
-> - 主要开发: vaycore
-> - 后续更新功能: Rural.Dog
-> - 产品经理: 0ne_1
+- 🔍 **深度扫描**：递归发现多层级隐藏目录和文件
+- 🎯 **智能识别**：基于指纹库自动识别敏感接口和信息
+- 🚀 **高效扫描**：优化的扫描策略，减少无效请求
+- 🛡️ **安全测试**：发现未授权访问、越权、信息泄漏等安全问题
+
+> 由 vaycore 开发维护
 
 ### 简单示例
 
@@ -388,25 +382,3 @@ Connection: close
 
 ![](imgs/main_panel_test.png)
 
-## QQ交流群
-
-欢迎各位师傅加入 OneScan 交流群
-
-![772823734](imgs/chat_group.jpg)
-
-## 项目热度
-
-非常感谢各位师傅的关注和支持（如果觉得项目还不错，请给项目一个 `Star` 吧）
-
-<a href="https://star-history.com/#vaycore/OneScan&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=vaycore/OneScan&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=vaycore/OneScan&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=vaycore/OneScan&type=Date" />
- </picture>
-</a>
-
-## END
-
-- 代码写的很乱，还请师傅们见谅
-- 欢迎各位师傅提交 `Issues` 和 `Pull requests`，一起完善项目

@@ -1,4 +1,4 @@
-你的任务是帮我维护 onescan 项目，优先使用 mcp、深度思考、子代理来帮我分析、确认和完善如下todo：
+﻿你的任务是帮我搞定 OneScan 项目，优先使用 MCP、深度思考、子代理来分析、设计和完善下列 TODO：
 
 TODO list:
 
@@ -47,7 +47,7 @@ TODO list:
   - dataSource: response
     field: body
     method: iContains
-    content: 
+    content:
       - '"swagger":'
       - '"swaggerVersion":'
   - dataSource: response
