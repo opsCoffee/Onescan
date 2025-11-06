@@ -2,7 +2,59 @@
 
 TODO list:
 
-1. 请帮我分析，我希望优化，指纹管理面板的表格宽度自适应
+1. 请帮我深度思考分析，能否修改指纹配置文件，从如下原始格式保存成我希望的格式？
+- 指纹逻辑说明：
+  - 始终合并相同 dataSource + field + method 下不同 content
+  - 相同 dataSource + field + method 下不同 content 间的逻辑关系为 逻辑与
+  - 但是，逻辑或需要写入在一条 content 中，使用正则表达式实现（同时推荐用户也如此实现）
+- 不要过度设计
+原始格式
+```yaml
+- name: Swagger-UI
+  enabled: true
+  color: red
+  matchers-condition: and
+  matchers:
+  - dataSource: response
+    field: body
+    method: iContains
+    content: '"swagger":'
+  - dataSource: response
+    field: title
+    method: contains
+    content: Swagger UI
+- name: Swagger-UI
+  enabled: true
+  color: red
+  matchers-condition: and
+  matchers:
+  - dataSource: response
+    field: body
+    method: iContains
+    content: '"swaggerVersion":'
+  - dataSource: response
+    field: title
+    method: contains
+    content: Swagger UI
+```
+我希望的格式
+```yaml
+- name: Swagger-UI
+  enabled: true
+  color: red
+  matchers-condition: and
+  matchers:
+  - dataSource: response
+    field: body
+    method: iContains
+    content: 
+      - '"swagger":'
+      - '"swaggerVersion":'
+  - dataSource: response
+    field: title
+    method: contains
+    content: Swagger UI
+```
 
 rules:
 

@@ -204,7 +204,9 @@ public class FpConfig {
                 DumperOptions options = new DumperOptions();
                 options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
                 options.setPrettyFlow(true);
+                // 基础缩进 2 空格；列表项再额外缩进 2 空格，提升 content 列表的可读性
                 options.setIndent(2);
+                options.setIndicatorIndent(2);
                 Representer representer = new Representer(options) {
                     @Override
                     protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
@@ -223,13 +225,14 @@ public class FpConfig {
                 String columnId = columns != null && !columns.isEmpty() ? columns.get(0).getId() : "npv";
                 root.put("name", columnName);
 
+                // 聚合输出：同名条目合并，并将相同 dataSource+field+method 的不同 content 合并为列表（逻辑与）
                 java.util.List<java.util.Map<String, Object>> items = new java.util.ArrayList<>();
                 if (list != null) {
+                    java.util.Map<String, java.util.Map<String, Object>> agg = new java.util.LinkedHashMap<>();
                     for (FpData data : list) {
                         if (data == null || data.getRules() == null || data.getRules().isEmpty()) {
                             continue;
                         }
-                        // 从 params 中读取条目名称
                         String itemName = null;
                         if (data.getParams() != null) {
                             for (FpData.Param p : data.getParams()) {
@@ -239,27 +242,80 @@ public class FpConfig {
                                 }
                             }
                         }
-                        // 将 OR 的每个 AND 组拆分为独立条目，保持语义一致
+                        if (itemName == null) {
+                            itemName = columnName;
+                        }
+                        java.util.Map<String, Object> holder = agg.get(itemName);
+                        if (holder == null) {
+                            holder = new java.util.LinkedHashMap<>();
+                            holder.put("name", itemName);
+                            holder.put("enabled", data.isEnabled());
+                            if (data.getColor() != null) holder.put("color", data.getColor());
+                            holder.put("rules", new java.util.ArrayList<FpRule>());
+                            agg.put(itemName, holder);
+                        } else {
+                            boolean enabled = Boolean.TRUE.equals(holder.get("enabled")) || data.isEnabled();
+                            holder.put("enabled", enabled);
+                            if (holder.get("color") == null && data.getColor() != null) {
+                                holder.put("color", data.getColor());
+                            }
+                        }
+                        @SuppressWarnings("unchecked")
+                        java.util.List<FpRule> allRules = (java.util.List<FpRule>) holder.get("rules");
                         for (java.util.ArrayList<FpRule> group : data.getRules()) {
                             if (group == null || group.isEmpty()) continue;
-                            java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
-                            if (itemName != null) item.put("name", itemName);
-                            item.put("enabled", data.isEnabled());
-                            if (data.getColor() != null) item.put("color", data.getColor());
-                            item.put("matchers-condition", "and");
-                            java.util.List<java.util.Map<String, Object>> matchers = new java.util.ArrayList<>();
-                            for (FpRule r : group) {
-                                if (r == null) continue;
-                                java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
-                                m.put("dataSource", r.getDataSource());
-                                m.put("field", r.getField());
-                                m.put("method", r.getMethod());
-                                m.put("content", r.getContent());
-                                matchers.add(m);
-                            }
-                            item.put("matchers", matchers);
-                            items.add(item);
+                            allRules.addAll(group);
                         }
+                    }
+                    for (java.util.Map<String, Object> holder : agg.values()) {
+                        java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
+                        item.put("name", holder.get("name"));
+                        item.put("enabled", holder.get("enabled"));
+                        if (holder.get("color") != null) item.put("color", holder.get("color"));
+                        item.put("matchers-condition", "and");
+                        @SuppressWarnings("unchecked")
+                        java.util.List<FpRule> allRules = (java.util.List<FpRule>) holder.get("rules");
+                        java.util.Map<String, java.util.Map<String, Object>> merged = new java.util.LinkedHashMap<>();
+                        for (FpRule r : allRules) {
+                            if (r == null) continue;
+                            String ds = r.getDataSource();
+                            String field = r.getField();
+                            String method = r.getMethod();
+                            String contentVal = r.getContent();
+                            String key = String.valueOf(ds) + "\u0000" + String.valueOf(field) + "\u0000" + String.valueOf(method);
+                            java.util.Map<String, Object> m = merged.get(key);
+                            if (m == null) {
+                                m = new java.util.LinkedHashMap<>();
+                                m.put("dataSource", ds);
+                                m.put("field", field);
+                                m.put("method", method);
+                                java.util.List<String> contents = new java.util.ArrayList<>();
+                                if (contentVal != null) contents.add(contentVal);
+                                m.put("content", contents);
+                                merged.put(key, m);
+                            } else {
+                                @SuppressWarnings("unchecked")
+                                java.util.List<String> contents = (java.util.List<String>) m.get("content");
+                                if (contentVal != null && (contents.isEmpty() || !contents.contains(contentVal))) {
+                                    contents.add(contentVal);
+                                }
+                            }
+                        }
+                        java.util.List<java.util.Map<String, Object>> matchers = new java.util.ArrayList<>();
+                        for (java.util.Map<String, Object> m : merged.values()) {
+                            @SuppressWarnings("unchecked")
+                            java.util.List<String> contents = (java.util.List<String>) m.get("content");
+                            if (contents == null || contents.isEmpty()) continue;
+                            if (contents.size() == 1) {
+                                m.put("content", contents.get(0));
+                            } else {
+                                m.put("condition", "and");
+                                m.put("content", contents);
+                            }
+                            matchers.add(m);
+                        }
+                        item.put("matchers", matchers);
+                        items.add(item);
                     }
                 }
                 root.put("list", items);
