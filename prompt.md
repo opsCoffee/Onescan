@@ -461,9 +461,6 @@ grep -r "password\|secret\|api_key" src/ --exclude-dir=test
 
 # 检查敏感信息泄漏
 git secrets --scan
-
-# SQL 注入检查（使用 SQLMap 或类似工具）
-# XSS 检查（使用 OWASP ZAP）
 ```
 
 #### 5. 集成测试与端到端测试
