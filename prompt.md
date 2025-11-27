@@ -140,6 +140,221 @@
 
 请以结构化报告的形式呈现分析结果，包含问题摘要、详细说明和修复建议三个部分。
 
+---
+
+## 报告输出规范
+
+### 报告结构要求
+
+报告必须保存为：`.agent/code_review_report.md`
+
+报告必须包含以下固定结构：
+
+```markdown
+# 代码审查报告
+
+**项目名称**：[项目名称]  
+**审查日期**：[YYYY-MM-DD]  
+**审查范围**：[描述审查的模块/文件范围]  
+**审查人员**：AI Code Reviewer  
+
+---
+
+## 📊 执行摘要
+
+### 总体评分
+- **代码质量**：⭐⭐⭐⭐☆ (4/5)
+- **安全性**：⭐⭐⭐☆☆ (3/5)
+- **性能**：⭐⭐⭐⭐☆ (4/5)
+- **可维护性**：⭐⭐⭐☆☆ (3/5)
+
+### 问题统计
+| 优先级 | 数量 | 占比 |
+|--------|------|------|
+| 🔴 高  | X    | XX%  |
+| 🟡 中  | X    | XX%  |
+| 🟢 低  | X    | XX%  |
+| **总计** | **X** | **100%** |
+
+### 关键发现
+- [简要列出 3-5 个最重要的发现]
+
+---
+
+## 🔍 详细问题清单
+
+### 1. [问题类别] - [问题标题]
+
+**优先级**：🔴 高 / 🟡 中 / 🟢 低  
+**影响范围**：[性能/安全/可维护性/用户体验]  
+**发现维度**：[对应 17 个审查维度中的哪一个]
+
+#### 问题描述
+[清晰描述问题是什么，为什么是问题]
+
+#### 问题位置
+```
+文件：src/main/java/com/example/Example.java
+行号：L123-L145
+函数：processData()
+```
+
+#### 代码示例
+```java
+// 当前实现（有问题的代码）
+public void processData(List<String> data) {
+    for (int i = 0; i < data.size(); i++) {
+        for (int j = 0; j < data.size(); j++) {
+            // O(n²) 复杂度
+        }
+    }
+}
+```
+
+#### 影响分析
+- **性能影响**：数据量 > 1000 时响应时间超过 5 秒
+- **安全风险**：可能导致 DoS 攻击
+- **用户体验**：界面卡顿，用户体验差
+
+#### 修复建议
+**方案 1：使用 HashSet 优化（推荐）**
+```java
+// 优化后的实现 - O(n)
+public void processData(List<String> data) {
+    Set<String> dataSet = new HashSet<>(data);
+    for (String item : data) {
+        if (dataSet.contains(item)) {
+            // O(1) 查找
+        }
+    }
+}
+```
+
+**预期效果**：
+- 时间复杂度：O(n²) → O(n)
+- 性能提升：1000 条数据从 5s → 50ms（100倍提升）
+- 工作量估计：2 小时
+
+**方案 2：使用并行流（备选）**
+[如果有多个方案，列出备选方案]
+
+---
+
+### 2. [下一个问题...]
+
+[重复上述结构]
+
+---
+
+## 📈 数据流分析
+
+### 关键数据流图
+```mermaid
+graph LR
+    A[用户输入] --> B[参数验证]
+    B --> C[业务处理]
+    C --> D[数据持久化]
+    D --> E[响应返回]
+    
+    style B fill:#f9f,stroke:#333
+    style D fill:#bbf,stroke:#333
+```
+
+### 数据流问题汇总
+1. **验证缺失**：[位置] 缺少输入验证
+2. **数据泄漏**：[位置] 敏感数据未脱敏
+3. **转换错误**：[位置] 数据类型转换可能失败
+
+---
+
+## 🏗️ 架构问题
+
+### 模块耦合度分析
+```
+高耦合模块：
+- ModuleA ←→ ModuleB (双向依赖，需解耦)
+- ServiceX → 15 个依赖项 (上帝类，需拆分)
+```
+
+### SOLID 原则违反
+1. **单一职责违反**：`UserService` 同时处理认证、授权、用户管理
+2. **开闭原则违反**：添加新支付方式需修改 `PaymentProcessor`
+
+---
+
+## 🔒 安全问题汇总
+
+| 问题类型 | 位置 | 风险等级 | 修复状态 |
+|----------|------|----------|----------|
+| SQL 注入 | UserDao.java:L45 | 🔴 高 | 待修复 |
+| XSS 漏洞 | CommentController.java:L78 | 🟡 中 | 待修复 |
+| 硬编码密钥 | Config.java:L12 | 🔴 高 | 待修复 |
+
+---
+
+## ✅ 修复优先级路线图
+
+### Phase 1：紧急修复（1-3 天）
+- [ ] 🔴 修复 SQL 注入漏洞
+- [ ] 🔴 移除硬编码密钥
+- [ ] 🔴 修复内存泄漏问题
+
+### Phase 2：重要优化（1-2 周）
+- [ ] 🟡 优化 O(n²) 算法
+- [ ] 🟡 解耦 ModuleA 和 ModuleB
+- [ ] 🟡 添加缺失的错误处理
+
+### Phase 3：改进提升（1 个月）
+- [ ] 🟢 重构上帝类
+- [ ] 🟢 提升测试覆盖率
+- [ ] 🟢 改进代码可读性
+
+---
+
+## 📚 最佳实践建议
+
+1. **代码规范**：建议引入 Checkstyle/SpotBugs 自动化检查
+2. **测试策略**：关键业务逻辑测试覆盖率应达到 80%+
+3. **文档完善**：API 接口缺少 Swagger 文档
+4. **监控增强**：建议添加关键业务指标监控
+
+---
+
+## 📎 附录
+
+### 审查工具
+- 静态分析：SonarQube
+- 依赖检查：OWASP Dependency-Check
+- 性能分析：JProfiler
+
+### 参考资料
+- [Java 最佳实践](https://example.com)
+- [安全编码规范](https://example.com)
+```
+
+### 报告风格要求
+
+1. **使用 Emoji 图标**：增强可读性
+   - 🔴 高优先级
+   - 🟡 中优先级
+   - 🟢 低优先级
+   - ⭐ 评分
+   - 📊 数据统计
+   - 🔍 详细分析
+   - 🏗️ 架构
+   - 🔒 安全
+   - ✅ 行动项
+
+2. **使用表格**：结构化数据展示
+
+3. **使用代码块**：所有代码必须有语法高亮
+
+4. **使用 Mermaid 图**：复杂关系用图表展示
+
+5. **使用对比格式**：修复前后代码对比
+
+6. **量化指标**：所有性能改进必须有具体数字
+
 **如果 TODO list 为空或选择暂停**：创建 `.agent/completed` 文件并退出。
 
 ## 执行规则:
@@ -181,16 +396,182 @@
 - `refactor(errors): 使用泛型trait消除错误处理函数重复`
 
 ### 测试验证：
+
+#### 1. 基础编译与构建验证
 每个任务完成后必须执行：
+
 ```bash
-# 运行所有测试
+# 清理并编译（检查编译错误）
+mvn clean compile
+
+# 运行所有单元测试
 mvn test
 
-# 检查编译警告
+# 生成测试覆盖率报告
+mvn test jacoco:report
+
+# 完整构建（包含集成测试）
 mvn clean package
 
-# 格式化检查
-mvn clean compile dependency-check:check
+# 检查测试覆盖率是否达标（目标：80%+）
+mvn verify
+```
+
+#### 2. 代码质量检查
+
+```bash
+# 静态代码分析（SpotBugs + PMD）
+mvn spotbugs:check pmd:check
+
+# 代码风格检查
+mvn checkstyle:check
+
+# 依赖安全漏洞扫描
+mvn dependency-check:check
+
+# SonarQube 分析（如果配置）
+mvn sonar:sonar
+```
+
+#### 3. 性能基准测试
+
+```bash
+# JMH 性能基准测试（如果有）
+mvn clean install
+java -jar target/benchmarks.jar
+
+# 性能回归检查
+# 确保关键方法的性能不低于基线
+```
+
+**性能验证标准**：
+- 关键 API 响应时间 < 100ms (P95)
+- 数据库查询时间 < 50ms (P95)
+- 内存使用增长 < 10%
+- CPU 使用率 < 70%
+
+#### 4. 安全验证
+
+```bash
+# OWASP 依赖检查
+mvn org.owasp:dependency-check-maven:check
+
+# 查找硬编码密钥/密码
+grep -r "password\|secret\|api_key" src/ --exclude-dir=test
+
+# 检查敏感信息泄漏
+git secrets --scan
+
+# SQL 注入检查（使用 SQLMap 或类似工具）
+# XSS 检查（使用 OWASP ZAP）
+```
+
+#### 5. 集成测试与端到端测试
+
+```bash
+# 启动测试环境
+docker-compose -f docker-compose.test.yml up -d
+
+# 运行集成测试
+mvn verify -P integration-test
+
+# 运行端到端测试
+mvn verify -P e2e-test
+
+# 清理测试环境
+docker-compose -f docker-compose.test.yml down
+```
+
+#### 6. 回归测试
+
+```bash
+# 运行完整回归测试套件
+mvn clean verify -P regression-test
+
+# 检查是否有测试失败
+# 检查是否有新的警告或错误
+```
+
+#### 7. 验证检查清单
+
+每次修改后必须确认：
+
+- [ ] ✅ 所有单元测试通过
+- [ ] ✅ 测试覆盖率 ≥ 80%（关键模块 ≥ 90%）
+- [ ] ✅ 无编译警告
+- [ ] ✅ 无静态分析错误（SpotBugs/PMD）
+- [ ] ✅ 代码风格检查通过（Checkstyle）
+- [ ] ✅ 无安全漏洞（OWASP Dependency-Check）
+- [ ] ✅ 性能无回归（关键指标不下降）
+- [ ] ✅ 集成测试通过
+- [ ] ✅ 文档已更新（如有 API 变更）
+- [ ] ✅ CHANGELOG.md 已更新
+
+#### 8. 测试失败处理流程
+
+如果测试失败：
+
+1. **记录失败信息**到 `.agent/test_failures.log`
+   ```
+   [时间戳] 测试失败
+   文件：[修改的文件]
+   测试：[失败的测试名称]
+   错误：[错误信息]
+   堆栈：[堆栈跟踪]
+   ```
+
+2. **分析失败原因**
+   - 是新引入的 bug？
+   - 是测试本身的问题？
+   - 是环境问题？
+
+3. **回滚或修复**
+   ```bash
+   # 如果是代码问题，回滚变更
+   git reset --hard HEAD~1
+   
+   # 或者修复问题后重新测试
+   mvn clean test
+   ```
+
+4. **记录到问题跟踪**
+   - 更新 `.agent/errors.log`
+   - 如果连续 3 次失败，停止执行并报告
+
+#### 9. 性能监控
+
+```bash
+# 使用 JProfiler 或 VisualVM 进行性能分析
+# 检查内存泄漏
+jmap -dump:live,format=b,file=heap.bin [PID]
+
+# 分析 GC 日志
+java -Xlog:gc* -jar target/app.jar
+
+# 火焰图生成（如果需要）
+```
+
+#### 10. 自动化测试报告
+
+测试完成后生成报告：`.agent/test_report.md`
+
+```markdown
+# 测试报告
+
+**测试时间**：[时间戳]
+**提交哈希**：[Git commit hash]
+
+## 测试结果摘要
+- ✅ 单元测试：XX/XX 通过
+- ✅ 集成测试：XX/XX 通过
+- ✅ 覆盖率：XX%
+- ✅ 性能测试：通过
+
+## 详细结果
+[详细测试结果]
+
+## 问题列表
+[如果有失败的测试]
 ```
 
 ### 完成后操作：
