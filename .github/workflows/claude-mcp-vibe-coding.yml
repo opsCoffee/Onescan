@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'prompt.md'
+  schedule:
+    - cron: '0 16 * * *'  # 东八区凌晨0点 (UTC 16:00)
 
 env:
   CARGO_TERM_COLOR: always
@@ -13,6 +15,10 @@ jobs:
   process-with-claude:
     name: 使用 Claude 处理代码
     runs-on: ubuntu-latest
+    # 并发控制：新任务触发时取消旧任务，避免 git push 冲突
+    concurrency:
+      group: claude-code-processing
+      cancel-in-progress: true
     permissions:
       contents: write
       pull-requests: write
@@ -31,7 +37,7 @@ jobs:
           # 查看当前远程仓库地址
           git remote -v
           # 修改远程仓库地址指向Gitea[citation:1][citation:3][citation:6]
-          git remote set-url origin https://${{ secrets.GITEA_USERNAME }}:${{ secrets.GITEA_TOKEN }}@git@git.httpx.online:0xMonkey/onescan.git
+          git remote set-url origin https://${{ secrets.GITEA_USERNAME }}:${{ secrets.GITEA_TOKEN }}@git.httpx.online:0xMonkey/onescan.git
           # 验证修改结果
           git remote -v
 
@@ -58,7 +64,7 @@ jobs:
       # 步骤5: 全局安装Claude Code
       - name: 全局安装 Claude Code
         run: |
-          npm install -g @anthropic-ai/claude-code
+          npm install -g @anthropic-ai/claude-code@2.0.26
 
       # 步骤6: 配置Claude Code环境
       - name: 配置 Claude Code 环境
@@ -103,14 +109,34 @@ jobs:
           CLAUDE_CODE_DISABLE_COMMIT_SIGNATURES: 1  # 尝试性添加（可能无效）
         run: |
           while :; do
+            # 执行主要处理任务
             cat prompt.md | claude -p --dangerously-skip-permissions
-            # 检查完成标记文件，存在则退出循环
+            
+            # 检查是否有未提交的变更
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "检测到未提交的变更，调用Claude进行代码审查和提交"
+              claude -p "请分析当前git仓库状态，如果有变更：1. 显示变更摘要;2. 确认是否适合提交;3. 如适合，使用语义化commit格式提交;4. 推送到当前分支" --dangerously-skip-permissions
+            else
+              echo "没有检测到未提交的变更"
+            fi
+            
+            # 检查完成标记文件
             if [ -f .agent/completed ]; then
               echo "检测到 .agent/completed 文件，任务已完成，退出循环"
               break
             fi
+            
             # 短暂延迟，避免过快重试
-            sleep 2 && git push origin
+            sleep 2
           done
-          # 循环结束后，推送所有变更到远程仓库（Gitea）
+          
+          # 循环结束后，检查并推送最终状态
+          echo "检查最终状态..."
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "发现未提交的变更，进行提交..."
+            claude -p "请分析当前git仓库状态，如果有变更：1. 显示变更摘要;2. 确认是否适合提交;3. 如适合，使用语义化commit格式提交;4. 推送到当前分支" --dangerously-skip-permissions
+          fi
+          
+          # 最终推送到远程仓库
+          echo "推送到远程仓库..."
           git push origin
