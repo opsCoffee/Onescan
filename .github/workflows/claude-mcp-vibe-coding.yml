@@ -37,7 +37,7 @@ jobs:
           # 查看当前远程仓库地址
           git remote -v
           # 修改远程仓库地址指向Gitea[citation:1][citation:3][citation:6]
-          git remote set-url origin https://${{ secrets.GITEA_USERNAME }}:${{ secrets.GITEA_TOKEN }}@git.httpx.online:0xMonkey/onescan.git
+          git remote set-url origin https://${{ secrets.GITEA_USERNAME }}:${{ secrets.GITEA_TOKEN }}@git.httpx.online/0xMonkey/onescan.git
           # 验证修改结果
           git remote -v
 
