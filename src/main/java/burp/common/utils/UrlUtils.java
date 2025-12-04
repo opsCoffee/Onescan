@@ -223,7 +223,7 @@ public class UrlUtils {
             path = path.replace("/./", "/");
         }
         // 处理结尾的目录跳转
-        if (path.endsWith("/.")) {
+        if (path.endsWith("/.") && path.length() >= 2) {
             path = path.substring(0, path.length() - 2) + "/";
         }
         // 处理 '/../' 目录跳转
@@ -240,7 +240,7 @@ public class UrlUtils {
             path = leftParentPath + rightPath;
         }
         // 处理结尾的目录跳转
-        if (path.endsWith("/..")) {
+        if (path.endsWith("/..") && path.length() >= 3) {
             path = path.substring(0, path.length() - 3);
             path = getUrlParentPath(path);
         }
@@ -258,7 +258,7 @@ public class UrlUtils {
         if (StringUtils.isEmpty(path) || !path.contains("/") || path.equals("/")) {
             return "/";
         }
-        if (path.endsWith("/")) {
+        if (path.endsWith("/") && path.length() > 1) {
             path = path.substring(0, path.length() - 1);
         }
         return path.substring(0, path.lastIndexOf("/") + 1);
