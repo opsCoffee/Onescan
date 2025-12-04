@@ -1,14 +1,17 @@
 package burp.onescan.common;
 
 import burp.common.log.Logger;
+import burp.common.utils.SafeRegex;
 import burp.common.utils.StringUtils;
-
-import java.util.regex.Pattern;
 
 /**
  * 指纹规则匹配方法
  * <p>
+ * @author kenyon
+ * @mail kenyon <kenyon@noreply.localhost>
+ * <p>
  * Created by vaycore on 2023-04-21.
+ * Refactored by kenyon on 2025-12-04: 使用 SafeRegex 防御 ReDoS 攻击
  */
 public class FpMethodHandler {
 
@@ -125,20 +128,18 @@ public class FpMethodHandler {
     }
 
     /**
-     * 检测正则匹配
+     * 检测正则匹配 (使用 SafeRegex 防御 ReDoS 攻击)
      *
      * @param data    数据源
      * @param content 匹配的内容
-     * @return true=匹配；false=不匹配
+     * @return true=匹配；false=不匹配或超时
      */
     public static boolean regex(String data, String content) {
-        try {
-            Pattern pattern = Pattern.compile(content);
-            return pattern.matcher(data).find();
-        } catch (Exception var3) {
-            Logger.error("Regex compile error: %s", var3.getMessage());
-            return false;
+        if (StringUtils.isEmpty(data)) {
+            data = "";
         }
+        // 使用带超时保护的安全正则匹配
+        return SafeRegex.find(data, content);
     }
 
     /**
@@ -153,20 +154,18 @@ public class FpMethodHandler {
     }
 
     /**
-     * 检测正则匹配（忽略大小写）
+     * 检测正则匹配（忽略大小写,使用 SafeRegex 防御 ReDoS 攻击)
      *
      * @param data    数据源
      * @param content 匹配的内容
-     * @return true=匹配；false=不匹配
+     * @return true=匹配；false=不匹配或超时
      */
     public static boolean iRegex(String data, String content) {
-        try {
-            Pattern pattern = Pattern.compile(content, Pattern.CASE_INSENSITIVE);
-            return pattern.matcher(data).find();
-        } catch (Exception var3) {
-            Logger.error("Regex compile error: %s", var3.getMessage());
-            return false;
+        if (StringUtils.isEmpty(data)) {
+            data = "";
         }
+        // 使用带超时保护的安全正则匹配 (忽略大小写)
+        return SafeRegex.findIgnoreCase(data, content);
     }
 
     /**
