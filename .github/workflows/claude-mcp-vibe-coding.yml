@@ -108,35 +108,5 @@ jobs:
           GIT_COMMITTER_EMAIL: kenyon@noreply.localhost
           CLAUDE_CODE_DISABLE_COMMIT_SIGNATURES: 1  # 尝试性添加（可能无效）
         run: |
-          while :; do
-            # 执行主要处理任务
-            cat prompt.md | claude -p --dangerously-skip-permissions
-            
-            # 检查是否有未提交的变更
-            if [ -n "$(git status --porcelain)" ]; then
-              echo "检测到未提交的变更，调用Claude进行代码审查和提交"
-              claude -p "请分析当前git仓库状态，如果有变更：1. 显示变更摘要;2. 确认是否适合提交;3. 如适合，使用语义化commit格式提交;4. 推送到当前分支" --dangerously-skip-permissions
-            else
-              echo "没有检测到未提交的变更"
-            fi
-            
-            # 检查完成标记文件
-            if [ -f .agent/completed ]; then
-              echo "检测到 .agent/completed 文件，任务已完成，退出循环"
-              break
-            fi
-            
-            # 短暂延迟，避免过快重试
-            sleep 2
-          done
-          
-          # 循环结束后，检查并推送最终状态
-          echo "检查最终状态..."
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "发现未提交的变更，进行提交..."
-            claude -p "请分析当前git仓库状态，如果有变更：1. 显示变更摘要;2. 确认是否适合提交;3. 如适合，使用语义化commit格式提交;4. 推送到当前分支" --dangerously-skip-permissions
-          fi
-          
-          # 最终推送到远程仓库
-          echo "推送到远程仓库..."
-          git push origin
+          chmod +x .github/agent-driver.sh
+          .github/agent-driver.sh
