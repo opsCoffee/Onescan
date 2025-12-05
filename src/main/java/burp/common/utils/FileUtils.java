@@ -1,6 +1,7 @@
 package burp.common.utils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 /**
@@ -82,9 +83,9 @@ public class FileUtils {
     }
 
     public static boolean writeFile(File file, String content, boolean append) {
-        FileWriter writer = null;
+        Writer writer = null;
         try {
-            writer = new FileWriter(file, append);
+            writer = new OutputStreamWriter(new FileOutputStream(file, append), StandardCharsets.UTF_8);
             writer.write(content);
             writer.flush();
             return true;
@@ -115,12 +116,12 @@ public class FileUtils {
 
     public static String readFileToString(String filepath) {
         byte[] result = readFile(filepath);
-        return new String(result, 0, result.length);
+        return new String(result, 0, result.length, StandardCharsets.UTF_8);
     }
 
     public static String readStreamToString(InputStream is) {
         byte[] result = IOUtils.readStream(is);
-        return new String(result, 0, result.length);
+        return new String(result, 0, result.length, StandardCharsets.UTF_8);
     }
 
     public static ArrayList<String> readFileToList(String filepath) {
@@ -149,7 +150,7 @@ public class FileUtils {
         }
         BufferedReader br = null;
         try {
-            br = new BufferedReader(new InputStreamReader(is));
+            br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
             ArrayList<String> lines = new ArrayList<>();
             while (br.ready()) {
                 String line = br.readLine();
