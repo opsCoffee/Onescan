@@ -126,6 +126,20 @@ class TaskStatusManager:
         
         return None
     
+    def is_all_completed(self) -> bool:
+        """检查是否所有任务都已完成"""
+        next_task = self.get_next_task()
+        status = self.load_status()
+        in_progress = status.get('in_progress_tasks', [])
+        
+        return next_task is None and len(in_progress) == 0
+    
+    def create_completion_marker(self):
+        """创建完成标记文件"""
+        marker_file = self.project_root / ".agent" / "completed"
+        marker_file.touch()
+        print("✅ 已创建完成标记文件: .agent/completed")
+    
     def _sync_to_prompt(self, task_id: str, status: str):
         """同步状态到 prompt.md"""
         if not self.prompt_file.exists():
@@ -208,6 +222,8 @@ def main():
         print("  python task_status_manager.py next                # 获取下一个任务")
         print("  python task_status_manager.py start <TASK_ID>     # 开始任务")
         print("  python task_status_manager.py complete <TASK_ID> [COMMIT_HASH]  # 完成任务")
+        print("  python task_status_manager.py init                # 初始化状态文件")
+        print("  python task_status_manager.py check-completion    # 检查是否全部完成")
         sys.exit(1)
     
     command = sys.argv[1]
@@ -236,6 +252,25 @@ def main():
         task_id = sys.argv[2]
         commit_hash = sys.argv[3] if len(sys.argv) > 3 else None
         manager.mark_task_completed(task_id, commit_hash)
+        
+        # 检查是否所有任务都已完成
+        if manager.is_all_completed():
+            print("\n🎉 所有任务已完成！")
+            manager.create_completion_marker()
+    
+    elif command == "init":
+        status = manager.load_status()
+        manager.save_status(status)
+        print("✅ 状态文件已初始化")
+    
+    elif command == "check-completion":
+        if manager.is_all_completed():
+            print("✅ 所有任务已完成")
+            manager.create_completion_marker()
+            sys.exit(0)
+        else:
+            print("⏳ 还有待处理任务")
+            sys.exit(1)
     
     else:
         print(f"未知命令: {command}")

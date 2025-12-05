@@ -40,12 +40,25 @@ cat prompt.md | claude -p --dangerously-skip-permissions << 'EOF'
 7. 绝不在本次运行中进入无限循环
 EOF
 
-# 4. 检查是否全部完成
-if [ -f .agent/completed ]; then
-  echo "所有任务已完成，停止触发"
+# 4. 检查是否还有待处理任务
+echo "检查任务队列状态..."
+NEXT_TASK=$(python .agent/task_status_manager.py next 2>/dev/null | grep -v "下一个任务:" | grep -v "所有任务已完成" || echo "")
+
+if [ -z "$NEXT_TASK" ] || [ "$NEXT_TASK" = "✅ 所有任务已完成!" ]; then
+  echo "✅ 所有任务已完成，停止触发下一轮"
+  # 创建完成标记文件（下次运行会被清理）
+  touch .agent/completed
   exit 0
 fi
 
-# 5. 【自驱动核心】完成本轮后，自动触发下一轮
-echo "本轮完成，触发下一轮优化..."
+# 5. 提交当前进度（确保状态文件已推送）
+if [ -n "$(git status --porcelain)" ]; then
+  echo "提交当前进度..."
+  git add .
+  git commit -m "chore: 更新任务状态" || true
+  git push origin HEAD || echo "推送失败，下一轮会重试"
+fi
+
+# 6. 【自驱动核心】完成本轮后，自动触发下一轮
+echo "🔄 还有待处理任务 ($NEXT_TASK)，触发下一轮..."
 gh workflow run "Claude 代码处理" --ref $(git rev-parse --abbrev-ref HEAD)
