@@ -656,13 +656,14 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     /**
      * 根据 Url 检测是否重复扫描
      *
+     * <p>线程安全说明: sRepeatFilter 使用 ConcurrentHashMap.newKeySet() 创建,
+     * add() 方法本身是原子操作,返回 true 表示成功添加(首次出现),返回 false 表示已存在(重复)。
+     * 无需额外的 synchronized 同步。</p>
+     *
      * @param reqId 请求 ID
      * @return true=重复；false=不重复
      */
-    private synchronized boolean checkRepeatFilterByReqId(String reqId) {
-        if (sRepeatFilter.contains(reqId)) {
-            return true;
-        }
+    private boolean checkRepeatFilterByReqId(String reqId) {
         return !sRepeatFilter.add(reqId);
     }
 
