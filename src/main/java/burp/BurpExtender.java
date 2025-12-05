@@ -1023,7 +1023,9 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 数据包自带的请求头
         List<String> headers = info.getHeaders();
         // 构建请求头
-        StringBuilder requestRaw = new StringBuilder();
+        // Pre-allocate capacity to avoid multiple reallocations during header building
+        // Typical HTTP request: ~100 chars request line + ~15 headers * 40 chars = ~700 chars
+        StringBuilder requestRaw = new StringBuilder(1024);
         // 根据数据来源区分两种请求头
         if (from.equals(FROM_SCAN)) {
             requestRaw.append("GET ").append(pathWithQuery).append(" HTTP/1.1").append("\r\n");
