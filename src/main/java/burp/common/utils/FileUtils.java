@@ -57,12 +57,11 @@ public class FileUtils {
         if (is == null) {
             return false;
         }
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
+        try (FileOutputStream fos = new FileOutputStream(file);
+             InputStream inputStream = is) {
             int len;
             byte[] temp = new byte[8192];
-            while ((len = is.read(temp)) != -1) {
+            while ((len = inputStream.read(temp)) != -1) {
                 fos.write(temp, 0, len);
             }
             fos.flush();
@@ -70,9 +69,6 @@ public class FileUtils {
         } catch (Exception e) {
             Logger.error("Failed to write file: %s - %s", file.getPath(), e.getMessage());
             return false;
-        } finally {
-            IOUtils.closeIO(fos);
-            IOUtils.closeIO(is);
         }
     }
 
@@ -85,17 +81,13 @@ public class FileUtils {
     }
 
     public static boolean writeFile(File file, String content, boolean append) {
-        Writer writer = null;
-        try {
-            writer = new OutputStreamWriter(new FileOutputStream(file, append), StandardCharsets.UTF_8);
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file, append), StandardCharsets.UTF_8)) {
             writer.write(content);
             writer.flush();
             return true;
         } catch (IOException e) {
             Logger.error("Failed to write file: %s - %s", file.getPath(), e.getMessage());
             return false;
-        } finally {
-            IOUtils.closeIO(writer);
         }
     }
 
@@ -104,15 +96,11 @@ public class FileUtils {
         if (!isFile(filepath)) {
             return result;
         }
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(filepath);
+        try (FileInputStream fis = new FileInputStream(filepath)) {
             return IOUtils.readStream(fis);
         } catch (IOException e) {
             Logger.error("Failed to read file: %s - %s", filepath, e.getMessage());
             return result;
-        } finally {
-            IOUtils.closeIO(fis);
         }
     }
 
@@ -134,15 +122,11 @@ public class FileUtils {
         if (file == null || !file.exists() || !isFile(file)) {
             return null;
         }
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(file);
+        try (FileInputStream fis = new FileInputStream(file)) {
             return readStreamToList(fis);
         } catch (IOException e) {
             Logger.error("Failed to read file to list: %s - %s", file.getPath(), e.getMessage());
             return null;
-        } finally {
-            IOUtils.closeIO(fis);
         }
     }
 
@@ -150,9 +134,7 @@ public class FileUtils {
         if (is == null) {
             return null;
         }
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             ArrayList<String> lines = new ArrayList<>();
             while (br.ready()) {
                 String line = br.readLine();
@@ -164,9 +146,6 @@ public class FileUtils {
         } catch (Exception e) {
             Logger.error("Failed to read stream to list: %s", e.getMessage());
             return null;
-        } finally {
-            IOUtils.closeIO(br);
-            IOUtils.closeIO(is);
         }
     }
 
