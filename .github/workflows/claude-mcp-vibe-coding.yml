@@ -110,3 +110,69 @@ jobs:
         run: |
           chmod +x .github/agent-driver.sh
           .github/agent-driver.sh
+
+      # 步骤9: 处理未保存的变更和未推送的提交
+      - name: 处理未保存的变更和未推送的提交
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_API }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_API_KEY }}
+          GIT_AUTHOR_NAME: kenyon
+          GIT_AUTHOR_EMAIL: kenyon@noreply.localhost
+          GIT_COMMITTER_NAME: kenyon
+          GIT_COMMITTER_EMAIL: kenyon@noreply.localhost
+        run: |
+          # 检查是否有未保存的变更
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "发现未保存的变更，调用 Claude Code 生成提交信息..."
+            
+            # 显示变更内容
+            echo "=== 变更文件列表 ==="
+            git status --short
+            echo ""
+            echo "=== 变更详情 ==="
+            git diff --stat
+            
+            # 使用 Claude Code 生成提交信息并提交
+            claude -p --dangerously-skip-permissions << 'EOF'
+          请根据当前的 git 变更生成一个符合 Conventional Commits 规范的提交信息，并执行提交。
+          
+          要求：
+          1. 使用中文编写提交信息
+          2. 格式：<type>(<scope>): <subject>
+          3. 包含详细的正文说明变更内容
+          4. 不要添加 AI 协作标识或署名
+          
+          执行步骤：
+          1. 运行 git status 和 git diff 查看变更
+          2. 分析变更内容
+          3. 生成合适的提交信息
+          4. 执行 git add . && git commit -F <commit-msg-file>
+          EOF
+            
+            echo "提交完成"
+          else
+            echo "没有未保存的变更"
+          fi
+          
+          # 检查是否有未推送的提交
+          UNPUSHED_COMMITS=$(git log origin/$(git rev-parse --abbrev-ref HEAD)..HEAD --oneline 2>/dev/null || echo "")
+          
+          if [ -n "$UNPUSHED_COMMITS" ]; then
+            echo "发现未推送的提交，准备推送..."
+            echo "=== 未推送的提交列表 ==="
+            echo "$UNPUSHED_COMMITS"
+            echo ""
+            
+            # 推送到远程仓库
+            git push origin HEAD || {
+              echo "推送失败，可能需要手动处理"
+              exit 1
+            }
+            
+            echo "推送成功"
+          else
+            echo "没有未推送的提交"
+          fi
+          
+          echo "变更处理完成"
