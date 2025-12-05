@@ -47,14 +47,37 @@ public class FpManager {
             "#B4B4B4", // gray
     };
 
-    private static final ConcurrentHashMap<String, List<FpData>> sFpCache = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, List<FpData>> sFpHistory = new ConcurrentHashMap<>();
+    /**
+     * 最大缓存容量，防止 OOM
+     */
+    private static final int MAX_CACHE_SIZE = 10_000;
+
+    private static final Map<String, List<FpData>> sFpCache = createLruCache(MAX_CACHE_SIZE);
+    private static final Map<String, List<FpData>> sFpHistory = createLruCache(MAX_CACHE_SIZE);
     private static final List<OnFpColumnModifyListener> sFpColumnModifyListeners = new ArrayList<>();
     private static String sFilePath;
     private static FpConfig sConfig;
 
     private FpManager() {
         throw new IllegalAccessError("manager class not support create instance.");
+    }
+
+    /**
+     * 创建 LRU 缓存 Map
+     * <p>
+     * 使用 LinkedHashMap 实现 LRU（最近最少使用）策略，当缓存超过最大容量时，
+     * 自动移除最老的条目。通过 Collections.synchronizedMap 包装以保证线程安全。
+     *
+     * @param maxSize 最大缓存容量
+     * @return 线程安全的 LRU Map
+     */
+    private static <K, V> Map<K, V> createLruCache(int maxSize) {
+        return Collections.synchronizedMap(new LinkedHashMap<K, V>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+                return size() > maxSize;
+            }
+        });
     }
 
     public static void init(String path) {
