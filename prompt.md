@@ -58,7 +58,7 @@
   - 问题: 未使用 try-with-resources
   - 修复: 升级至 Java 7+ try-with-resources
 
-- [ ] **[LGC-003]** 添加数组边界检查（2h）
+- [x] **[LGC-003]** - [ ] **[LGC-003]** 添加数组边界检查（2h） ✅
   - 文件: `BurpExtender.java:1015,1048,1238`
   - 问题: split() 结果未检查长度
   - 修复: 添加边界检查
