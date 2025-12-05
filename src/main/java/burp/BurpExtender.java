@@ -1241,39 +1241,42 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     }
 
     /**
-     * 解析日期时间，将每个字段的数据存入数组
+     * 解析日期时间,将每个字段的数据存入数组
      *
-     * @param dateTime 日期时间字符串（格式：yyyy-MM-dd HH:mm:ss 或者 yy-M-d H:m:s）
-     * @return [0]=年；[1]=月；[2]=日；[3]=时；[4]=分；[5]=秒
+     * @param dateTime 日期时间字符串(格式:yyyy-MM-dd HH:mm:ss 或者 yy-M-d H:m:s)
+     * @return [0]=年;[1]=月;[2]=日;[3]=时;[4]=分;[5]=秒;如果解析失败返回空数组
      */
     private String[] parseDateTime(String dateTime) {
-        String[] result = new String[6];
-        String[] split = dateTime.split(" ");
-        if (split.length < 2) {
-            Logger.debug("Invalid datetime format (missing space separator): %s", dateTime);
-            return result;
+        if (dateTime == null || dateTime.trim().isEmpty()) {
+            Logger.debug("DateTime string is null or empty");
+            return new String[6];
         }
-        // 日期
-        String date = split[0];
-        String[] dateSplit = date.split("-");
-        if (dateSplit.length < 3) {
-            Logger.debug("Invalid date format (expected yyyy-MM-dd): %s", date);
+
+        try {
+            // 定义支持的日期时间格式
+            java.time.format.DateTimeFormatter formatter;
+            if (dateTime.contains("-") && dateTime.split("-")[0].length() == 4) {
+                // yyyy-MM-dd HH:mm:ss 格式
+                formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-M-d H:m:s");
+            } else {
+                // yy-M-d H:m:s 格式
+                formatter = java.time.format.DateTimeFormatter.ofPattern("yy-M-d H:m:s");
+            }
+
+            java.time.LocalDateTime dateTimeObj = java.time.LocalDateTime.parse(dateTime, formatter);
+
+            String[] result = new String[6];
+            result[0] = String.valueOf(dateTimeObj.getYear());
+            result[1] = String.valueOf(dateTimeObj.getMonthValue());
+            result[2] = String.valueOf(dateTimeObj.getDayOfMonth());
+            result[3] = String.valueOf(dateTimeObj.getHour());
+            result[4] = String.valueOf(dateTimeObj.getMinute());
+            result[5] = String.valueOf(dateTimeObj.getSecond());
             return result;
+        } catch (java.time.format.DateTimeParseException e) {
+            Logger.debug("Failed to parse datetime '%s': %s", dateTime, e.getMessage());
+            return new String[6];
         }
-        result[0] = dateSplit[0];
-        result[1] = dateSplit[1];
-        result[2] = dateSplit[2];
-        // 时间
-        String time = split[1];
-        String[] timeSplit = time.split(":");
-        if (timeSplit.length < 3) {
-            Logger.debug("Invalid time format (expected HH:mm:ss): %s", time);
-            return result;
-        }
-        result[3] = timeSplit[0];
-        result[4] = timeSplit[1];
-        result[5] = timeSplit[2];
-        return result;
     }
 
     /**
