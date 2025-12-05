@@ -617,10 +617,12 @@ public class FpManager {
             }
             // 可能在扫描过程中存在添加/修改/删除等操作，所以不能使用 item.getRules() 获取的实例进行遍历
             ArrayList<ArrayList<FpRule>> rules = new ArrayList<>(item.getRules());
-            List<ArrayList<FpRule>> checkResults = rules.parallelStream().filter((ruleItems) -> {
+            // 外层为 or 运算，使用 stream + anyMatch 短路求值（避免嵌套 parallelStream 的性能问题）
+            return rules.stream().anyMatch((ruleItems) -> {
                 if (ruleItems == null || ruleItems.isEmpty()) {
                     return false;
                 }
+                // 内层为 and 运算，所有规则都必须匹配
                 for (FpRule ruleItem : ruleItems) {
                     // 拿规则数据，获取数据源的数据
                     String dataSource = ruleItem.getDataSource();
@@ -634,9 +636,7 @@ public class FpManager {
                     }
                 }
                 return true;
-            }).collect(Collectors.toList());
-            // 外层为 or 运算，只要结果不为空，表示规则匹配
-            return !checkResults.isEmpty();
+            });
         }).collect(Collectors.toList());
         // 如果启用缓存
         if (useCache) {
