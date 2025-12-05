@@ -20,7 +20,8 @@
   "completed_phases": [],
   "completed_tasks": [
     "SEC-001",
-    "LGC-001"
+    "LGC-001",
+    "ERR-001"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [],
@@ -37,13 +38,19 @@
       "completed_at": "2025-12-05T12:37:00+08:00",
       "commit": "757e6ba7098ca378c91d926573bfd7be2d9712c4",
       "description": ""
+    },
+    "ERR-001": {
+      "status": "completed",
+      "completed_at": "2025-12-05T12:54:17+08:00",
+      "commit": "b51de1c6d8e3db358c97d8aeac4b831ef437d9a9",
+      "description": ""
     }
   },
   "total_tasks": 17,
-  "completed_count": 2,
+  "completed_count": 3,
   "in_progress_count": 0,
-  "pending_count": 15,
-  "progress_percentage": 11,
+  "pending_count": 14,
+  "progress_percentage": 17,
   "phases": {
     "1.1": {
       "name": "P0 级别问题修复（严重）",
@@ -498,5 +505,5 @@
     "P0 级别问题必须立即修复",
     "建议引入单元测试和静态分析工具"
   ],
-  "last_update": "2025-12-05T12:37:00+08:00"
+  "last_update": "2025-12-05T12:54:17+08:00"
 }
