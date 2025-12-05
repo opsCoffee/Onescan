@@ -25,7 +25,8 @@
     "LGC-002",
     "LGC-003",
     "SYNC-001",
-    "LGC-004"
+    "LGC-004",
+    "PERF-001"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [],
@@ -72,13 +73,19 @@
       "completed_at": "2025-12-05T13:49:19+08:00",
       "commit": "b3de23f385857b84dcf8789395e2cdfdf79d6316",
       "description": ""
+    },
+    "PERF-001": {
+      "status": "completed",
+      "completed_at": "2025-12-05T14:01:27+08:00",
+      "commit": "a374ed73aa4e32bcc0957e4cf0df610c8bab9c91",
+      "description": ""
     }
   },
   "total_tasks": 17,
-  "completed_count": 7,
+  "completed_count": 8,
   "in_progress_count": 0,
-  "pending_count": 10,
-  "progress_percentage": 41,
+  "pending_count": 9,
+  "progress_percentage": 47,
   "phases": {
     "1.1": {
       "name": "P0 级别问题修复（严重）",
@@ -533,5 +540,5 @@
     "P0 级别问题必须立即修复",
     "建议引入单元测试和静态分析工具"
   ],
-  "last_update": "2025-12-05T13:49:19+08:00"
+  "last_update": "2025-12-05T14:01:27+08:00"
 }

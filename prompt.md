@@ -73,7 +73,7 @@
   - 问题: parseDateTime() 无输入验证
   - 修复: 使用 DateTimeFormatter
 
-- [ ] **[PERF-001]** 添加缓存大小限制（5h）
+- [x] **[PERF-001]** - [ ] **[PERF-001]** 添加缓存大小限制（5h） ✅
   - 文件: `FpManager.java:50-51; BurpExtender.java:123`
   - 问题: 缓存无上限，OOM 风险
   - 修复: 实现 LRU 缓存
