@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,9 +103,14 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private static final String FROM_REDIRECT = "Redirect";
 
     /**
+     * 去重过滤集合最大容量，防止 OOM
+     */
+    private static final int MAX_REPEAT_FILTER_SIZE = 50_000;
+
+    /**
      * 去重过滤集合
      */
-    private final Set<String> sRepeatFilter = ConcurrentHashMap.newKeySet(500000);
+    private final Set<String> sRepeatFilter = createLruSet(MAX_REPEAT_FILTER_SIZE);
 
     /**
      * 超时的请求主机集合
@@ -128,6 +134,26 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private final AtomicInteger mLFTaskOverCounter = new AtomicInteger(0);
     private final AtomicInteger mLFTaskCommitCounter = new AtomicInteger(0);
     private Timer mStatusRefresh;
+
+    /**
+     * 创建 LRU Set
+     * <p>
+     * 使用 LinkedHashMap 实现 LRU（最近最少使用）策略，当集合超过最大容量时，
+     * 自动移除最老的元素。通过 Collections.synchronizedSet 包装以保证线程安全。
+     *
+     * @param maxSize 最大集合容量
+     * @return 线程安全的 LRU Set
+     */
+    private static <E> Set<E> createLruSet(int maxSize) {
+        return Collections.synchronizedSet(Collections.newSetFromMap(
+            new java.util.LinkedHashMap<E, Boolean>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<E, Boolean> eldest) {
+                    return size() > maxSize;
+                }
+            }
+        ));
+    }
 
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
