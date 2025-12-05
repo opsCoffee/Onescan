@@ -47,6 +47,43 @@ import java.util.stream.Collectors;
  * 插件入口
  * <p>
  * Created by vaycore on 2022-08-07.
+ * <p>
+ * ============================================================
+ * 职责区域索引 (9 大职责)
+ * ============================================================
+ * 1. 插件生命周期管理
+ *    - IBurpExtender: 插件注册和初始化
+ *    - IExtensionStateListener: 插件卸载监听
+ *
+ * 2. 扫描引擎管理
+ *    - 线程池管理 (mTaskThreadPool, mLFTaskThreadPool, mFpThreadPool)
+ *    - 任务调度和去重 (sRepeatFilter, sTimeoutReqHost)
+ *    - 任务计数器 (mTaskOverCounter, mTaskCommitCounter)
+ *
+ * 3. 代理监听
+ *    - IProxyListener: 代理流量拦截和处理
+ *
+ * 4. UI 控制
+ *    - ITab: 插件 Tab 界面
+ *    - IMessageEditorController: 消息编辑器控制
+ *
+ * 5. 任务表事件处理
+ *    - TaskTable.OnTaskTableEventListener: 任务表操作事件
+ *
+ * 6. Tab 事件处理
+ *    - OnTabEventListener: 配置 Tab 事件
+ *
+ * 7. 右键菜单
+ *    - IContextMenuFactory: 上下文菜单创建
+ *
+ * 8. 编辑器 Tab 工厂
+ *    - IMessageEditorTabFactory: OneScan 信息 Tab 创建
+ *
+ * 9. 请求处理核心逻辑
+ *    - 请求过滤和验证
+ *    - Payload 处理和变量替换
+ *    - HTTP 请求发送和响应处理
+ * ============================================================
  */
 public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEditorController,
         TaskTable.OnTaskTableEventListener, ITab, OnTabEventListener, IMessageEditorTabFactory,
@@ -135,6 +172,10 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private final AtomicInteger mLFTaskCommitCounter = new AtomicInteger(0);
     private Timer mStatusRefresh;
 
+    // ============================================================
+    // 辅助方法 - 工具函数
+    // ============================================================
+
     /**
      * 创建 LRU Set
      * <p>
@@ -154,6 +195,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             }
         ));
     }
+
+    // ============================================================
+    // 职责 1: 插件生命周期管理
+    // 实现接口: IBurpExtender, IExtensionStateListener
+    // ============================================================
 
     @Override
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
@@ -242,6 +288,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         mStatusRefresh.start();
     }
 
+    // ============================================================
+    // 职责 7: 右键菜单
+    // 实现接口: IContextMenuFactory
+    // ============================================================
+
     @Override
     public List<JMenuItem> createMenuItems(IContextMenuInvocation invocation) {
         ArrayList<JMenuItem> items = new ArrayList<>();
@@ -286,6 +337,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         return items;
     }
 
+    // ============================================================
+    // 职责 4: UI 控制
+    // 实现接口: ITab
+    // ============================================================
+
     @Override
     public String getTabCaption() {
         return Constants.PLUGIN_NAME;
@@ -295,6 +351,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     public Component getUiComponent() {
         return mOneScan;
     }
+
+    // ============================================================
+    // 职责 3: 代理监听
+    // 实现接口: IProxyListener
+    // ============================================================
 
     @Override
     public void processProxyMessage(boolean messageIsRequest, IInterceptedProxyMessage message) {
@@ -310,6 +371,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 扫描任务
         doScan(httpReqResp, FROM_PROXY);
     }
+
+    // ============================================================
+    // 职责 9: 请求处理核心逻辑
+    // 包含: 扫描任务调度、请求过滤、Payload处理、HTTP请求发送
+    // ============================================================
 
     private void doScan(IHttpRequestResponse httpReqResp, String from) {
         String item = WordlistManager.getItem(WordlistManager.KEY_PAYLOAD);
@@ -1624,6 +1690,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
     }
 
+    // ============================================================
+    // 职责 4: UI 控制 (续) - IMessageEditorController
+    // 消息编辑器控制接口实现
+    // ============================================================
+
     @Override
     public IHttpService getHttpService() {
         if (mCurrentReqResp != null) {
@@ -1647,6 +1718,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
         return new byte[0];
     }
+
+    // ============================================================
+    // 职责 5: 任务表事件处理
+    // 实现接口: TaskTable.OnTaskTableEventListener
+    // ============================================================
 
     @Override
     public void onChangeSelection(TaskData data) {
@@ -1759,6 +1835,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         WordlistManager.putList(WordlistManager.KEY_HOST_BLOCKLIST, list);
         mOneScan.getConfigPanel().refreshHostTab();
     }
+
+    // ============================================================
+    // 职责 6: Tab 事件处理
+    // 实现接口: OnTabEventListener
+    // ============================================================
 
     @Override
     public void onTabEventMethod(String action, Object... params) {
@@ -1874,10 +1955,20 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
     }
 
+    // ============================================================
+    // 职责 8: 编辑器 Tab 工厂
+    // 实现接口: IMessageEditorTabFactory
+    // ============================================================
+
     @Override
     public IMessageEditorTab createNewInstance(IMessageEditorController iMessageEditorController, boolean editable) {
         return new OneScanInfoTab(mCallbacks, iMessageEditorController);
     }
+
+    // ============================================================
+    // 职责 1: 插件生命周期管理 (续) - IExtensionStateListener
+    // 插件卸载处理
+    // ============================================================
 
     @Override
     public void extensionUnloaded() {
