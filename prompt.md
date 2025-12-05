@@ -32,7 +32,7 @@
 
 **目标**: 修复严重安全问题和数据丢失风险（预计 4.5 小时）
 
-- [ ] **[SEC-001]** 降低 YAML CodePointLimit 防止 DoS（0.5h）
+- [x] **[SEC-001]** - [ ] **[SEC-001]** 降低 YAML CodePointLimit 防止 DoS（0.5h） ✅
   - 文件: `FpManager.java:92`
   - 问题: CodePointLimit 2,000,000 过高，DoS 风险
   - 修复: 降低至 100,000
