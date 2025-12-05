@@ -6,46 +6,131 @@
 ## 当前状态
 
 - **项目版本**: 2.2.0
-- **评审状态**: 待开始
-- **当前阶段**: 阶段 0 - 项目评审与分析
-- **总进度**: 0/0 (0%)
+- **评审状态**: ✅ 已完成
+- **当前阶段**: 阶段 1.1 - P0 级别问题修复
+- **总进度**: 0/17 (0%)
+- **项目健康度**: 72/100
 
 ## 任务清单
 
-### 阶段 0：项目评审与分析
+### 阶段 0：项目评审与分析 ✅
 
 **目标**: 完成项目代码质量评审，生成详细的问题清单和优化计划
 
-- [ ] **[REVIEW-001]** 项目结构分析
-  - 分析整体架构和模块划分
-  - 识别核心功能模块和依赖关系
-  - 评估代码组织的合理性
+- [x] **[REVIEW-001]** 项目结构分析
+- [x] **[REVIEW-002]** 代码质量评审
+- [x] **[REVIEW-003]** 技术债务评估
+- [x] **[REVIEW-004]** 生成评审报告
 
-- [ ] **[REVIEW-002]** 代码质量评审
-  - 运行静态代码分析工具（SpotBugs、PMD、Checkstyle）
-  - 识别代码中的潜在问题（安全、性能、逻辑等）
-  - 按严重程度对问题进行分类和优先级排序
-
-- [ ] **[REVIEW-003]** 技术债务评估
-  - 识别重复代码和可重构的部分
-  - 评估代码复杂度和可维护性
-  - 识别过大的文件和函数
-
-- [ ] **[REVIEW-004]** 生成评审报告
-  - 创建 `.agent/analysis_report.md`（参考 `.claude/skills/code-review/references/output-patterns.md`）
-  - 创建 `.agent/task_status.json`
-  - 更新本文件包含具体的任务清单
+**输出文件**:
+- `.agent/analysis_report.md` - 完整评审报告
+- `.agent/task_status.json` - 任务状态追踪
 
 ---
 
-### 后续阶段
+### 阶段 1.1：P0 级别问题修复（严重）
 
-完成阶段 0 后，将根据评审结果生成具体的优化任务，按优先级组织为：
+**目标**: 修复严重安全问题和数据丢失风险（预计 4.5 小时）
 
-- **阶段 1**: P0 级别问题修复（严重）
-- **阶段 2**: P1 级别问题修复（高）
-- **阶段 3**: P2 级别问题修复（中）
-- **阶段 4**: P3 级别问题优化（低）
+- [ ] **[SEC-001]** 降低 YAML CodePointLimit 防止 DoS（0.5h）
+  - 文件: `FpManager.java:92`
+  - 问题: CodePointLimit 2,000,000 过高，DoS 风险
+  - 修复: 降低至 100,000
+
+- [ ] **[LGC-001]** 统一文件编码为 UTF-8（2h）
+  - 文件: `FileUtils.java:118,44; GsonUtils.java`
+  - 问题: 使用平台默认编码，中文环境乱码
+  - 修复: 统一使用 StandardCharsets.UTF_8
+
+- [ ] **[ERR-001]** 替换 printStackTrace() 防止信息泄露（2h）
+  - 文件: 14 处（FileUtils, GsonUtils, WordlistManager, FpManager, Config）
+  - 问题: 暴露内部路径和堆栈信息
+  - 修复: 替换为 Logger.error()
+
+---
+
+### 阶段 1.2：P1 级别问题修复（高）
+
+**目标**: 修复高优先级问题，防止资源泄漏和崩溃（预计 13.5 小时）
+
+- [ ] **[LGC-002]** 修复资源泄漏风险（3h）
+  - 文件: `FileUtils.java:53-73`
+  - 问题: 未使用 try-with-resources
+  - 修复: 升级至 Java 7+ try-with-resources
+
+- [ ] **[LGC-003]** 添加数组边界检查（2h）
+  - 文件: `BurpExtender.java:1015,1048,1238`
+  - 问题: split() 结果未检查长度
+  - 修复: 添加边界检查
+
+- [ ] **[SYNC-001]** 修复竞态条件（2h）
+  - 文件: `BurpExtender.java:662,743,754`
+  - 问题: sRepeatFilter 同步不一致
+  - 修复: 统一同步策略
+
+- [ ] **[LGC-004]** 修复日期时间解析错误（1.5h）
+  - 文件: `BurpExtender.java:1238-1254`
+  - 问题: parseDateTime() 无输入验证
+  - 修复: 使用 DateTimeFormatter
+
+- [ ] **[PERF-001]** 添加缓存大小限制（5h）
+  - 文件: `FpManager.java:50-51; BurpExtender.java:123`
+  - 问题: 缓存无上限，OOM 风险
+  - 修复: 实现 LRU 缓存
+
+---
+
+### 阶段 2.1：P2 级别问题修复（中）
+
+**目标**: 改善架构和性能问题（预计 31.5 小时）
+
+- [ ] **[PERF-002]** 优化 parallelStream 使用（1h）
+  - 文件: `FpManager.java:591`
+  - 问题: 小数据集使用 parallelStream 性能退化
+  - 修复: 改为普通 stream
+
+- [ ] **[PERF-003]** 优化字符串拼接（1.5h）
+  - 文件: `BurpExtender.java:1000-1054`
+  - 问题: 循环中频繁 append
+  - 修复: 预分配容量
+
+- [ ] **[ARCH-001]** 拆分 BurpExtender 上帝类（16h）
+  - 文件: `BurpExtender.java` (1889 行)
+  - 问题: 承担 9 大职责
+  - 修复: 提取 ScanEngine, RequestBuilder, PayloadProcessor
+
+- [ ] **[ARCH-002]** 重构 UI 层耦合（12h）
+  - 文件: `TaskTable.java (982行); DataBoardTab.java (450行)`
+  - 问题: UI 混合 Model/View/Controller
+  - 修复: 引入 MVVM/MVP 架构
+
+---
+
+### 阶段 3.1：P3 级别优化（低）
+
+**目标**: 代码规范和可维护性改进（预计 12 小时）
+
+- [ ] **[STYLE-001]** 消除魔法数字（2h）
+  - 问题: 8192, 500000, 50 等硬编码
+  - 修复: 提取为命名常量
+
+- [ ] **[STYLE-002]** 减少嵌套深度（2h）
+  - 文件: `BurpExtender.java:344-375`
+  - 问题: doScan() 5 层嵌套
+  - 修复: 提取子方法，早返回
+
+- [ ] **[STYLE-003]** 拆分过长方法（4h）
+  - 问题: doScan() 88 行, setupVariable() 76 行
+  - 修复: 拆分为多个小方法
+
+- [ ] **[STYLE-004]** 消除代码重复（1h）
+  - 文件: `BurpExtender.java:302-322`
+  - 问题: Host 过滤逻辑重复
+  - 修复: 提取共享方法
+
+- [ ] **[STYLE-005]** 统一命名规范（3h）
+  - 问题: m/s 前缀混用
+  - 修复: 统一命名风格
 
 ## 快速参考
 

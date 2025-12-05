@@ -1,0 +1,491 @@
+{
+  "version": "1.0",
+  "projectName": "OneScan",
+  "projectVersion": "2.2.0",
+  "reviewDate": "2025-12-05",
+  "lastUpdate": "2025-12-05T10:00:00+08:00",
+
+  "summary": {
+    "totalTasks": 17,
+    "completedTasks": 0,
+    "inProgressTasks": 0,
+    "pendingTasks": 17,
+    "skippedTasks": 0,
+    "failedTasks": 0,
+    "progressPercentage": 0,
+    "estimatedTotalHours": 61.5,
+    "actualHours": 0
+  },
+
+  "current_phase": "1.1",
+  "current_task": null,
+  "completed_phases": [],
+  "completed_tasks": [],
+  "in_progress_tasks": [],
+  "skipped_tasks": [],
+  "failed_tasks": [],
+  "task_details": {},
+  "total_tasks": 17,
+  "completed_count": 0,
+  "in_progress_count": 0,
+  "pending_count": 17,
+  "progress_percentage": 0,
+
+  "phases": {
+    "1.1": {
+      "name": "P0 级别问题修复（严重）",
+      "description": "修复严重安全问题和数据丢失风险",
+      "priority": "P0",
+      "status": "pending",
+      "total_tasks": 3,
+      "completed_tasks": 0,
+      "estimatedHours": 4.5,
+      "actualHours": 0
+    },
+    "1.2": {
+      "name": "P1 级别问题修复（高）",
+      "description": "修复高优先级问题，防止资源泄漏和崩溃",
+      "priority": "P1",
+      "status": "pending",
+      "total_tasks": 5,
+      "completed_tasks": 0,
+      "estimatedHours": 13.5,
+      "actualHours": 0
+    },
+    "2.1": {
+      "name": "P2 级别问题修复（中）",
+      "description": "改善架构和性能问题",
+      "priority": "P2",
+      "status": "pending",
+      "total_tasks": 4,
+      "completed_tasks": 0,
+      "estimatedHours": 31.5,
+      "actualHours": 0
+    },
+    "3.1": {
+      "name": "P3 级别优化（低）",
+      "description": "代码规范和可维护性改进",
+      "priority": "P3",
+      "status": "pending",
+      "total_tasks": 5,
+      "completed_tasks": 0,
+      "estimatedHours": 12,
+      "actualHours": 0
+    }
+  },
+
+  "tasks": [
+    {
+      "taskId": "SEC-001",
+      "phaseId": "1.1",
+      "title": "降低 YAML CodePointLimit 防止 DoS",
+      "description": "SnakeYAML CodePointLimit 设置为 2,000,000，远高于安全值，恶意 YAML 文件可导致内存溢出",
+      "priority": "P0",
+      "severity": "严重",
+      "category": "安全性",
+      "impact": "全局",
+      "riskLevel": "高",
+      "estimatedHours": 0.5,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/onescan/manager/FpManager.java"
+      ],
+      "location": "FpManager.java:92",
+      "fixSuggestion": "将 options.setCodePointLimit() 从 2,000,000 降低至 100,000",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "LGC-001",
+      "phaseId": "1.1",
+      "title": "统一文件编码为 UTF-8",
+      "description": "文件读取使用平台默认编码，在中文环境下导致配置文件乱码和数据丢失",
+      "priority": "P0",
+      "severity": "严重",
+      "category": "可靠性",
+      "impact": "全局",
+      "riskLevel": "高",
+      "estimatedHours": 2,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/common/utils/FileUtils.java",
+        "src/main/java/burp/common/utils/GsonUtils.java"
+      ],
+      "location": "FileUtils.java:118, 44; GsonUtils.java:*",
+      "fixSuggestion": "所有文件读写操作统一使用 StandardCharsets.UTF_8",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "ERR-001",
+      "phaseId": "1.1",
+      "title": "替换 printStackTrace() 防止信息泄露",
+      "description": "14 处直接使用 printStackTrace() 输出到 stderr，生产环境暴露内部路径和堆栈信息",
+      "priority": "P0",
+      "severity": "严重",
+      "category": "安全性",
+      "impact": "全局",
+      "riskLevel": "高",
+      "estimatedHours": 2,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/common/utils/FileUtils.java",
+        "src/main/java/burp/common/utils/GsonUtils.java",
+        "src/main/java/burp/onescan/manager/WordlistManager.java",
+        "src/main/java/burp/onescan/manager/FpManager.java",
+        "src/main/java/burp/onescan/common/Config.java"
+      ],
+      "location": "FileUtils.java:68,79,100,112,139; GsonUtils.java:45,63,75,91; WordlistManager.java:131,158; FpManager.java:87,108; Config.java:212",
+      "fixSuggestion": "全部替换为 Logger.error() 方法",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "LGC-002",
+      "phaseId": "1.2",
+      "title": "修复资源泄漏风险",
+      "description": "FileUtils 未使用 try-with-resources，异常情况下文件句柄可能泄漏",
+      "priority": "P1",
+      "severity": "高",
+      "category": "可靠性",
+      "impact": "模块级",
+      "riskLevel": "高",
+      "estimatedHours": 3,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/common/utils/FileUtils.java"
+      ],
+      "location": "FileUtils.java:53-73",
+      "fixSuggestion": "升级至 Java 7+ try-with-resources 语法",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "LGC-003",
+      "phaseId": "1.2",
+      "title": "添加数组边界检查",
+      "description": "split() 结果未检查长度直接访问数组元素，可能导致 ArrayIndexOutOfBoundsException",
+      "priority": "P1",
+      "severity": "高",
+      "category": "可靠性",
+      "impact": "局部",
+      "riskLevel": "高",
+      "estimatedHours": 2,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:1015, 1048, 1238-1254",
+      "fixSuggestion": "添加边界检查或使用 split(delimiter, limit) 参数",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "SYNC-001",
+      "phaseId": "1.2",
+      "title": "修复竞态条件",
+      "description": "checkRepeatFilterByReqId() 虽然同步，但其他地方直接操作 sRepeatFilter 未同步，存在 TOCTOU 问题",
+      "priority": "P1",
+      "severity": "高",
+      "category": "并发性",
+      "impact": "模块级",
+      "riskLevel": "高",
+      "estimatedHours": 2,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:662, 743, 754",
+      "fixSuggestion": "统一同步策略或使用 ConcurrentHashMap.putIfAbsent()",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "LGC-004",
+      "phaseId": "1.2",
+      "title": "修复日期时间解析错误",
+      "description": "parseDateTime() 未验证输入格式，直接访问数组元素导致崩溃",
+      "priority": "P1",
+      "severity": "高",
+      "category": "可靠性",
+      "impact": "局部",
+      "riskLevel": "高",
+      "estimatedHours": 1.5,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:1238-1254",
+      "fixSuggestion": "使用 DateTimeFormatter 或添加输入验证",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "PERF-001",
+      "phaseId": "1.2",
+      "title": "添加缓存大小限制",
+      "description": "FpManager 缓存和 sRepeatFilter 无上限，长期运行导致 OOM 风险",
+      "priority": "P1",
+      "severity": "高",
+      "category": "性能",
+      "impact": "全局",
+      "riskLevel": "高",
+      "estimatedHours": 5,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/onescan/manager/FpManager.java",
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "FpManager.java:50-51; BurpExtender.java:123",
+      "fixSuggestion": "实现 LRU 缓存或使用 Guava Cache",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "PERF-002",
+      "phaseId": "2.1",
+      "title": "优化 parallelStream 使用",
+      "description": "指纹数据通常 < 1000 条，parallelStream 开销大于收益",
+      "priority": "P2",
+      "severity": "中",
+      "category": "性能",
+      "impact": "局部",
+      "riskLevel": "中",
+      "estimatedHours": 1,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/onescan/manager/FpManager.java"
+      ],
+      "location": "FpManager.java:591",
+      "fixSuggestion": "小数据集使用普通 stream",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "PERF-003",
+      "phaseId": "2.1",
+      "title": "优化字符串拼接",
+      "description": "循环中频繁使用 append() 创建临时对象",
+      "priority": "P2",
+      "severity": "中",
+      "category": "性能",
+      "impact": "局部",
+      "riskLevel": "中",
+      "estimatedHours": 1.5,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:1000-1054",
+      "fixSuggestion": "预分配容量或批量追加",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "ARCH-001",
+      "phaseId": "2.1",
+      "title": "拆分 BurpExtender 上帝类",
+      "description": "BurpExtender 1889 行，承担 9 大职责，严重违反单一职责原则",
+      "priority": "P2",
+      "severity": "中",
+      "category": "可维护性",
+      "impact": "全局",
+      "riskLevel": "中",
+      "estimatedHours": 16,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:1-1889",
+      "fixSuggestion": "提取 ScanEngine, RequestBuilder, PayloadProcessor 等类",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "ARCH-002",
+      "phaseId": "2.1",
+      "title": "重构 UI 层耦合",
+      "description": "UI 直接调用业务管理类，混合 Model/View/Controller",
+      "priority": "P2",
+      "severity": "中",
+      "category": "可维护性",
+      "impact": "模块级",
+      "riskLevel": "中",
+      "estimatedHours": 12,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/onescan/ui/widget/TaskTable.java",
+        "src/main/java/burp/onescan/ui/tab/DataBoardTab.java"
+      ],
+      "location": "TaskTable.java:1-982; DataBoardTab.java:1-450",
+      "fixSuggestion": "引入 MVVM/MVP 架构分离",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "STYLE-001",
+      "phaseId": "3.1",
+      "title": "消除魔法数字",
+      "description": "硬编码的数字缺乏语义，如 8192, 500000, 50 等",
+      "priority": "P3",
+      "severity": "低",
+      "category": "代码规范",
+      "impact": "全局",
+      "riskLevel": "低",
+      "estimatedHours": 2,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java",
+        "src/main/java/burp/onescan/manager/FpManager.java",
+        "src/main/java/burp/common/utils/FileUtils.java"
+      ],
+      "location": "多处",
+      "fixSuggestion": "提取为命名常量",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "STYLE-002",
+      "phaseId": "3.1",
+      "title": "减少嵌套深度",
+      "description": "doScan() 方法 5 层嵌套，影响可读性",
+      "priority": "P3",
+      "severity": "低",
+      "category": "代码规范",
+      "impact": "局部",
+      "riskLevel": "低",
+      "estimatedHours": 2,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:344-375",
+      "fixSuggestion": "提取子方法，使用早返回（early return）",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "STYLE-003",
+      "phaseId": "3.1",
+      "title": "拆分过长方法",
+      "description": "doScan() 88 行、setupVariable() 76 行、buildRequest() 65 行",
+      "priority": "P3",
+      "severity": "低",
+      "category": "代码规范",
+      "impact": "局部",
+      "riskLevel": "低",
+      "estimatedHours": 4,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java: doScan(), setupVariable(), buildRequest()",
+      "fixSuggestion": "拆分为多个小方法（每个 < 30 行）",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "STYLE-004",
+      "phaseId": "3.1",
+      "title": "消除代码重复",
+      "description": "Host 白名单/黑名单过滤逻辑重复",
+      "priority": "P3",
+      "severity": "低",
+      "category": "代码规范",
+      "impact": "局部",
+      "riskLevel": "低",
+      "estimatedHours": 1,
+      "actualHours": 0,
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
+      "location": "BurpExtender.java:302-322",
+      "fixSuggestion": "提取为 checkHostFilter(host, whitelist, blacklist) 方法",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": false
+    },
+    {
+      "taskId": "STYLE-005",
+      "phaseId": "3.1",
+      "title": "统一命名规范",
+      "description": "混用 m 前缀（成员变量）和 s 前缀（静态变量），不一致",
+      "priority": "P3",
+      "severity": "低",
+      "category": "代码规范",
+      "impact": "全局",
+      "riskLevel": "低",
+      "estimatedHours": 3,
+      "actualHours": 0,
+      "affectedFiles": [
+        "多个文件"
+      ],
+      "location": "全局",
+      "fixSuggestion": "统一命名风格，参考 Java 代码规范",
+      "dependencies": [],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": false
+    }
+  ],
+
+  "milestones": [
+    {
+      "name": "P0 问题全部修复",
+      "targetDate": "2025-12-05",
+      "completed": false
+    },
+    {
+      "name": "P1 问题全部修复",
+      "targetDate": "2025-12-06",
+      "completed": false
+    },
+    {
+      "name": "P2 问题全部修复",
+      "targetDate": "2025-12-13",
+      "completed": false
+    },
+    {
+      "name": "P3 优化全部完成",
+      "targetDate": "2025-12-20",
+      "completed": false
+    }
+  ],
+
+  "notes": [
+    "评审发现 17 个问题，预计 61.5 小时完成",
+    "P0 级别问题必须立即修复",
+    "建议引入单元测试和静态分析工具"
+  ]
+}
