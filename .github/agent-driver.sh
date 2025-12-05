@@ -14,7 +14,10 @@ rm -f .agent/completed
 
 # 3. 让 Claude 严格按你的状态系统执行当前任务（关键！）
 echo "交给 Claude 执行当前待处理任务..."
-cat prompt.md | claude -p --dangerously-skip-permissions << 'EOF'
+claude -p --dangerously-skip-permissions << 'EOF'
+$(cat prompt.md)
+
+---
 
 请严格遵守以下执行流程（这是最高优先级指令）：
 
