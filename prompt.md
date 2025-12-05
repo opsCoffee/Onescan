@@ -84,7 +84,7 @@
 
 **目标**: 改善架构和性能问题（预计 31.5 小时）
 
-- [ ] **[PERF-002]** 优化 parallelStream 使用（1h）
+- [x] **[PERF-002]** - [ ] **[PERF-002]** 优化 parallelStream 使用（1h） ✅
   - 文件: `FpManager.java:591`
   - 问题: 小数据集使用 parallelStream 性能退化
   - 修复: 改为普通 stream
