@@ -33,9 +33,7 @@ public class IOUtils {
         if (is == null) {
             return result;
         }
-        ByteArrayOutputStream baos = null;
-        try {
-            baos = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             int len;
             byte[] temp = new byte[8192];
             while ((len = is.read(temp)) != -1) {
@@ -46,9 +44,6 @@ public class IOUtils {
         } catch (IOException e) {
             Logger.error("Failed to read stream: %s", e.getMessage());
             return result;
-        } finally {
-            IOUtils.closeIO(is);
-            IOUtils.closeIO(baos);
         }
     }
 }
