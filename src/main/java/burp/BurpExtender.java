@@ -1012,7 +1012,12 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 请求头的参数处理（顺带处理移除的请求头），从 1 开始表示跳过首行（请求行）
         for (int i = 1; i < headers.size(); i++) {
             String item = headers.get(i);
-            String key = item.split(": ")[0];
+            String[] parts = item.split(": ");
+            if (parts.length < 1) {
+                Logger.debug("Invalid header format (missing key): %s", item);
+                continue;
+            }
+            String key = parts[0];
             // 是否需要移除当前请求头字段（优先级最高）
             if (removeHeaders.contains(key)) {
                 continue;
@@ -1045,7 +1050,12 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
         // 将配置里剩下的值全部填充到请求头中
         for (String item : configHeader) {
-            String key = item.split(": ")[0];
+            String[] parts = item.split(": ");
+            if (parts.length < 1) {
+                Logger.debug("Invalid config header format (missing key): %s", item);
+                continue;
+            }
+            String key = parts[0];
             // 检测是否需要移除当前KEY
             if (!removeHeaders.contains(key)) {
                 requestRaw.append(item).append("\r\n");
@@ -1238,15 +1248,27 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private String[] parseDateTime(String dateTime) {
         String[] result = new String[6];
         String[] split = dateTime.split(" ");
+        if (split.length < 2) {
+            Logger.debug("Invalid datetime format (missing space separator): %s", dateTime);
+            return result;
+        }
         // 日期
         String date = split[0];
         String[] dateSplit = date.split("-");
+        if (dateSplit.length < 3) {
+            Logger.debug("Invalid date format (expected yyyy-MM-dd): %s", date);
+            return result;
+        }
         result[0] = dateSplit[0];
         result[1] = dateSplit[1];
         result[2] = dateSplit[2];
         // 时间
         String time = split[1];
         String[] timeSplit = time.split(":");
+        if (timeSplit.length < 3) {
+            Logger.debug("Invalid time format (expected HH:mm:ss): %s", time);
+            return result;
+        }
         result[3] = timeSplit[0];
         result[4] = timeSplit[1];
         result[5] = timeSplit[2];
