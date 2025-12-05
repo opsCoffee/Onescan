@@ -42,7 +42,7 @@
   - 问题: 使用平台默认编码，中文环境乱码
   - 修复: 统一使用 StandardCharsets.UTF_8
 
-- [ ] **[ERR-001]** 替换 printStackTrace() 防止信息泄露（2h）
+- [x] **[ERR-001]** - [ ] **[ERR-001]** 替换 printStackTrace() 防止信息泄露（2h） ✅
   - 文件: 14 处（FileUtils, GsonUtils, WordlistManager, FpManager, Config）
   - 问题: 暴露内部路径和堆栈信息
   - 修复: 替换为 Logger.error()
