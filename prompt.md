@@ -94,7 +94,7 @@
   - 问题: 循环中频繁 append
   - 修复: 预分配容量
 
-- [ ] **[ARCH-001]** 拆分 BurpExtender 上帝类（16h）
+- [x] **[ARCH-001]** - [ ] **[ARCH-001]** 拆分 BurpExtender 上帝类（16h） ✅
   - 文件: `BurpExtender.java` (1889 行)
   - 问题: 承担 9 大职责
   - 修复: 提取 ScanEngine, RequestBuilder, PayloadProcessor
