@@ -1,5 +1,7 @@
 package burp.common.utils;
 
+import burp.common.log.Logger;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -66,7 +68,7 @@ public class FileUtils {
             fos.flush();
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("Failed to write file: %s - %s", file.getPath(), e.getMessage());
             return false;
         } finally {
             IOUtils.closeIO(fos);
@@ -90,7 +92,7 @@ public class FileUtils {
             writer.flush();
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Failed to write file: %s - %s", file.getPath(), e.getMessage());
             return false;
         } finally {
             IOUtils.closeIO(writer);
@@ -107,7 +109,7 @@ public class FileUtils {
             fis = new FileInputStream(filepath);
             return IOUtils.readStream(fis);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Failed to read file: %s - %s", filepath, e.getMessage());
             return result;
         } finally {
             IOUtils.closeIO(fis);
@@ -137,7 +139,7 @@ public class FileUtils {
             fis = new FileInputStream(file);
             return readStreamToList(fis);
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Failed to read file to list: %s - %s", file.getPath(), e.getMessage());
             return null;
         } finally {
             IOUtils.closeIO(fis);
@@ -160,7 +162,7 @@ public class FileUtils {
             }
             return lines;
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("Failed to read stream to list: %s", e.getMessage());
             return null;
         } finally {
             IOUtils.closeIO(br);

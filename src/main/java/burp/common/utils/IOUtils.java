@@ -1,5 +1,7 @@
 package burp.common.utils;
 
+import burp.common.log.Logger;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -22,7 +24,7 @@ public class IOUtils {
                 c.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Failed to close IO resource: %s", e.getMessage());
         }
     }
 
@@ -42,7 +44,7 @@ public class IOUtils {
             baos.flush();
             return baos.toByteArray();
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.error("Failed to read stream: %s", e.getMessage());
             return result;
         } finally {
             IOUtils.closeIO(is);

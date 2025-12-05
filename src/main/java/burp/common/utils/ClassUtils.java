@@ -1,5 +1,7 @@
 package burp.common.utils;
 
+import burp.common.log.Logger;
+
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -91,14 +93,14 @@ public class ClassUtils {
                             Class<?> clz = Class.forName(className);
                             result.add(clz);
                         } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
+                            Logger.error("Failed to load class: %s - %s", className, e.getMessage());
                         }
                     }
                 }
             }
             return result;
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("Failed to get class list from package: %s - %s", packageName, e.getMessage());
             return result;
         }
     }
@@ -165,7 +167,7 @@ public class ClassUtils {
             ois = new ObjectInputStream(bis);
             return (T) ois.readObject();
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("Failed to deep copy object: %s", e.getMessage());
             return null;
         } finally {
             IOUtils.closeIO(oos);
