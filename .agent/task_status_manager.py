@@ -101,29 +101,35 @@ class TaskStatusManager:
     def get_next_task(self) -> Optional[str]:
         """获取下一个待执行的任务"""
         status = self.load_status()
-        
-        # 定义任务顺序
-        all_tasks = [
-            # Phase 1.1
-            "CLIPPY-1", "CLIPPY-2", "CLIPPY-3", "CLIPPY-4", "CLIPPY-5", "CLIPPY-6", "CLIPPY-7",
-            # Phase 1.2
-            "SECURITY-001", "LOGIC-001", "LOGIC-002", "CONCURRENCY-001", 
-            "DATAFLOW-001", "ERRORS-001", "PERFORMANCE-001", "MEMORY-001",
-            # Phase 2.1
-            "SECURITY-002", "CONCURRENCY-002", "LOGIC-003", "PERFORMANCE-002",
-            "DATAFLOW-002", "SECURITY-003", "DATAFLOW-003", "LOGIC-004",
-            "PERFORMANCE-003", "PERFORMANCE-004", "CONCURRENCY-003", "SECURITY-004",
-            # Phase 3.1
-            "ARCH-001", "ARCH-002", "ARCH-003",
-        ]
-        
+
+        # 从 tasks 数组中动态获取任务列表（按定义顺序）
+        all_tasks = []
+        if 'tasks' in status:
+            # 新格式：从 tasks 数组中读取
+            all_tasks = [task['taskId'] for task in status['tasks']]
+        else:
+            # 旧格式：硬编码任务列表（向后兼容）
+            all_tasks = [
+                # Phase 1.1
+                "CLIPPY-1", "CLIPPY-2", "CLIPPY-3", "CLIPPY-4", "CLIPPY-5", "CLIPPY-6", "CLIPPY-7",
+                # Phase 1.2
+                "SECURITY-001", "LOGIC-001", "LOGIC-002", "CONCURRENCY-001",
+                "DATAFLOW-001", "ERRORS-001", "PERFORMANCE-001", "MEMORY-001",
+                # Phase 2.1
+                "SECURITY-002", "CONCURRENCY-002", "LOGIC-003", "PERFORMANCE-002",
+                "DATAFLOW-002", "SECURITY-003", "DATAFLOW-003", "LOGIC-004",
+                "PERFORMANCE-003", "PERFORMANCE-004", "CONCURRENCY-003", "SECURITY-004",
+                # Phase 3.1
+                "ARCH-001", "ARCH-002", "ARCH-003",
+            ]
+
         completed = set(status.get('completed_tasks', []))
         in_progress = set(status.get('in_progress_tasks', []))
-        
+
         for task_id in all_tasks:
             if task_id not in completed and task_id not in in_progress:
                 return task_id
-        
+
         return None
     
     def is_all_completed(self) -> bool:
