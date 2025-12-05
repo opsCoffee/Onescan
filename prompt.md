@@ -37,7 +37,7 @@
   - 问题: CodePointLimit 2,000,000 过高，DoS 风险
   - 修复: 降低至 100,000
 
-- [ ] **[LGC-001]** 统一文件编码为 UTF-8（2h）
+- [x] **[LGC-001]** - [ ] **[LGC-001]** 统一文件编码为 UTF-8（2h） ✅
   - 文件: `FileUtils.java:118,44; GsonUtils.java`
   - 问题: 使用平台默认编码，中文环境乱码
   - 修复: 统一使用 StandardCharsets.UTF_8
