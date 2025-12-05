@@ -22,6 +22,17 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    
+    # Job 级别的环境变量（所有步骤共享）
+    env:
+      ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_API }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_API_KEY }}
+      GIT_AUTHOR_NAME: kenyon
+      GIT_AUTHOR_EMAIL: kenyon@noreply.localhost
+      GIT_COMMITTER_NAME: kenyon
+      GIT_COMMITTER_EMAIL: kenyon@noreply.localhost
+      CLAUDE_CODE_DISABLE_COMMIT_SIGNATURES: 1
 
     steps:
       # 步骤1: 检出仓库代码
@@ -98,29 +109,12 @@ jobs:
 
       # 步骤8: 读取处理指令并执行Claude Code
       - name: 使用 Claude Code 处理项目
-        env:
-          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_API }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_API_KEY }}
-          GIT_AUTHOR_NAME: kenyon
-          GIT_AUTHOR_EMAIL: kenyon@noreply.localhost
-          GIT_COMMITTER_NAME: kenyon
-          GIT_COMMITTER_EMAIL: kenyon@noreply.localhost
-          CLAUDE_CODE_DISABLE_COMMIT_SIGNATURES: 1  # 尝试性添加（可能无效）
         run: |
           chmod +x .github/agent-driver.sh
           .github/agent-driver.sh
 
       # 步骤9: 处理未保存的变更和未推送的提交
       - name: 处理未保存的变更和未推送的提交
-        env:
-          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_API }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_API_KEY }}
-          GIT_AUTHOR_NAME: kenyon
-          GIT_AUTHOR_EMAIL: kenyon@noreply.localhost
-          GIT_COMMITTER_NAME: kenyon
-          GIT_COMMITTER_EMAIL: kenyon@noreply.localhost
         run: |
           # 检查是否有未保存的变更
           if [ -n "$(git status --porcelain)" ]; then
