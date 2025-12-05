@@ -89,7 +89,7 @@ public class FpManager {
             LoaderOptions options = new LoaderOptions();
             options.setMaxAliasesForCollections(50);
             options.setAllowDuplicateKeys(false);
-            options.setCodePointLimit(2_000_000);
+            options.setCodePointLimit(100_000);
             options.setNestingDepthLimit(50);
             Yaml yaml = new Yaml(options);
             Object obj = yaml.load(content);
