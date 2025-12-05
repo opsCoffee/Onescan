@@ -68,7 +68,7 @@
   - 问题: sRepeatFilter 同步不一致
   - 修复: 统一同步策略
 
-- [ ] **[LGC-004]** 修复日期时间解析错误（1.5h）
+- [x] **[LGC-004]** - [ ] **[LGC-004]** 修复日期时间解析错误（1.5h） ✅
   - 文件: `BurpExtender.java:1238-1254`
   - 问题: parseDateTime() 无输入验证
   - 修复: 使用 DateTimeFormatter
