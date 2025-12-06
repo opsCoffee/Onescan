@@ -1,5 +1,7 @@
 package burp;
 
+import burp.api.montoya.BurpExtension;
+import burp.api.montoya.MontoyaApi;
 import burp.common.helper.DomainHelper;
 import burp.common.helper.QpsLimiter;
 import burp.common.helper.UIHelper;
@@ -85,7 +87,7 @@ import java.util.stream.Collectors;
  *    - HTTP 请求发送和响应处理
  * ============================================================
  */
-public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEditorController,
+public class BurpExtender implements BurpExtension, IProxyListener, IMessageEditorController,
         TaskTable.OnTaskTableEventListener, ITab, OnTabEventListener, IMessageEditorTabFactory,
         IExtensionStateListener, IContextMenuFactory {
 
@@ -174,7 +176,8 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
      */
     private final Set<String> sTimeoutReqHost = ConcurrentHashMap.newKeySet();
 
-    private IBurpExtenderCallbacks mCallbacks;
+    private MontoyaApi api;
+    private IBurpExtenderCallbacks mCallbacks;  // TODO: MIGRATE-102 will remove this
     private IExtensionHelpers mHelpers;
     private OneScan mOneScan;
     private DataBoardTab mDataBoardTab;
@@ -215,16 +218,18 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     // ============================================================
 
     @Override
-    public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
-        initData(callbacks);
+    public void initialize(MontoyaApi api) {
+        initData(api);
         initView();
         initEvent();
         Logger.debug("register Extender ok! Log: %b", Constants.DEBUG);
     }
 
-    private void initData(IBurpExtenderCallbacks callbacks) {
-        this.mCallbacks = callbacks;
-        this.mHelpers = callbacks.getHelpers();
+    private void initData(MontoyaApi api) {
+        this.api = api;
+        // TODO: MIGRATE-102 - 创建临时适配器,桥接新旧 API
+        this.mCallbacks = new MontoyaCallbacksAdapter(api);
+        this.mHelpers = mCallbacks.getHelpers();
         // 初始化扫描引擎
         this.mScanEngine = new burp.onescan.engine.ScanEngine(
                 TASK_THREAD_COUNT,
