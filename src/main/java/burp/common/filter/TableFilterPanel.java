@@ -290,6 +290,10 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
     public ArrayList<TableFilter<AbstractTableModel>> exportTableFilters() {
         ArrayList<TableFilter<AbstractTableModel>> filters = new ArrayList<>();
         for (FilterRule rule : mRules) {
+            // 跳过空规则，防止创建 TableFilter 时抛出异常
+            if (rule == null || rule.getItems() == null || rule.getItems().isEmpty()) {
+                continue;
+            }
             TableFilter<AbstractTableModel> filter = new TableFilter<>(rule);
             filters.add(filter);
         }

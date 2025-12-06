@@ -121,6 +121,10 @@ public class FilterRule {
     }
 
     public ArrayList<Item> getItems() {
+        // 防止反序列化时 items 为 null 导致 NPE
+        if (items == null) {
+            return new ArrayList<>();
+        }
         return items;
     }
 
