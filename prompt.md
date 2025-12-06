@@ -1,142 +1,194 @@
-# OneScan 项目优化任务
+# OneScan Burp API 迁移任务
 
-> **说明**: 代码评审规范和标准已移至 `.claude/skills/code-review/SKILL.md`  
-> 工作流程和输出格式请参考 `.claude/skills/code-review/references/` 目录
+> **核心目标**: 将插件从传统 Burp Extender API 迁移到新版 Montoya API
 
 ## 当前状态
 
 - **项目版本**: 2.2.0
-- **评审状态**: ✅ 已完成
-- **当前阶段**: 阶段 1.1 - P0 级别问题修复
-- **总进度**: 0/17 (0%)
-- **项目健康度**: 72/100
+- **迁移状态**: 进行中
+- **当前阶段**: 阶段 0 - API 使用情况分析
+- **总进度**: 1/17 (6%)
 
-## 任务清单
+## API 版本信息
 
-### 阶段 0：项目评审与分析 ✅
+- **传统 API**: burp-extender-api 2.3 (已弃用)
+- **目标 API**: montoya-api 2025.5 (已在 pom.xml 中引入)
+- **Java 版本**: 17
 
-**目标**: 完成项目代码质量评审，生成详细的问题清单和优化计划
+## 迁移任务清单
 
-- [x] **[REVIEW-001]** 项目结构分析
-- [x] **[REVIEW-002]** 代码质量评审
-- [x] **[REVIEW-003]** 技术债务评估
-- [x] **[REVIEW-004]** 生成评审报告
+### 阶段 0：API 使用情况分析
 
-**输出文件**:
-- `.agent/analysis_report.md` - 完整评审报告
-- `.agent/task_status.json` - 任务状态追踪
+**目标**: 全面分析项目中传统 API 的使用情况，制定详细的迁移计划
 
----
+- [x] **[MIGRATE-001]** 扫描传统 API 使用
+  - 识别所有使用 `burp.*` 包的类和方法
+  - 统计各个传统 API 接口的使用频率
+  - 生成 API 使用清单（按模块分类）
+  - **状态**: ✅ 已完成 (2025-12-06)
+  - **产出**: `.agent/api_usage_report.md`, `.agent/api_quick_reference.md`, `.agent/burp_api_usage.csv`
 
-### 阶段 1.1：P0 级别问题修复（严重）
+- [ ] **[MIGRATE-002]** API 映射关系分析
+  - 建立传统 API 到 Montoya API 的映射表
+  - 识别需要重构的复杂场景
+  - 标记无直接对应的 API（需要特殊处理）
 
-**目标**: 修复严重安全问题和数据丢失风险（预计 4.5 小时）
+- [ ] **[MIGRATE-003]** 依赖关系分析
+  - 分析各模块间的 API 依赖关系
+  - 确定迁移的优先级和顺序
+  - 识别可能的风险点
 
-- [x] **[SEC-001]** - [ ] **[SEC-001]** 降低 YAML CodePointLimit 防止 DoS（0.5h） ✅
-  - 文件: `FpManager.java:92`
-  - 问题: CodePointLimit 2,000,000 过高，DoS 风险
-  - 修复: 降低至 100,000
-
-- [ ] **[LGC-001]** 统一文件编码为 UTF-8（2h）
-  - 文件: `FileUtils.java:118,44; GsonUtils.java`
-  - 问题: 使用平台默认编码，中文环境乱码
-  - 修复: 统一使用 StandardCharsets.UTF_8
-
-- [ ] **[ERR-001]** 替换 printStackTrace() 防止信息泄露（2h）
-  - 文件: 14 处（FileUtils, GsonUtils, WordlistManager, FpManager, Config）
-  - 问题: 暴露内部路径和堆栈信息
-  - 修复: 替换为 Logger.error()
+- [ ] **[MIGRATE-004]** 生成迁移计划
+  - 创建 `.agent/migration_plan.md`
+  - 创建 `.agent/api_mapping.md`（API 映射表）
+  - 更新 `.agent/task_status.json`
 
 ---
 
-### 阶段 1.2：P1 级别问题修复（高）
+### 阶段 1：核心入口点迁移
 
-**目标**: 修复高优先级问题，防止资源泄漏和崩溃（预计 13.5 小时）
+**目标**: 迁移插件的主入口和核心初始化逻辑
 
-- [ ] **[LGC-002]** 修复资源泄漏风险（3h）
-  - 文件: `FileUtils.java:53-73`
-  - 问题: 未使用 try-with-resources
-  - 修复: 升级至 Java 7+ try-with-resources
+- [ ] **[MIGRATE-101]** BurpExtender 类迁移
+  - 从 `IBurpExtender` 迁移到 `BurpExtension`
+  - 从 `registerExtenderCallbacks` 迁移到 `initialize`
+  - 更新回调接口的注册方式
 
-- [ ] **[LGC-003]** 添加数组边界检查（2h）
-  - 文件: `BurpExtender.java:1015,1048,1238`
-  - 问题: split() 结果未检查长度
-  - 修复: 添加边界检查
-
-- [ ] **[SYNC-001]** 修复竞态条件（2h）
-  - 文件: `BurpExtender.java:662,743,754`
-  - 问题: sRepeatFilter 同步不一致
-  - 修复: 统一同步策略
-
-- [ ] **[LGC-004]** 修复日期时间解析错误（1.5h）
-  - 文件: `BurpExtender.java:1238-1254`
-  - 问题: parseDateTime() 无输入验证
-  - 修复: 使用 DateTimeFormatter
-
-- [ ] **[PERF-001]** 添加缓存大小限制（5h）
-  - 文件: `FpManager.java:50-51; BurpExtender.java:123`
-  - 问题: 缓存无上限，OOM 风险
-  - 修复: 实现 LRU 缓存
+- [ ] **[MIGRATE-102]** 扩展上下文迁移
+  - 从 `IBurpExtenderCallbacks` 迁移到 `MontoyaApi`
+  - 更新所有使用回调接口的代码
+  - 适配新的服务获取方式
 
 ---
 
-### 阶段 2.1：P2 级别问题修复（中）
+### 阶段 2：HTTP 处理迁移
 
-**目标**: 改善架构和性能问题（预计 31.5 小时）
+**目标**: 迁移 HTTP 请求/响应处理相关的 API
 
-- [ ] **[PERF-002]** 优化 parallelStream 使用（1h）
-  - 文件: `FpManager.java:591`
-  - 问题: 小数据集使用 parallelStream 性能退化
-  - 修复: 改为普通 stream
+- [ ] **[MIGRATE-201]** HTTP 监听器迁移
+  - 从 `IHttpListener` 迁移到 `HttpHandler`
+  - 更新请求/响应处理逻辑
+  - 适配新的消息编辑器 API
 
-- [ ] **[PERF-003]** 优化字符串拼接（1.5h）
-  - 文件: `BurpExtender.java:1000-1054`
-  - 问题: 循环中频繁 append
-  - 修复: 预分配容量
+- [ ] **[MIGRATE-202]** HTTP 消息处理
+  - 从 `IHttpRequestResponse` 迁移到 `HttpRequestResponse`
+  - 更新请求/响应解析逻辑
+  - 适配新的 HTTP 服务 API
 
-- [ ] **[ARCH-001]** 拆分 BurpExtender 上帝类（16h）
-  - 文件: `BurpExtender.java` (1889 行)
-  - 问题: 承担 9 大职责
-  - 修复: 提取 ScanEngine, RequestBuilder, PayloadProcessor
-
-- [x] **[ARCH-002]** 重构 UI 层耦合(12h)（已跳过 - 过度设计）⏭️
-  - 文件: `TaskTable.java (982行); DataBoardTab.java (450行)`
-  - 问题: UI 混合 Model/View/Controller
-  - 跳过理由: 引入 MVVM/MVP 架构不解决实际问题,Swing 的 TableModel 已经是 MVC 模式
-  - 详见: `.agent/thinking_ARCH-002.md`
+- [ ] **[MIGRATE-203]** 代理监听器迁移
+  - 从 `IProxyListener` 迁移到 `ProxyRequestHandler`/`ProxyResponseHandler`
+  - 更新拦截和修改逻辑
 
 ---
 
-### 阶段 3.1：P3 级别优化（低）
+### 阶段 3：UI 组件迁移
 
-**目标**: 代码规范和可维护性改进（预计 12 小时）
+**目标**: 迁移用户界面相关的 API
 
-- [ ] **[STYLE-001]** 消除魔法数字（2h） 🔄 **← 当前任务**
-  - 问题: 8192, 500000, 50 等硬编码
-  - 修复: 提取为命名常量
+- [ ] **[MIGRATE-301]** 标签页迁移
+  - 从 `ITab` 迁移到 `UserInterface.registerSuiteTab()`
+  - 更新标签页注册方式（使用 `api.userInterface().registerSuiteTab(title, component)`）
+  - 适配新的 UI 组件模型
 
-- [ ] **[STYLE-002]** 减少嵌套深度（2h）
-  - 文件: `BurpExtender.java:344-375`
-  - 问题: doScan() 5 层嵌套
-  - 修复: 提取子方法，早返回
+- [ ] **[MIGRATE-302]** 上下文菜单迁移
+  - 从 `IContextMenuFactory` 迁移到 `ContextMenuItemsProvider`
+  - 实现 `provideMenuItems()` 方法（支持 HTTP、WebSocket、AuditIssue 三种事件）
+  - 使用 `api.userInterface().registerContextMenuItemsProvider()` 注册
 
-- [ ] **[STYLE-003]** 拆分过长方法（4h） 🔄 **← 当前任务**
-  - 问题: doScan() 88 行, setupVariable() 76 行
-  - 修复: 拆分为多个小方法
+- [ ] **[MIGRATE-303]** 消息编辑器迁移
+  - 从 `IMessageEditorController` 迁移到 `HttpRequestEditorProvider`/`HttpResponseEditorProvider`
+  - 实现 `ExtensionProvidedHttpRequestEditor`/`ExtensionProvidedHttpResponseEditor` 接口
+  - 使用 `api.userInterface().registerHttpRequestEditorProvider()` 注册
 
-- [ ] **[STYLE-004]** 消除代码重复（1h）
-  - 文件: `BurpExtender.java:302-322`
-  - 问题: Host 过滤逻辑重复
-  - 修复: 提取共享方法
+---
 
-- [ ] **[STYLE-005]** 统一命名规范（3h）
-  - 问题: m/s 前缀混用
-  - 修复: 统一命名风格
+### 阶段 4：工具类和辅助功能迁移
+
+**目标**: 迁移工具类和辅助功能相关的 API
+
+- [ ] **[MIGRATE-401]** 辅助工具类迁移
+  - 从 `IExtensionHelpers` 迁移到各个专用服务
+  - 更新 URL 解析、编码/解码等工具方法
+  - 适配新的参数处理 API
+
+- [ ] **[MIGRATE-402]** 扫描器集成迁移
+  - 从 `IScannerCheck` 迁移到 `Scanner` API
+  - 更新扫描逻辑和问题报告
+
+- [ ] **[MIGRATE-403]** 日志和输出迁移
+  - 从 `stdout`/`stderr` 迁移到 `Logging` API
+  - 统一日志输出方式
+
+---
+
+### 阶段 5：测试和验证
+
+**目标**: 确保迁移后的功能完整性和稳定性
+
+- [ ] **[MIGRATE-501]** 功能测试
+  - 测试所有核心功能
+  - 验证 UI 交互
+  - 检查性能表现
+
+- [ ] **[MIGRATE-502]** 兼容性测试
+  - 测试不同 Burp Suite 版本
+  - 验证与其他插件的兼容性
+
+- [ ] **[MIGRATE-503]** 清理工作
+  - 移除传统 API 依赖
+  - 更新文档和注释
+  - 代码格式化和优化
+
+---
+
+## 迁移原则
+
+1. **渐进式迁移**: 按模块逐步迁移，确保每个阶段都可以编译和测试
+2. **保持功能**: 迁移过程中保持现有功能不变，不引入新特性
+3. **代码质量**: 利用迁移机会优化代码结构和命名
+4. **充分测试**: 每个阶段完成后进行充分测试
+5. **文档同步**: 及时更新代码注释和文档
+
+## 关键 API 映射参考
+
+### 核心接口
+- `IBurpExtender` → `BurpExtension`
+  - `registerExtenderCallbacks(IBurpExtenderCallbacks)` → `initialize(MontoyaApi)`
+- `IBurpExtenderCallbacks` → `MontoyaApi`
+  - 通过 `api.http()`, `api.proxy()`, `api.userInterface()` 等获取各个服务
+
+### HTTP 处理
+- `IHttpListener` → `HttpHandler`
+  - `processHttpMessage()` → `handleHttpRequestToBeSent()` + `handleHttpResponseReceived()`
+  - 注册方式：`api.http().registerHttpHandler()`
+- `IProxyListener` → `ProxyRequestHandler` + `ProxyResponseHandler`
+  - 注册方式：`api.proxy().registerRequestHandler()` / `registerResponseHandler()`
+- `IHttpRequestResponse` → `HttpRequestResponse`
+- `IRequestInfo`/`IResponseInfo` → `HttpRequest`/`HttpResponse`
+  - 直接通过 `HttpRequest`/`HttpResponse` 对象访问属性和方法
+
+### UI 组件
+- `ITab` → `UserInterface.registerSuiteTab(String title, Component component)`
+  - 返回 `Registration` 对象用于注销
+- `IContextMenuFactory` → `ContextMenuItemsProvider`
+  - `createMenuItems(IContextMenuInvocation)` → `provideMenuItems(ContextMenuEvent)`
+  - 注册方式：`api.userInterface().registerContextMenuItemsProvider()`
+- `IMessageEditorController` → `HttpRequestEditorProvider`/`HttpResponseEditorProvider`
+  - 需实现 `ExtensionProvidedHttpRequestEditor`/`ExtensionProvidedHttpResponseEditor`
+  - 注册方式：`api.userInterface().registerHttpRequestEditorProvider()`
+
+### 辅助工具
+- `IExtensionHelpers` → 各个专用服务
+  - URL 解析：`api.utilities().urlUtils()`
+  - Base64 编解码：`api.utilities().base64Utils()`
+  - HTTP 构建：`HttpRequest.httpRequest()` / `HttpResponse.httpResponse()`
+- 日志输出：`callbacks.printOutput()` → `api.logging().logToOutput()`
+- 错误输出：`callbacks.printError()` → `api.logging().logToError()`
 
 ## 快速参考
 
 - 📋 **评审规范**: `.claude/skills/code-review/SKILL.md`
 - 🔄 **工作流程**: `.claude/skills/code-review/references/workflows.md`
-- 📊 **输出格式**: `.claude/skills/code-review/references/output-patterns.md`
-- 🔧 **Burp API**: `.claude/skills/code-review/references/burp-api-guide.md`
+- 🔧 **Burp API 指南**: `.claude/skills/code-review/references/burp-api-guide.md`
+- 📚 **Montoya API 文档**: https://portswigger.github.io/burp-extensions-montoya-api/
 - 🐍 **任务管理**: `.agent/task_status_manager.py`
