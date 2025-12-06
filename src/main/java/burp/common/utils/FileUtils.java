@@ -13,6 +13,11 @@ import java.util.ArrayList;
  */
 public class FileUtils {
 
+    /**
+     * File copy buffer size in bytes (8KB)
+     */
+    private static final int FILE_COPY_BUFFER_SIZE = 8192;
+
     private FileUtils() {
         throw new IllegalAccessError("utils class not support create instance.");
     }
@@ -60,7 +65,7 @@ public class FileUtils {
         try (FileOutputStream fos = new FileOutputStream(file);
              InputStream inputStream = is) {
             int len;
-            byte[] temp = new byte[8192];
+            byte[] temp = new byte[FILE_COPY_BUFFER_SIZE];
             while ((len = inputStream.read(temp)) != -1) {
                 fos.write(temp, 0, len);
             }

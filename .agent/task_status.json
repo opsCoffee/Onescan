@@ -16,7 +16,7 @@
     "actualHours": 0
   },
   "current_phase": "1.1",
-  "current_task": null,
+  "current_task": "STYLE-001",
   "completed_phases": [],
   "completed_tasks": [
     "SEC-001",
@@ -31,8 +31,12 @@
     "PERF-003",
     "ARCH-001"
   ],
-  "in_progress_tasks": [],
-  "skipped_tasks": [],
+  "in_progress_tasks": [
+    "STYLE-001"
+  ],
+  "skipped_tasks": [
+    "ARCH-002"
+  ],
   "failed_tasks": [],
   "task_details": {
     "SEC-001": {
@@ -100,12 +104,23 @@
       "completed_at": "2025-12-05T15:13:24+08:00",
       "commit": "4615875b31c841ca216594f574cc6840e13d664b",
       "description": ""
+    },
+    "ARCH-002": {
+      "status": "skipped",
+      "skipped_at": "2025-12-06T00:00:00+08:00",
+      "reason": "过度设计 - UI层引入MVVM/MVP架构不解决实际问题,增加不必要复杂性,潜在破坏现有功能。Swing的TableModel已经是MVC模式,无需额外架构层。详见 .agent/thinking_ARCH-002.md",
+      "description": "重构 UI 层耦合"
+    },
+    "STYLE-001": {
+      "status": "in_progress",
+      "started_at": "2025-12-06T03:57:40+08:00"
     }
   },
   "total_tasks": 17,
   "completed_count": 11,
-  "in_progress_count": 0,
-  "pending_count": 6,
+  "in_progress_count": 1,
+  "pending_count": 5,
+  "skipped_count": 1,
   "progress_percentage": 64,
   "phases": {
     "1.1": {
@@ -561,5 +576,5 @@
     "P0 级别问题必须立即修复",
     "建议引入单元测试和静态分析工具"
   ],
-  "last_update": "2025-12-05T15:13:24+08:00"
+  "last_update": "2025-12-06T03:57:40+08:00"
 }

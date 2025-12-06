@@ -52,6 +52,13 @@ public class FpManager {
      */
     private static final int MAX_CACHE_SIZE = 10_000;
 
+    /**
+     * YAML 配置安全限制
+     */
+    private static final int YAML_MAX_ALIASES = 50;
+    private static final int YAML_CODE_POINT_LIMIT = 100_000;
+    private static final int YAML_MAX_NESTING_DEPTH = 50;
+
     private static final Map<String, List<FpData>> sFpCache = createLruCache(MAX_CACHE_SIZE);
     private static final Map<String, List<FpData>> sFpHistory = createLruCache(MAX_CACHE_SIZE);
     private static final List<OnFpColumnModifyListener> sFpColumnModifyListeners = new ArrayList<>();
@@ -110,10 +117,10 @@ public class FpManager {
         Map<String, Object> root;
         try {
             LoaderOptions options = new LoaderOptions();
-            options.setMaxAliasesForCollections(50);
+            options.setMaxAliasesForCollections(YAML_MAX_ALIASES);
             options.setAllowDuplicateKeys(false);
-            options.setCodePointLimit(100_000);
-            options.setNestingDepthLimit(50);
+            options.setCodePointLimit(YAML_CODE_POINT_LIMIT);
+            options.setNestingDepthLimit(YAML_MAX_NESTING_DEPTH);
             Yaml yaml = new Yaml(options);
             Object obj = yaml.load(content);
             if (!(obj instanceof Map)) {
