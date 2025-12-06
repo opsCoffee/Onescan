@@ -99,7 +99,7 @@
   - 问题: 承担 9 大职责
   - 修复: 提取 ScanEngine, RequestBuilder, PayloadProcessor
 
-- [ ] **[ARCH-002]** 重构 UI 层耦合（12h）
+- [x] **[ARCH-002]** 重构 UI 层耦合（12h）（跳过）
   - 文件: `TaskTable.java (982行); DataBoardTab.java (450行)`
   - 问题: UI 混合 Model/View/Controller
   - 修复: 引入 MVVM/MVP 架构
