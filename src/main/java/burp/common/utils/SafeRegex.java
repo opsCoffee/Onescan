@@ -27,6 +27,11 @@ public class SafeRegex {
     private static final long DEFAULT_TIMEOUT_MS = 100;
 
     /**
+     * 正则表达式缩略显示最大长度 (用于日志输出)
+     */
+    private static final int REGEX_ABBREVIATION_MAX_LENGTH = 50;
+
+    /**
      * Pattern 缓存 (最多缓存1000个,LRU淘汰)
      */
     private static final ConcurrentHashMap<String, Pattern> sPatternCache = new ConcurrentHashMap<>(256);
@@ -92,7 +97,7 @@ public class SafeRegex {
         } catch (TimeoutException e) {
             future.cancel(true);  // 中断执行
             Logger.error("Regex timeout (>%dms): pattern='%s', data length=%d",
-                    timeoutMs, abbreviate(regex, 50), data.length());
+                    timeoutMs, abbreviate(regex, REGEX_ABBREVIATION_MAX_LENGTH), data.length());
             return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();  // 恢复中断状态
@@ -140,7 +145,7 @@ public class SafeRegex {
         } catch (TimeoutException e) {
             future.cancel(true);
             Logger.error("Regex timeout (>%dms, case-insensitive): pattern='%s', data length=%d",
-                    timeoutMs, abbreviate(regex, 50), data.length());
+                    timeoutMs, abbreviate(regex, REGEX_ABBREVIATION_MAX_LENGTH), data.length());
             return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

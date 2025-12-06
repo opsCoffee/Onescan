@@ -99,10 +99,11 @@
   - 问题: 承担 9 大职责
   - 修复: 提取 ScanEngine, RequestBuilder, PayloadProcessor
 
-- [x] **[ARCH-002]** 重构 UI 层耦合（12h）（跳过）
+- [x] **[ARCH-002]** 重构 UI 层耦合(12h)（已跳过 - 过度设计）⏭️
   - 文件: `TaskTable.java (982行); DataBoardTab.java (450行)`
   - 问题: UI 混合 Model/View/Controller
-  - 修复: 引入 MVVM/MVP 架构
+  - 跳过理由: 引入 MVVM/MVP 架构不解决实际问题,Swing 的 TableModel 已经是 MVC 模式
+  - 详见: `.agent/thinking_ARCH-002.md`
 
 ---
 
@@ -110,7 +111,7 @@
 
 **目标**: 代码规范和可维护性改进（预计 12 小时）
 
-- [ ] **[STYLE-001]** 消除魔法数字（2h）
+- [ ] **[STYLE-001]** 消除魔法数字（2h） 🔄 **← 当前任务**
   - 问题: 8192, 500000, 50 等硬编码
   - 修复: 提取为命名常量
 

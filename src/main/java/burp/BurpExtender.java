@@ -145,6 +145,26 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private static final int MAX_REPEAT_FILTER_SIZE = 50_000;
 
     /**
+     * HTTP 协议相关常量
+     */
+    private static final int HTTP_DEFAULT_PORT = 80;
+    private static final int HTTPS_DEFAULT_PORT = 443;
+    private static final int HTTP_STATUS_REDIRECT_START = 300;
+    private static final int HTTP_STATUS_CLIENT_ERROR_START = 400;
+
+    /**
+     * 限制和阈值常量
+     */
+    private static final int MAX_TASK_LIMIT = 9999;
+    private static final int MIN_LENGTH_FOR_TRUNCATION = 100_000;
+
+    /**
+     * 性能优化相关常量
+     */
+    private static final int HTTP_REQUEST_BUILDER_INITIAL_CAPACITY = 1024;
+    private static final int STATUS_REFRESH_INTERVAL_MS = 1000;
+
+    /**
      * 去重过滤集合
      */
     private final Set<String> sRepeatFilter = createLruSet(MAX_REPEAT_FILTER_SIZE);
@@ -245,7 +265,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 检测范围，如果不符合条件，不创建限制器
         int limit = Config.getInt(Config.KEY_QPS_LIMIT);
         int delay = Config.getInt(Config.KEY_REQUEST_DELAY);
-        if (limit > 0 && limit <= 9999) {
+        if (limit > 0 && limit <= MAX_TASK_LIMIT) {
             this.mQpsLimit = new QpsLimiter(limit, delay);
         }
     }
@@ -271,7 +291,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 注册菜单
         mCallbacks.registerContextMenuFactory(this);
         // 状态栏刷新定时器
-        mStatusRefresh = new Timer(1000, e -> {
+        mStatusRefresh = new Timer(STATUS_REFRESH_INTERVAL_MS, e -> {
             if (mDataBoardTab == null) {
                 return;
             }
@@ -923,7 +943,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
         int status = data.getStatus();
         // 检测 30x 状态码
-        if (status < 300 || status >= 400) {
+        if (status < HTTP_STATUS_REDIRECT_START || status >= HTTP_STATUS_CLIENT_ERROR_START) {
             return;
         }
         // 如果线程中断，不继续往下执行
@@ -1086,7 +1106,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 构建请求头
         // Pre-allocate capacity to avoid multiple reallocations during header building
         // Typical HTTP request: ~100 chars request line + ~15 headers * 40 chars = ~700 chars
-        StringBuilder requestRaw = new StringBuilder(1024);
+        StringBuilder requestRaw = new StringBuilder(HTTP_REQUEST_BUILDER_INITIAL_CAPACITY);
         // 根据数据来源区分两种请求头
         if (from.equals(FROM_SCAN)) {
             requestRaw.append("GET ").append(pathWithQuery).append(" HTTP/1.1").append("\r\n");
@@ -1231,7 +1251,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     private String setupVariable(IHttpService service, URL url, String requestRaw) {
         String protocol = service.getProtocol();
         String host = service.getHost() + ":" + service.getPort();
-        if (service.getPort() == 80 || service.getPort() == 443) {
+        if (service.getPort() == HTTP_DEFAULT_PORT || service.getPort() == HTTPS_DEFAULT_PORT) {
             host = service.getHost();
         }
         String domain = service.getHost();
@@ -1632,7 +1652,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
                 String protocol = getProtocol();
                 int port = url.getPort();
                 if (port == -1) {
-                    port = protocol.equals("https") ? 443 : 80;
+                    port = protocol.equals("https") ? HTTPS_DEFAULT_PORT : HTTP_DEFAULT_PORT;
                 }
                 return port;
             }
@@ -1764,11 +1784,11 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         }
         // 检测是否超过配置的显示长度限制
         int maxLength = Config.getInt(Config.KEY_MAX_DISPLAY_LENGTH);
-        if (maxLength >= 100000 && request.length >= maxLength) {
+        if (maxLength >= MIN_LENGTH_FOR_TRUNCATION && request.length >= maxLength) {
             String hint = L.get("message_editor_request_length_limit_hint");
             request = mHelpers.stringToBytes(hint);
         }
-        if (maxLength >= 100000 && response.length >= maxLength) {
+        if (maxLength >= MIN_LENGTH_FOR_TRUNCATION && response.length >= maxLength) {
             String hint = L.get("message_editor_response_length_limit_hint");
             response = mHelpers.stringToBytes(hint);
         }
@@ -1792,7 +1812,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
                 int port = u.getPort();
                 boolean useHttps = "https".equalsIgnoreCase(u.getProtocol());
                 if (port == -1) {
-                    port = useHttps ? 443 : 80;
+                    port = useHttps ? HTTPS_DEFAULT_PORT : HTTP_DEFAULT_PORT;
                 }
                 mCallbacks.sendToRepeater(u.getHost(), port, useHttps, reqBytes, null);
             } catch (Exception e) {

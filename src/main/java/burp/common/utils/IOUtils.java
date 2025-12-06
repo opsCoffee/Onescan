@@ -14,6 +14,11 @@ import java.io.InputStream;
  */
 public class IOUtils {
 
+    /**
+     * Stream read buffer size in bytes (8KB)
+     */
+    private static final int STREAM_READ_BUFFER_SIZE = 8192;
+
     private IOUtils() {
         throw new IllegalAccessError("utils class not support create instance.");
     }
@@ -35,7 +40,7 @@ public class IOUtils {
         }
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             int len;
-            byte[] temp = new byte[8192];
+            byte[] temp = new byte[STREAM_READ_BUFFER_SIZE];
             while ((len = is.read(temp)) != -1) {
                 baos.write(temp, 0, len);
             }
