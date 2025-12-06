@@ -1,0 +1,18 @@
+API接口名称,实现类,使用文件,关键方法,方法调用次数,功能分类,重要性等级,代码行号范围,迁移难度,Montoya对应API
+IBurpExtender,BurpExtender,BurpExtender.java,registerExtenderCallbacks,1,生命周期管理,必要,88-223,低,Extension
+IBurpExtenderCallbacks,使用方,BurpExtender.java;OneScanInfoTab.java,getHelpers;setExtensionName;registerProxyListener;registerContextMenuFactory;registerExtensionStateListener;addSuiteTab;createMessageEditor;registerMessageEditorTabFactory;makeHttpRequest;sendToRepeater;unloadExtension;removeProxyListener;removeExtensionStateListener;removeMessageEditorTabFactory;removeContextMenuFactory,20+,核心接口,核心,177-294;225-247;2191-2245,中,MontoyaApi
+IExtensionHelpers,使用方,BurpExtender.java;OneScanInfoTab.java,analyzeRequest;analyzeResponse;stringToBytes;bytesToString,30+,HTTP处理,核心,450;785;1023;1312;1674,中,MontoyaApi.utilities()
+IProxyListener,BurpExtender,BurpExtender.java,processProxyMessage,常频,代理监听,高,383-395,低,ProxyRequestHandler
+IInterceptedProxyMessage,使用方,BurpExtender.java,getMessageInfo,常频,代理监听,高,392,低,ProxyRequestMessage
+ITab,BurpExtender,BurpExtender.java,getTabCaption;getUiComponent,1,UI组件,中,368-375,高,WebSocketHandler / UI API
+IMessageEditorController,BurpExtender,BurpExtender.java;OneScanInfoTab.java,getHttpService;getRequest;getResponse,多次,UI控制,高,1915-1936,中,MessageEditorProvider
+IMessageEditorTabFactory,BurpExtender,BurpExtender.java,createNewInstance,1,UI组件工厂,中,2181-2183,中,MessageEditorProvider
+IMessageEditorTab,OneScanInfoTab,OneScanInfoTab.java,getTabCaption;getUiComponent;isEnabled;setMessage;getMessage;isModified;getSelectedData,多次,消息编辑,中,24-244,中,MessageEditorProvider
+IContextMenuFactory,BurpExtender,BurpExtender.java,createMenuItems,1,菜单交互,低,312-360,低,ContextMenuItemsProvider
+IContextMenuInvocation,使用方,BurpExtender.java,getSelectedMessages,常频,菜单交互,低,312-360,低,ContextMenuItemsProvider
+IExtensionStateListener,BurpExtender,BurpExtender.java,extensionUnloaded,1,生命周期管理,必要,2191-2245,低,不需要(新API直接回调)
+IHttpService,使用方/实现,BurpExtender.java;HttpReqRespAdapter.java,getHost;getPort;getProtocol,常频,HTTP服务,高,多处,中,HttpService
+IHttpRequestResponse,使用方/实现,BurpExtender.java;HttpReqRespAdapter.java;OneScanInfoTab.java,getRequest;getResponse;getHttpService;setRequest;setResponse;getComment;setComment;getHighlight;setHighlight,常频,HTTP对象,核心,多处,中,HttpRequestResponse
+IRequestInfo,使用方,BurpExtender.java;OneScanInfoTab.java,getMethod;getHeaders;getUrl;getBodyOffset,常频,请求分析,高,多处,中,HttpRequest
+IResponseInfo,使用方,BurpExtender.java,getStatusCode;getBodyOffset;getHeaders;getCookies,常频,响应分析,高,多处,中,HttpResponse
+ICookie,使用方,BurpExtender.java,getName;getValue,罕见,Cookie处理,低,1083-1091,低,HttpCookie
