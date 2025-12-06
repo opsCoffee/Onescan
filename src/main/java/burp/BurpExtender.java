@@ -318,9 +318,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             IHttpRequestResponse[] messages = invocation.getSelectedMessages();
             for (IHttpRequestResponse httpReqResp : messages) {
                 doScan(httpReqResp, FROM_SEND);
-                // 线程池关闭后，停止发送扫描任务
                 if (isTaskThreadPoolShutdown()) {
-                    Logger.debug("sendToPlugin: thread pool is shutdown, stop sending scan task");
                     return;
                 }
             }
@@ -330,18 +328,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         if (!payloadList.isEmpty() && payloadList.size() > 1) {
             JMenu menu = new JMenu(L.get("use_payload_scan"));
             items.add(menu);
-            ActionListener listener = (event) -> new Thread(() -> {
-                String action = event.getActionCommand();
-                IHttpRequestResponse[] messages = invocation.getSelectedMessages();
-                for (IHttpRequestResponse httpReqResp : messages) {
-                    doScan(httpReqResp, FROM_SEND, action);
-                    // 线程池关闭后，停止发送扫描任务
-                    if (isTaskThreadPoolShutdown()) {
-                        Logger.debug("usePayloadScan: thread pool is shutdown, stop sending scan task");
-                        return;
-                    }
-                }
-            }).start();
+            ActionListener listener = createDynamicPayloadScanListener(invocation);
             for (String itemName : payloadList) {
                 JMenuItem item = new JMenuItem(itemName);
                 item.setActionCommand(itemName);
@@ -350,6 +337,26 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             }
         }
         return items;
+    }
+
+    /**
+     * 创建使用动态 Payload 的批量扫描 ActionListener
+     * Payload 从 ActionEvent.getActionCommand() 获取
+     *
+     * @param invocation 上下文菜单调用
+     * @return ActionListener
+     */
+    private ActionListener createDynamicPayloadScanListener(IContextMenuInvocation invocation) {
+        return (event) -> new Thread(() -> {
+            String payloadItem = event.getActionCommand();
+            IHttpRequestResponse[] messages = invocation.getSelectedMessages();
+            for (IHttpRequestResponse httpReqResp : messages) {
+                doScan(httpReqResp, FROM_SEND, payloadItem);
+                if (isTaskThreadPoolShutdown()) {
+                    return;
+                }
+            }
+        }).start();
     }
 
     // ============================================================
