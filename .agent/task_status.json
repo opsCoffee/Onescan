@@ -4,7 +4,7 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-06T14:25:00+00:00",
+  "lastUpdate": "2025-12-06T14:40:00+00:00",
   "summary": {
     "totalTasks": 17,
     "completedTasks": 1,
@@ -27,7 +27,7 @@
     "MIGRATE-001": {
       "status": "completed",
       "completed_at": "2025-12-06T14:37:00+00:00",
-      "commit": "",
+      "commit": "a9b43bd",
       "description": "扫描传统 API 使用情况,生成详细报告",
       "deliverables": [
         ".agent/api_usage_report.md",
