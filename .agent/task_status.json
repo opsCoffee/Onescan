@@ -39,7 +39,7 @@
     "MIGRATE-002": {
       "status": "completed",
       "completed_at": "2025-12-06T14:53:00+00:00",
-      "commit": "pending",
+      "commit": "318bcac",
       "description": "建立传统 API 到 Montoya API 的映射表,识别复杂场景,标记特殊API",
       "deliverables": [
         ".agent/api_mapping.md"
