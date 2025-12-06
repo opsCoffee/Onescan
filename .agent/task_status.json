@@ -57,7 +57,7 @@
     "MIGRATE-004": {
       "status": "completed",
       "completed_at": "2025-12-06T15:30:41+00:00",
-      "commit": "pending",
+      "commit": "aadf0e7",
       "description": "创建详细的迁移计划,整合前三个任务的输出,更新 task_status.json",
       "deliverables": [
         ".agent/migration_plan.md"
