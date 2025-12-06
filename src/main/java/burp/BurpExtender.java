@@ -439,55 +439,86 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         if (httpReqResp == null || httpReqResp.getHttpService() == null) {
             return;
         }
+
         IRequestInfo info = mHelpers.analyzeRequest(httpReqResp);
         String host = httpReqResp.getHttpService().getHost();
-        byte[] request = httpReqResp.getRequest();
-        byte[] response = httpReqResp.getResponse();
-        // 对来自代理的包进行检测，检测请求方法是否需要拦截
+
+        // 应用过滤规则
+        if (shouldFilterRequest(from, host, info.getMethod())) {
+            return;
+        }
+
+        // 提交指纹识别任务
+        submitFingerprintTask(httpReqResp.getRequest(), httpReqResp.getResponse());
+
+        // 处理原始请求
+        URL url = getUrlByRequestInfo(info);
+        processOriginalRequest(httpReqResp, info, url, from);
+
+        // 递归目录扫描
+        if (mDataBoardTab.hasDirScan()) {
+            performRecursiveScan(httpReqResp, info, url, payloadItem);
+        }
+    }
+
+    /**
+     * 检查请求是否应该被过滤
+     */
+    private boolean shouldFilterRequest(String from, String host, String method) {
+        // 对来自代理的包进行检测
         if (from.equals(FROM_PROXY)) {
-            String method = info.getMethod();
             if (includeMethodFilter(method)) {
-                // 拦截不匹配的请求方法
                 Logger.debug("doScan filter request method: %s, host: %s", method, host);
-                return;
+                return true;
             }
-            // 检测 Host 是否在白名单、黑名单中
             if (hostAllowlistFilter(host) || hostBlocklistFilter(host)) {
                 Logger.debug("doScan allowlist and blocklist filter host: %s", host);
-                return;
+                return true;
             }
         }
-        // 如果启用，对来自重定向的包进行检测
+
+        // 对来自重定向的包进行检测
         if (from.startsWith(FROM_REDIRECT) && Config.getBoolean(Config.KEY_REDIRECT_TARGET_HOST_LIMIT)) {
-            // 检测 Host 是否在白名单、黑名单中
             if (hostAllowlistFilter(host) || hostBlocklistFilter(host)) {
                 Logger.debug("doScan allowlist and blocklist filter host: %s", host);
-                return;
+                return true;
             }
         }
-        // 开启线程识别指纹，将识别结果缓存起来
+
+        return false;
+    }
+
+    /**
+     * 提交指纹识别任务
+     */
+    private void submitFingerprintTask(byte[] request, byte[] response) {
         if (!mScanEngine.isFpThreadPoolShutdown()) {
             mScanEngine.submitFpTask(() -> FpManager.check(request, response));
         }
-        // 准备生成任务
-        URL url = getUrlByRequestInfo(info);
-        // 原始请求也需要经过 Payload Process 处理（不过需要过滤一些后缀的流量）
+    }
+
+    /**
+     * 处理原始请求（非递归扫描）
+     */
+    private void processOriginalRequest(IHttpRequestResponse httpReqResp, IRequestInfo info, URL url, String from) {
         if (!proxyExcludeSuffixFilter(url.getPath())) {
             runScanTask(httpReqResp, info, null, from);
         } else {
             Logger.debug("proxyExcludeSuffixFilter filter request path: %s", url.getPath());
         }
-        // 检测是否禁用递归扫描
-        if (!mDataBoardTab.hasDirScan()) {
-            return;
-        }
-        // 获取一下请求数据包中的请求路径
+    }
+
+    /**
+     * 执行递归目录扫描
+     */
+    private void performRecursiveScan(IHttpRequestResponse httpReqResp, IRequestInfo info, URL url, String payloadItem) {
         String reqPath = getReqPathByRequestInfo(info);
-        // 从请求路径中，尝试获取请求主机地址
         String reqHost = getReqHostByReqPath(reqPath);
         Logger.debug("doScan receive: %s", url.toString());
+
         ArrayList<String> pathDict = getUrlPathDict(url.getPath());
         List<String> payloads = WordlistManager.getPayload(payloadItem);
+
         // 一级目录一级目录递减访问
         for (int i = pathDict.size() - 1; i >= 0; i--) {
             String path = pathDict.get(i);
@@ -495,17 +526,16 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
             if (path.endsWith("/")) {
                 path = path.substring(0, path.length() - 1);
             }
-            // 拼接字典，发起请求
+
+            // 对每个 payload 生成扫描任务
             for (String item : payloads) {
-                // 线程池关闭后，停止继续生成任务
                 if (isTaskThreadPoolShutdown()) {
                     return;
                 }
-                // 跳过 HTTP payload 的递归扫描
                 if (shouldSkipHttpPayload(path, item)) {
                     continue;
                 }
-                // 构建扫描 URL 路径
+
                 String urlPath = buildScanUrlPath(path, item, reqPath, reqHost);
                 runScanTask(httpReqResp, info, urlPath, FROM_SCAN);
             }
@@ -1127,99 +1157,152 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
      * @return 处理完成的数据包，失败时返回null
      */
     private byte[] handleHeader(IHttpRequestResponse httpReqResp, IRequestInfo info, String pathWithQuery, String from) {
-        // 配置的请求头
-        List<String> configHeader = getHeader();
-        // 要移除的请求头KEY列表
+        List<String> configHeaders = getHeader();
         List<String> removeHeaders = getRemoveHeaders();
-        // 数据包自带的请求头
-        List<String> headers = info.getHeaders();
-        // 构建请求头
-        // Pre-allocate capacity to avoid multiple reallocations during header building
-        // Typical HTTP request: ~100 chars request line + ~15 headers * 40 chars = ~700 chars
+        List<String> originalHeaders = info.getHeaders();
+
+        // 构建请求
         StringBuilder requestRaw = new StringBuilder(HTTP_REQUEST_BUILDER_INITIAL_CAPACITY);
-        // 根据数据来源区分两种请求头
+        buildRequestLine(requestRaw, originalHeaders, pathWithQuery, from);
+        processHeaders(requestRaw, originalHeaders, configHeaders, removeHeaders, from);
+        appendRemainingConfigHeaders(requestRaw, configHeaders, removeHeaders);
+        requestRaw.append("\r\n");
+        appendRequestBody(requestRaw, httpReqResp, info, from);
+
+        // 填充动态变量并更新 Content-Length
+        return finalizeRequest(httpReqResp, info, requestRaw.toString());
+    }
+
+    /**
+     * 构建 HTTP 请求行
+     */
+    private void buildRequestLine(StringBuilder requestRaw, List<String> headers, String pathWithQuery, String from) {
         if (from.equals(FROM_SCAN)) {
             requestRaw.append("GET ").append(pathWithQuery).append(" HTTP/1.1").append("\r\n");
         } else {
             String reqLine = headers.get(0);
-            // 先检测一下是否包含 ' HTTP/' 字符串，再继续处理（可能有些畸形数据包不存在该内容）
             if (reqLine.contains(" HTTP/")) {
                 int start = reqLine.lastIndexOf(" HTTP/");
                 reqLine = reqLine.substring(0, start) + " HTTP/1.1";
             }
             requestRaw.append(reqLine).append("\r\n");
         }
-        // 请求头的参数处理（顺带处理移除的请求头），从 1 开始表示跳过首行（请求行）
+    }
+
+    /**
+     * 处理原始请求头（移除/替换/保留）
+     */
+    private void processHeaders(StringBuilder requestRaw, List<String> headers,
+                                 List<String> configHeaders, List<String> removeHeaders, String from) {
+        // 从索引 1 开始，跳过请求行
         for (int i = 1; i < headers.size(); i++) {
-            String item = headers.get(i);
-            String[] parts = item.split(": ");
-            if (parts.length < 1) {
-                Logger.debug("Invalid header format (missing key): %s", item);
+            String header = headers.get(i);
+            String headerKey = extractHeaderKey(header);
+
+            if (headerKey == null) {
+                Logger.debug("Invalid header format (missing key): %s", header);
                 continue;
             }
-            String key = parts[0];
-            // 是否需要移除当前请求头字段（优先级最高）
-            if (removeHeaders.contains(key)) {
+
+            // 跳过需要移除的请求头
+            if (shouldRemoveHeader(headerKey, removeHeaders, from)) {
                 continue;
             }
-            // 如果是扫描的请求（只有 GET 请求），将 Content-Length 移除
-            if (from.equals(FROM_SCAN) && "Content-Length".equalsIgnoreCase(key)) {
-                continue;
-            }
-            // 检测配置中是否存在当前请求头字段
-            String matchItem = configHeader.stream().filter(configHeaderItem -> {
-                if (StringUtils.isNotEmpty(configHeaderItem) && configHeaderItem.contains(": ")) {
-                    String configHeaderKey = configHeaderItem.split(": ")[0];
-                    // 检测是否需要移除当前请求头字段
-                    if (removeHeaders.contains(key)) {
-                        return false;
-                    }
-                    return configHeaderKey.equals(key);
-                }
-                return false;
-            }).findFirst().orElse(null);
-            // 配置中存在匹配项，替换为配置中的数据
-            if (matchItem != null) {
-                requestRaw.append(matchItem).append("\r\n");
-                // 将已经添加的数据从列表中移除
-                configHeader.remove(matchItem);
+
+            // 查找配置中是否有相同 key 的请求头
+            String matchedConfigHeader = findMatchingConfigHeader(headerKey, configHeaders, removeHeaders);
+            if (matchedConfigHeader != null) {
+                requestRaw.append(matchedConfigHeader).append("\r\n");
+                configHeaders.remove(matchedConfigHeader);
             } else {
-                // 不存在匹配项，填充原数据
-                requestRaw.append(item).append("\r\n");
+                requestRaw.append(header).append("\r\n");
             }
         }
-        // 将配置里剩下的值全部填充到请求头中
-        for (String item : configHeader) {
-            String[] parts = item.split(": ");
-            if (parts.length < 1) {
-                Logger.debug("Invalid config header format (missing key): %s", item);
+    }
+
+    /**
+     * 提取请求头的 key
+     */
+    private String extractHeaderKey(String header) {
+        String[] parts = header.split(": ");
+        return parts.length >= 1 ? parts[0] : null;
+    }
+
+    /**
+     * 判断是否应该移除请求头
+     */
+    private boolean shouldRemoveHeader(String key, List<String> removeHeaders, String from) {
+        if (removeHeaders.contains(key)) {
+            return true;
+        }
+        // 扫描请求（GET）移除 Content-Length
+        if (from.equals(FROM_SCAN) && "Content-Length".equalsIgnoreCase(key)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 查找配置中匹配的请求头
+     */
+    private String findMatchingConfigHeader(String targetKey, List<String> configHeaders, List<String> removeHeaders) {
+        return configHeaders.stream()
+            .filter(configHeader -> {
+                if (StringUtils.isEmpty(configHeader) || !configHeader.contains(": ")) {
+                    return false;
+                }
+                String configKey = configHeader.split(": ")[0];
+                return !removeHeaders.contains(configKey) && configKey.equals(targetKey);
+            })
+            .findFirst()
+            .orElse(null);
+    }
+
+    /**
+     * 添加配置中剩余的请求头
+     */
+    private void appendRemainingConfigHeaders(StringBuilder requestRaw, List<String> configHeaders, List<String> removeHeaders) {
+        for (String header : configHeaders) {
+            String headerKey = extractHeaderKey(header);
+            if (headerKey == null) {
+                Logger.debug("Invalid config header format (missing key): %s", header);
                 continue;
             }
-            String key = parts[0];
-            // 检测是否需要移除当前KEY
-            if (!removeHeaders.contains(key)) {
-                requestRaw.append(item).append("\r\n");
+            if (!removeHeaders.contains(headerKey)) {
+                requestRaw.append(header).append("\r\n");
             }
         }
-        requestRaw.append("\r\n");
-        // 如果当前数据来源不是 Scan，可能会包含 POST 请求，判断是否存在 body 数据
-        if (!from.equals(FROM_SCAN)) {
-            byte[] httpRequest = httpReqResp.getRequest();
-            int bodyOffset = info.getBodyOffset();
-            int bodySize = httpRequest.length - bodyOffset;
-            if (bodySize > 0) {
-                requestRaw.append(new String(httpRequest, bodyOffset, bodySize));
-            }
+    }
+
+    /**
+     * 添加请求 body（仅非扫描请求）
+     */
+    private void appendRequestBody(StringBuilder requestRaw, IHttpRequestResponse httpReqResp, IRequestInfo info, String from) {
+        if (from.equals(FROM_SCAN)) {
+            return;
         }
-        // 请求头构建完成后，对里面包含的动态变量进行赋值
+
+        byte[] httpRequest = httpReqResp.getRequest();
+        int bodyOffset = info.getBodyOffset();
+        int bodySize = httpRequest.length - bodyOffset;
+        if (bodySize > 0) {
+            requestRaw.append(new String(httpRequest, bodyOffset, bodySize));
+        }
+    }
+
+    /**
+     * 完成请求构建：填充变量并更新 Content-Length
+     */
+    private byte[] finalizeRequest(IHttpRequestResponse httpReqResp, IRequestInfo info, String requestRaw) {
         IHttpService service = httpReqResp.getHttpService();
         URL url = getUrlByRequestInfo(info);
-        String newRequestRaw = setupVariable(service, url, requestRaw.toString());
-        if (newRequestRaw == null) {
+        String processedRequest = setupVariable(service, url, requestRaw);
+
+        if (processedRequest == null) {
             return null;
         }
-        // 更新 Content-Length
-        return updateContentLength(mHelpers.stringToBytes(newRequestRaw));
+
+        return updateContentLength(mHelpers.stringToBytes(processedRequest));
     }
 
     /**
@@ -1279,81 +1362,162 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
      * @return 处理失败返回null
      */
     private String setupVariable(IHttpService service, URL url, String requestRaw) {
-        String protocol = service.getProtocol();
-        String host = service.getHost() + ":" + service.getPort();
-        if (service.getPort() == HTTP_DEFAULT_PORT || service.getPort() == HTTPS_DEFAULT_PORT) {
-            host = service.getHost();
-        }
-        String domain = service.getHost();
-        String timestamp = String.valueOf(DateUtils.getTimestamp());
-        String randomIP = IPUtils.randomIPv4();
-        String randomLocalIP = IPUtils.randomIPv4ForLocal();
-        String randomUA = Utils.getRandomItem(WordlistManager.getUserAgent());
-        String domainMain = DomainHelper.getDomain(domain, null);
-        String domainName = DomainHelper.getDomainName(domain, null);
-        String subdomain = getSubdomain(domain);
-        String subdomains = getSubdomains(domain);
-        String webroot = getWebrootByURL(url);
-        // 替换变量
         try {
-            requestRaw = fillVariable(requestRaw, "protocol", protocol);
-            requestRaw = fillVariable(requestRaw, "host", host);
-            requestRaw = fillVariable(requestRaw, "webroot", webroot);
-            // 需要填充再取值
-            if (requestRaw.contains("{{ip}}")) {
-                String ip = findIpByHost(domain);
-                requestRaw = fillVariable(requestRaw, "ip", ip);
-            }
-            // 填充域名相关动态变量
-            requestRaw = fillVariable(requestRaw, "domain", domain);
-            requestRaw = fillVariable(requestRaw, "domain.main", domainMain);
-            requestRaw = fillVariable(requestRaw, "domain.name", domainName);
-            // 填充子域名相关动态变量
-            requestRaw = fillVariable(requestRaw, "subdomain", subdomain);
-            requestRaw = fillVariable(requestRaw, "subdomains", subdomains);
-            if (requestRaw.contains("{{subdomains.")) {
-                if (StringUtils.isEmpty(subdomains)) {
-                    return null;
-                }
-                String[] subdomainsSplit = subdomains.split("\\.");
-                // 遍历填充 {{subdomains.%d}} 动态变量
-                for (int i = 0; i < subdomainsSplit.length; i++) {
-                    requestRaw = fillVariable(requestRaw, "subdomains." + i, subdomainsSplit[i]);
-                }
-                // 检测是否存在未填充的 {{subdomains.%d}} 动态变量，如果存在，忽略当前 Payload
-                if (requestRaw.contains("{{subdomains.")) {
-                    return null;
-                }
-            }
-            // 填充随机值相关动态变量
-            requestRaw = fillVariable(requestRaw, "random.ip", randomIP);
-            requestRaw = fillVariable(requestRaw, "random.local-ip", randomLocalIP);
-            requestRaw = fillVariable(requestRaw, "random.ua", randomUA);
-            // 填充日期、时间相关的动态变量
-            requestRaw = fillVariable(requestRaw, "timestamp", timestamp);
-            if (requestRaw.contains("{{date.") || requestRaw.contains("{{time.")) {
-                String currentDate = DateUtils.getCurrentDate("yyyy-MM-dd HH:mm:ss;yy-M-d H:m:s");
-                String[] split = currentDate.split(";");
-                String[] leftDateTime = parseDateTime(split[0]);
-                requestRaw = fillVariable(requestRaw, "date.yyyy", leftDateTime[0]);
-                requestRaw = fillVariable(requestRaw, "date.MM", leftDateTime[1]);
-                requestRaw = fillVariable(requestRaw, "date.dd", leftDateTime[2]);
-                requestRaw = fillVariable(requestRaw, "time.HH", leftDateTime[3]);
-                requestRaw = fillVariable(requestRaw, "time.mm", leftDateTime[4]);
-                requestRaw = fillVariable(requestRaw, "time.ss", leftDateTime[5]);
-                String[] rightDateTime = parseDateTime(split[1]);
-                requestRaw = fillVariable(requestRaw, "date.yy", rightDateTime[0]);
-                requestRaw = fillVariable(requestRaw, "date.M", rightDateTime[1]);
-                requestRaw = fillVariable(requestRaw, "date.d", rightDateTime[2]);
-                requestRaw = fillVariable(requestRaw, "time.H", rightDateTime[3]);
-                requestRaw = fillVariable(requestRaw, "time.m", rightDateTime[4]);
-                requestRaw = fillVariable(requestRaw, "time.s", rightDateTime[5]);
-            }
+            // 准备基础变量
+            VariableContext context = prepareBasicVariables(service, url);
+
+            // 填充所有变量
+            requestRaw = fillBasicVariables(requestRaw, context);
+            requestRaw = fillDomainVariables(requestRaw, context);
+            requestRaw = fillSubdomainVariables(requestRaw, context);
+            requestRaw = fillRandomVariables(requestRaw, context);
+            requestRaw = fillDateTimeVariables(requestRaw);
+
             return requestRaw;
         } catch (IllegalArgumentException e) {
             Logger.debug(e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * 变量上下文，包含所有需要替换的变量值
+     */
+    private static class VariableContext {
+        String protocol;
+        String host;
+        String domain;
+        String webroot;
+        String domainMain;
+        String domainName;
+        String subdomain;
+        String subdomains;
+        String randomIP;
+        String randomLocalIP;
+        String randomUA;
+        String timestamp;
+    }
+
+    /**
+     * 准备基础变量值
+     */
+    private VariableContext prepareBasicVariables(IHttpService service, URL url) {
+        VariableContext context = new VariableContext();
+
+        context.protocol = service.getProtocol();
+        context.host = service.getHost() + ":" + service.getPort();
+        if (service.getPort() == HTTP_DEFAULT_PORT || service.getPort() == HTTPS_DEFAULT_PORT) {
+            context.host = service.getHost();
+        }
+        context.domain = service.getHost();
+        context.timestamp = String.valueOf(DateUtils.getTimestamp());
+        context.randomIP = IPUtils.randomIPv4();
+        context.randomLocalIP = IPUtils.randomIPv4ForLocal();
+        context.randomUA = Utils.getRandomItem(WordlistManager.getUserAgent());
+        context.domainMain = DomainHelper.getDomain(context.domain, null);
+        context.domainName = DomainHelper.getDomainName(context.domain, null);
+        context.subdomain = getSubdomain(context.domain);
+        context.subdomains = getSubdomains(context.domain);
+        context.webroot = getWebrootByURL(url);
+
+        return context;
+    }
+
+    /**
+     * 填充基础变量（protocol, host, webroot, ip）
+     */
+    private String fillBasicVariables(String requestRaw, VariableContext context) {
+        requestRaw = fillVariable(requestRaw, "protocol", context.protocol);
+        requestRaw = fillVariable(requestRaw, "host", context.host);
+        requestRaw = fillVariable(requestRaw, "webroot", context.webroot);
+
+        // IP 需要按需填充（避免不必要的 DNS 查询）
+        if (requestRaw.contains("{{ip}}")) {
+            String ip = findIpByHost(context.domain);
+            requestRaw = fillVariable(requestRaw, "ip", ip);
+        }
+
+        return requestRaw;
+    }
+
+    /**
+     * 填充域名相关变量
+     */
+    private String fillDomainVariables(String requestRaw, VariableContext context) {
+        requestRaw = fillVariable(requestRaw, "domain", context.domain);
+        requestRaw = fillVariable(requestRaw, "domain.main", context.domainMain);
+        requestRaw = fillVariable(requestRaw, "domain.name", context.domainName);
+        return requestRaw;
+    }
+
+    /**
+     * 填充子域名相关变量
+     */
+    private String fillSubdomainVariables(String requestRaw, VariableContext context) {
+        requestRaw = fillVariable(requestRaw, "subdomain", context.subdomain);
+        requestRaw = fillVariable(requestRaw, "subdomains", context.subdomains);
+
+        // 处理 {{subdomains.N}} 格式的变量
+        if (requestRaw.contains("{{subdomains.")) {
+            if (StringUtils.isEmpty(context.subdomains)) {
+                return null;
+            }
+
+            String[] subdomainsSplit = context.subdomains.split("\\.");
+            for (int i = 0; i < subdomainsSplit.length; i++) {
+                requestRaw = fillVariable(requestRaw, "subdomains." + i, subdomainsSplit[i]);
+            }
+
+            // 如果还存在未填充的 subdomains 变量，忽略当前 payload
+            if (requestRaw.contains("{{subdomains.")) {
+                return null;
+            }
+        }
+
+        return requestRaw;
+    }
+
+    /**
+     * 填充随机值相关变量
+     */
+    private String fillRandomVariables(String requestRaw, VariableContext context) {
+        requestRaw = fillVariable(requestRaw, "random.ip", context.randomIP);
+        requestRaw = fillVariable(requestRaw, "random.local-ip", context.randomLocalIP);
+        requestRaw = fillVariable(requestRaw, "random.ua", context.randomUA);
+        requestRaw = fillVariable(requestRaw, "timestamp", context.timestamp);
+        return requestRaw;
+    }
+
+    /**
+     * 填充日期时间相关变量
+     */
+    private String fillDateTimeVariables(String requestRaw) {
+        if (!requestRaw.contains("{{date.") && !requestRaw.contains("{{time.")) {
+            return requestRaw;
+        }
+
+        String currentDate = DateUtils.getCurrentDate("yyyy-MM-dd HH:mm:ss;yy-M-d H:m:s");
+        String[] split = currentDate.split(";");
+        String[] leftDateTime = parseDateTime(split[0]);
+        String[] rightDateTime = parseDateTime(split[1]);
+
+        // 填充完整格式日期时间
+        requestRaw = fillVariable(requestRaw, "date.yyyy", leftDateTime[0]);
+        requestRaw = fillVariable(requestRaw, "date.MM", leftDateTime[1]);
+        requestRaw = fillVariable(requestRaw, "date.dd", leftDateTime[2]);
+        requestRaw = fillVariable(requestRaw, "time.HH", leftDateTime[3]);
+        requestRaw = fillVariable(requestRaw, "time.mm", leftDateTime[4]);
+        requestRaw = fillVariable(requestRaw, "time.ss", leftDateTime[5]);
+
+        // 填充简化格式日期时间
+        requestRaw = fillVariable(requestRaw, "date.yy", rightDateTime[0]);
+        requestRaw = fillVariable(requestRaw, "date.M", rightDateTime[1]);
+        requestRaw = fillVariable(requestRaw, "date.d", rightDateTime[2]);
+        requestRaw = fillVariable(requestRaw, "time.H", rightDateTime[3]);
+        requestRaw = fillVariable(requestRaw, "time.m", rightDateTime[4]);
+        requestRaw = fillVariable(requestRaw, "time.s", rightDateTime[5]);
+
+        return requestRaw;
     }
 
     /**

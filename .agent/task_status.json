@@ -16,7 +16,7 @@
     "actualHours": 0
   },
   "current_phase": "1.1",
-  "current_task": "STYLE-001",
+  "current_task": "STYLE-003",
   "completed_phases": [],
   "completed_tasks": [
     "SEC-001",
@@ -29,10 +29,12 @@
     "PERF-001",
     "PERF-002",
     "PERF-003",
-    "ARCH-001"
+    "ARCH-001",
+    "STYLE-001",
+    "STYLE-002"
   ],
   "in_progress_tasks": [
-    "STYLE-001"
+    "STYLE-003"
   ],
   "skipped_tasks": [
     "ARCH-002"
@@ -112,16 +114,28 @@
       "description": "重构 UI 层耦合"
     },
     "STYLE-001": {
+      "status": "completed",
+      "completed_at": "2025-12-06T04:13:15+08:00",
+      "commit": "09fcda99f00b70b0ee708b1c681f821e7aadc437",
+      "description": ""
+    },
+    "STYLE-002": {
+      "status": "completed",
+      "completed_at": "2025-12-06T04:26:17+08:00",
+      "commit": "431fe2b05a1fefe08d016e892aee47ac9789e44e",
+      "description": ""
+    },
+    "STYLE-003": {
       "status": "in_progress",
-      "started_at": "2025-12-06T03:57:40+08:00"
+      "started_at": "2025-12-06T04:28:12+08:00"
     }
   },
   "total_tasks": 17,
-  "completed_count": 11,
+  "completed_count": 13,
   "in_progress_count": 1,
-  "pending_count": 5,
+  "pending_count": 4,
   "skipped_count": 1,
-  "progress_percentage": 64,
+  "progress_percentage": 76,
   "phases": {
     "1.1": {
       "name": "P0 级别问题修复（严重）",
@@ -576,5 +590,5 @@
     "P0 级别问题必须立即修复",
     "建议引入单元测试和静态分析工具"
   ],
-  "last_update": "2025-12-06T03:57:40+08:00"
+  "last_update": "2025-12-06T04:28:12+08:00"
 }
