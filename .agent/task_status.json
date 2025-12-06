@@ -4,13 +4,13 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-06T15:30:41+00:00",
+  "lastUpdate": "2025-12-06T17:19:09+00:00",
   "summary": {
     "totalTasks": 17,
     "completedTasks": 4,
-    "inProgressTasks": 0,
-    "pendingTasks": 13,
-    "skippedTasks": 0,
+    "inProgressTasks": 1,
+    "pendingTasks": 11,
+    "skippedTasks": 1,
     "failedTasks": 0,
     "progressPercentage": 24,
     "estimatedTotalHours": 80,
@@ -18,10 +18,21 @@
   },
   "current_phase": "1",
   "current_task": "MIGRATE-101",
-  "completed_phases": ["0"],
-  "completed_tasks": ["MIGRATE-001", "MIGRATE-002", "MIGRATE-003", "MIGRATE-004"],
-  "in_progress_tasks": [],
-  "skipped_tasks": [],
+  "completed_phases": [
+    "0"
+  ],
+  "completed_tasks": [
+    "MIGRATE-001",
+    "MIGRATE-002",
+    "MIGRATE-003",
+    "MIGRATE-004"
+  ],
+  "in_progress_tasks": [
+    "MIGRATE-101"
+  ],
+  "skipped_tasks": [
+    "MIGRATE-102"
+  ],
   "failed_tasks": [],
   "task_details": {
     "MIGRATE-001": {
@@ -62,6 +73,54 @@
       "deliverables": [
         ".agent/migration_plan.md"
       ]
+    },
+    "MIGRATE-101": {
+      "status": "in_progress",
+      "started_at": "2025-12-06T17:19:09+00:00",
+      "notes": [
+        "决策: 合并 MIGRATE-101 和 MIGRATE-102 一次性执行",
+        "原因: 两个任务操作同一数据,MontoyaApi 和 IBurpExtenderCallbacks 类型不兼容",
+        "进度: 已完成深度分析,拆分为 5 个子任务 (MIGRATE-101-A ~ E)",
+        "下一步: 执行 MIGRATE-101-A (核心接口迁移)"
+      ],
+      "sub_tasks": [
+        {
+          "id": "MIGRATE-101-A",
+          "title": "核心接口迁移",
+          "status": "pending",
+          "hours": 2
+        },
+        {
+          "id": "MIGRATE-101-B",
+          "title": "UI 相关 API 迁移",
+          "status": "pending",
+          "hours": 2
+        },
+        {
+          "id": "MIGRATE-101-C",
+          "title": "事件监听器迁移",
+          "status": "pending",
+          "hours": 2
+        },
+        {
+          "id": "MIGRATE-101-D",
+          "title": "HTTP 请求处理迁移",
+          "status": "pending",
+          "hours": 2
+        },
+        {
+          "id": "MIGRATE-101-E",
+          "title": "清理和最终验证",
+          "status": "pending",
+          "hours": 1
+        }
+      ]
+    },
+    "MIGRATE-102": {
+      "status": "skipped",
+      "notes": [
+        "已合并到 MIGRATE-101 一起执行"
+      ]
     }
   },
   "phases": {
@@ -79,7 +138,7 @@
       "name": "核心入口点迁移",
       "description": "迁移插件的主入口和核心初始化逻辑",
       "priority": "P1",
-      "status": "pending",
+      "status": "in_progress",
       "total_tasks": 2,
       "completed_tasks": 0,
       "estimatedHours": 8,
@@ -138,8 +197,12 @@
       "impact": "全局",
       "estimatedHours": 3,
       "actualHours": 0,
-      "affectedFiles": ["所有 Java 文件"],
-      "deliverables": [".agent/api_usage_report.md"],
+      "affectedFiles": [
+        "所有 Java 文件"
+      ],
+      "deliverables": [
+        ".agent/api_usage_report.md"
+      ],
       "dependencies": [],
       "status": "pending",
       "testRequired": false,
@@ -157,8 +220,12 @@
       "estimatedHours": 4,
       "actualHours": 0,
       "affectedFiles": [],
-      "deliverables": [".agent/api_mapping.md"],
-      "dependencies": ["MIGRATE-001"],
+      "deliverables": [
+        ".agent/api_mapping.md"
+      ],
+      "dependencies": [
+        "MIGRATE-001"
+      ],
       "status": "pending",
       "testRequired": false,
       "documentationRequired": true
@@ -175,8 +242,13 @@
       "estimatedHours": 3,
       "actualHours": 0,
       "affectedFiles": [],
-      "deliverables": [".agent/dependency_analysis.md"],
-      "dependencies": ["MIGRATE-001", "MIGRATE-002"],
+      "deliverables": [
+        ".agent/dependency_analysis.md"
+      ],
+      "dependencies": [
+        "MIGRATE-001",
+        "MIGRATE-002"
+      ],
       "status": "pending",
       "testRequired": false,
       "documentationRequired": true
@@ -193,8 +265,14 @@
       "estimatedHours": 2,
       "actualHours": 0,
       "affectedFiles": [],
-      "deliverables": [".agent/migration_plan.md"],
-      "dependencies": ["MIGRATE-001", "MIGRATE-002", "MIGRATE-003"],
+      "deliverables": [
+        ".agent/migration_plan.md"
+      ],
+      "dependencies": [
+        "MIGRATE-001",
+        "MIGRATE-002",
+        "MIGRATE-003"
+      ],
       "status": "pending",
       "testRequired": false,
       "documentationRequired": true
@@ -210,9 +288,13 @@
       "impact": "全局",
       "estimatedHours": 4,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/BurpExtender.java"],
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-004"],
+      "dependencies": [
+        "MIGRATE-004"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -228,9 +310,13 @@
       "impact": "全局",
       "estimatedHours": 4,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/BurpExtender.java"],
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-101"],
+      "dependencies": [
+        "MIGRATE-101"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -246,9 +332,13 @@
       "impact": "模块级",
       "estimatedHours": 6,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/BurpExtender.java"],
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-102"],
+      "dependencies": [
+        "MIGRATE-102"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -264,9 +354,13 @@
       "impact": "模块级",
       "estimatedHours": 6,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/BurpExtender.java"],
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-201"],
+      "dependencies": [
+        "MIGRATE-201"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -282,9 +376,13 @@
       "impact": "模块级",
       "estimatedHours": 4,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/BurpExtender.java"],
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-202"],
+      "dependencies": [
+        "MIGRATE-202"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -300,9 +398,13 @@
       "impact": "模块级",
       "estimatedHours": 6,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/onescan/ui/"],
+      "affectedFiles": [
+        "src/main/java/burp/onescan/ui/"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-102"],
+      "dependencies": [
+        "MIGRATE-102"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -318,9 +420,13 @@
       "impact": "模块级",
       "estimatedHours": 6,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/BurpExtender.java"],
+      "affectedFiles": [
+        "src/main/java/burp/BurpExtender.java"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-301"],
+      "dependencies": [
+        "MIGRATE-301"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -336,9 +442,13 @@
       "impact": "模块级",
       "estimatedHours": 8,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/onescan/ui/"],
+      "affectedFiles": [
+        "src/main/java/burp/onescan/ui/"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-302"],
+      "dependencies": [
+        "MIGRATE-302"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -354,9 +464,13 @@
       "impact": "全局",
       "estimatedHours": 6,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/common/utils/"],
+      "affectedFiles": [
+        "src/main/java/burp/common/utils/"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-102"],
+      "dependencies": [
+        "MIGRATE-102"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -372,9 +486,13 @@
       "impact": "模块级",
       "estimatedHours": 4,
       "actualHours": 0,
-      "affectedFiles": ["src/main/java/burp/onescan/"],
+      "affectedFiles": [
+        "src/main/java/burp/onescan/"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-401"],
+      "dependencies": [
+        "MIGRATE-401"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -390,9 +508,13 @@
       "impact": "全局",
       "estimatedHours": 2,
       "actualHours": 0,
-      "affectedFiles": ["所有 Java 文件"],
+      "affectedFiles": [
+        "所有 Java 文件"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-102"],
+      "dependencies": [
+        "MIGRATE-102"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -409,8 +531,12 @@
       "estimatedHours": 6,
       "actualHours": 0,
       "affectedFiles": [],
-      "deliverables": [".agent/test_report.md"],
-      "dependencies": ["MIGRATE-403"],
+      "deliverables": [
+        ".agent/test_report.md"
+      ],
+      "dependencies": [
+        "MIGRATE-403"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -427,8 +553,12 @@
       "estimatedHours": 4,
       "actualHours": 0,
       "affectedFiles": [],
-      "deliverables": [".agent/compatibility_report.md"],
-      "dependencies": ["MIGRATE-501"],
+      "deliverables": [
+        ".agent/compatibility_report.md"
+      ],
+      "dependencies": [
+        "MIGRATE-501"
+      ],
       "status": "pending",
       "testRequired": true,
       "documentationRequired": true
@@ -444,9 +574,13 @@
       "impact": "全局",
       "estimatedHours": 2,
       "actualHours": 0,
-      "affectedFiles": ["所有文件"],
+      "affectedFiles": [
+        "所有文件"
+      ],
       "deliverables": [],
-      "dependencies": ["MIGRATE-502"],
+      "dependencies": [
+        "MIGRATE-502"
+      ],
       "status": "pending",
       "testRequired": false,
       "documentationRequired": true
