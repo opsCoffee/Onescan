@@ -125,9 +125,10 @@ class TaskStatusManager:
 
         completed = set(status.get('completed_tasks', []))
         in_progress = set(status.get('in_progress_tasks', []))
+        skipped = set(status.get('skipped_tasks', []))
 
         for task_id in all_tasks:
-            if task_id not in completed and task_id not in in_progress:
+            if task_id not in completed and task_id not in in_progress and task_id not in skipped:
                 return task_id
 
         return None

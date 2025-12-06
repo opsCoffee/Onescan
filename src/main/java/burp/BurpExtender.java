@@ -397,6 +397,44 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         doScan(httpReqResp, from, item);
     }
 
+    /**
+     * 检查是否应该跳过 HTTP payload（用于递归扫描）
+     *
+     * @param path    当前扫描路径
+     * @param payload payload 项
+     * @return true 表示应该跳过
+     */
+    private boolean shouldSkipHttpPayload(String path, String payload) {
+        // 对完整 Host 地址的字典取消递归扫描（直接替换请求路径扫描）
+        return StringUtils.isNotEmpty(path) && UrlUtils.isHTTP(payload);
+    }
+
+    /**
+     * 构建扫描用的 URL 路径
+     *
+     * @param path    当前路径
+     * @param payload payload 项
+     * @param reqPath 请求路径
+     * @param reqHost 请求主机地址
+     * @return 构建后的 URL 路径
+     */
+    private String buildScanUrlPath(String path, String payload, String reqPath, String reqHost) {
+        String urlPath = path + payload;
+
+        // 如果配置的字典不含 '/' 前缀，在根目录下扫描时，自动添加 '/' 符号
+        if (StringUtils.isEmpty(path) && !payload.startsWith("/") && !UrlUtils.isHTTP(payload)) {
+            urlPath = "/" + payload;
+        }
+
+        // 检测一下是否携带完整的 Host 地址（兼容一下携带了完整的 Host 地址的情况）
+        // 但有个前提：如果字典存在完整的 Host 地址，直接不做处理
+        if (UrlUtils.isHTTP(reqPath) && !UrlUtils.isHTTP(payload)) {
+            urlPath = reqHost + urlPath;
+        }
+
+        return urlPath;
+    }
+
     private void doScan(IHttpRequestResponse httpReqResp, String from, String payloadItem) {
         if (httpReqResp == null || httpReqResp.getHttpService() == null) {
             return;
@@ -463,20 +501,12 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
                 if (isTaskThreadPoolShutdown()) {
                     return;
                 }
-                // 对完整 Host 地址的字典取消递归扫描（直接替换请求路径扫描）
-                if (StringUtils.isNotEmpty(path) && UrlUtils.isHTTP(item)) {
+                // 跳过 HTTP payload 的递归扫描
+                if (shouldSkipHttpPayload(path, item)) {
                     continue;
                 }
-                String urlPath = path + item;
-                // 如果配置的字典不含 '/' 前缀，在根目录下扫描时，自动添加 '/' 符号
-                if (StringUtils.isEmpty(path) && !item.startsWith("/") && !UrlUtils.isHTTP(item)) {
-                    urlPath = "/" + item;
-                }
-                // 检测一下是否携带完整的 Host 地址（兼容一下携带了完整的 Host 地址的情况）
-                // 但有个前提：如果字典存在完整的 Host 地址，直接不做处理
-                if (UrlUtils.isHTTP(reqPath) && !UrlUtils.isHTTP(item)) {
-                    urlPath = reqHost + urlPath;
-                }
+                // 构建扫描 URL 路径
+                String urlPath = buildScanUrlPath(path, item, reqPath, reqHost);
                 runScanTask(httpReqResp, info, urlPath, FROM_SCAN);
             }
         }
