@@ -246,9 +246,6 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         initQpsLimiter();
         // 注册扩展卸载监听器 (Montoya API)
         api.extension().registerUnloadingHandler(this::extensionUnloaded);
-        // TODO: MIGRATE-101-D 迁移 createMessageEditor (涉及 OneScanInfoTab 重构)
-        // 旧: this.mCallbacks.createMessageEditor(...)
-        // 新: 需要先迁移 OneScanInfoTab 类到 Montoya API
         // TODO: MIGRATE-303 迁移 registerMessageEditorTabFactory (依赖 OneScanInfoTab 迁移)
         // 旧: this.mCallbacks.registerMessageEditorTabFactory(this);
         // 新: api.userInterface().registerHttpRequestEditorProvider(...)
@@ -286,9 +283,9 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         mOneScan.getConfigPanel().setOnTabEventListener(this);
         // 将页面添加到 BurpSuite (使用 Montoya API)
         api.userInterface().registerSuiteTab(Constants.PLUGIN_NAME, mOneScan);
-        // 创建请求和响应控件
-        mRequestTextEditor = mCallbacks.createMessageEditor(this, false);
-        mResponseTextEditor = mCallbacks.createMessageEditor(this, false);
+        // 创建请求和响应控件 (使用 Montoya API)
+        mRequestTextEditor = new burp.common.adapter.RawEditorAdapter(api.userInterface().createRawEditor());
+        mResponseTextEditor = new burp.common.adapter.RawEditorAdapter(api.userInterface().createRawEditor());
         mDataBoardTab.init(mRequestTextEditor.getComponent(), mResponseTextEditor.getComponent());
         mDataBoardTab.getTaskTable().setOnTaskTableEventListener(this);
     }
@@ -2297,7 +2294,7 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
 
     @Override
     public IMessageEditorTab createNewInstance(IMessageEditorController iMessageEditorController, boolean editable) {
-        return new OneScanInfoTab(mCallbacks, iMessageEditorController);
+        return new OneScanInfoTab(api, iMessageEditorController);
     }
 
     // ============================================================

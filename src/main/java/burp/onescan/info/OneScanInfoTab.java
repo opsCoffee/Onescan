@@ -1,6 +1,10 @@
 package burp.onescan.info;
 
 import burp.*;
+import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.common.helper.UIHelper;
 import burp.common.layout.VLayout;
 import burp.common.utils.JsonUtils;
@@ -23,14 +27,14 @@ import java.util.Vector;
  */
 public class OneScanInfoTab implements IMessageEditorTab {
 
-    private final IExtensionHelpers mHelpers;
+    private final MontoyaApi mApi;
     private final JTabbedPane mTabPanel;
     private final IMessageEditorController mController;
 
     private JList<String> mJsonKeyList;
 
-    public OneScanInfoTab(IBurpExtenderCallbacks callbacks, IMessageEditorController controller) {
-        mHelpers = callbacks.getHelpers();
+    public OneScanInfoTab(MontoyaApi api, IMessageEditorController controller) {
+        mApi = api;
         mTabPanel = new JTabbedPane();
         mController = controller;
     }
@@ -62,8 +66,8 @@ public class OneScanInfoTab implements IMessageEditorTab {
      */
     private boolean checkReqEnabled(byte[] content) {
         boolean hasEnabled = false;
-        // 解析请求包数据
-        IRequestInfo info = mHelpers.analyzeRequest(content);
+        // 解析请求包数据 (使用 Montoya API)
+        HttpRequest info = HttpRequest.httpRequest(ByteArray.byteArray(content));
         // 是否存在指纹识别历史记录
         if (FpManager.getHistoryCount() > 0) {
             String host = getHostByRequestInfo(info);
@@ -91,8 +95,8 @@ public class OneScanInfoTab implements IMessageEditorTab {
      */
     private boolean checkRespEnabled(byte[] content) {
         boolean hasEnabled = false;
-        // 解析响应包数据
-        IResponseInfo info = mHelpers.analyzeResponse(content);
+        // 解析响应包数据 (使用 Montoya API)
+        HttpResponse info = HttpResponse.httpResponse(ByteArray.byteArray(content));
         // 检测响应包中是否包含 JSON 数据格式
         String body = getRespBody(info, content);
         hasEnabled = JsonUtils.hasJson(body);
@@ -116,8 +120,8 @@ public class OneScanInfoTab implements IMessageEditorTab {
      * @param content 数据包
      */
     private void handleReqMessage(byte[] content) {
-        // 解析请求包数据
-        IRequestInfo info = mHelpers.analyzeRequest(content);
+        // 解析请求包数据 (使用 Montoya API)
+        HttpRequest info = HttpRequest.httpRequest(ByteArray.byteArray(content));
         // 识别请求包的指纹
         List<FpData> results = FpManager.check(content, mController.getResponse());
         if (results != null && !results.isEmpty()) {
@@ -147,8 +151,8 @@ public class OneScanInfoTab implements IMessageEditorTab {
      * @param content 数据包
      */
     private void handleRespMessage(byte[] content) {
-        // 解析响应包数据
-        IResponseInfo info = mHelpers.analyzeResponse(content);
+        // 解析响应包数据 (使用 Montoya API)
+        HttpResponse info = HttpResponse.httpResponse(ByteArray.byteArray(content));
         // 提取响应包 Json 字段数据展示
         String body = getRespBody(info, content);
         if (JsonUtils.hasJson(body)) {
@@ -185,44 +189,42 @@ public class OneScanInfoTab implements IMessageEditorTab {
         List<String> keys;
         if ("Json".equals(title)) {
             keys = mJsonKeyList.getSelectedValuesList();
-            return mHelpers.stringToBytes(StringUtils.join(keys, "\n"));
+            return StringUtils.join(keys, "\n").getBytes(StandardCharsets.UTF_8);
         }
         return new byte[0];
     }
 
-    private String getReqBody(IRequestInfo info, byte[] content) {
+    private String getReqBody(HttpRequest info, byte[] content) {
         if (info == null || content == null || content.length == 0) {
             return null;
         }
-        int bodyOffset = info.getBodyOffset();
+        int bodyOffset = info.bodyOffset();
         int bodySize = content.length - bodyOffset;
         return new String(content, bodyOffset, bodySize, StandardCharsets.UTF_8);
     }
 
-    private String getRespBody(IResponseInfo info, byte[] content) {
+    private String getRespBody(HttpResponse info, byte[] content) {
         if (info == null) {
             return null;
         }
-        int bodyOffset = info.getBodyOffset();
+        int bodyOffset = info.bodyOffset();
         int bodySize = content.length - bodyOffset;
         return new String(content, bodyOffset, bodySize, StandardCharsets.UTF_8);
     }
 
     /**
-     * 通过 IRequestInfo 实例，获取请求头中的 Host 值（示例格式：x.x.x.x、x.x.x.x:8080）
+     * 通过 HttpRequest 实例，获取请求头中的 Host 值（示例格式：x.x.x.x、x.x.x.x:8080）
      *
      * @return 失败返回null
      */
-    private String getHostByRequestInfo(IRequestInfo info) {
+    private String getHostByRequestInfo(HttpRequest info) {
         if (info == null) {
             return null;
         }
         // 优先使用从 HTTP 请求头中获取的 Host 值
-        List<String> headers = info.getHeaders();
-        for (String header : headers) {
-            if (header.startsWith("Host: ")) {
-                return header.replace("Host: ", "");
-            }
+        String hostHeader = info.headerValue("Host");
+        if (hostHeader != null && !hostHeader.isEmpty()) {
+            return hostHeader;
         }
         // 从 IHttpService 获取的 Host 值
         String host = getHostByHttpService();
