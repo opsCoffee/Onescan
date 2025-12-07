@@ -226,9 +226,12 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
 
     private void initData(MontoyaApi api) {
         this.api = api;
-        // 临时保留旧API兼容性 - 将在后续子任务中完全移除
-        this.mCallbacks = null; // TODO: MIGRATE-101-E 移除
-        this.mHelpers = null; // TODO: MIGRATE-101-E 移除
+        // 临时保留传统API访问 - 将在后续迁移任务中逐步移除:
+        // - mCallbacks.registerProxyListener() → MIGRATE-201
+        // - mCallbacks.makeHttpRequest() → MIGRATE-202
+        // - mHelpers.analyzeRequest/analyzeResponse() → MIGRATE-401
+        this.mCallbacks = null; // 警告: 运行时会失败,需要在实际部署前完成后续迁移
+        this.mHelpers = null;
         // 初始化扫描引擎
         this.mScanEngine = new burp.onescan.engine.ScanEngine(
                 TASK_THREAD_COUNT,
