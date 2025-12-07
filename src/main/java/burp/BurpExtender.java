@@ -88,8 +88,7 @@ import java.util.stream.Collectors;
  * ============================================================
  */
 public class BurpExtender implements BurpExtension, IProxyListener, IMessageEditorController,
-        TaskTable.OnTaskTableEventListener, OnTabEventListener, IMessageEditorTabFactory,
-        IContextMenuFactory {
+        TaskTable.OnTaskTableEventListener, OnTabEventListener, IMessageEditorTabFactory {
 
     /**
      * 任务线程数量
@@ -247,7 +246,10 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         initQpsLimiter();
         // 注册扩展卸载监听器 (Montoya API)
         api.extension().registerUnloadingHandler(this::extensionUnloaded);
-        // TODO: MIGRATE-101-C 迁移 registerMessageEditorTabFactory (涉及接口重构)
+        // TODO: MIGRATE-101-D 迁移 createMessageEditor (涉及 OneScanInfoTab 重构)
+        // 旧: this.mCallbacks.createMessageEditor(...)
+        // 新: 需要先迁移 OneScanInfoTab 类到 Montoya API
+        // TODO: MIGRATE-303 迁移 registerMessageEditorTabFactory (依赖 OneScanInfoTab 迁移)
         // 旧: this.mCallbacks.registerMessageEditorTabFactory(this);
         // 新: api.userInterface().registerHttpRequestEditorProvider(...)
     }
@@ -294,8 +296,13 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
     private void initEvent() {
         // 监听代理的包
         mCallbacks.registerProxyListener(this);
-        // 注册菜单
-        mCallbacks.registerContextMenuFactory(this);
+        // 注册上下文菜单 (Montoya API)
+        api.userInterface().registerContextMenuItemsProvider(new burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider() {
+            @Override
+            public List<Component> provideMenuItems(burp.api.montoya.ui.contextmenu.ContextMenuEvent event) {
+                return BurpExtender.this.provideMenuItems(event);
+            }
+        });
         // 状态栏刷新定时器
         mStatusRefresh = new Timer(STATUS_REFRESH_INTERVAL_MS, e -> {
             if (mDataBoardTab == null) {
@@ -311,19 +318,34 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
 
     // ============================================================
     // 职责 7: 右键菜单
-    // 实现接口: IContextMenuFactory
+    // 实现接口: ContextMenuItemsProvider (Montoya API)
     // ============================================================
 
-    @Override
-    public List<JMenuItem> createMenuItems(IContextMenuInvocation invocation) {
-        ArrayList<JMenuItem> items = new ArrayList<>();
+    private List<Component> provideMenuItems(burp.api.montoya.ui.contextmenu.ContextMenuEvent event) {
+        ArrayList<Component> items = new ArrayList<>();
         // 扫描选定目标
         JMenuItem sendToOneScanItem = new JMenuItem(L.get("send_to_plugin"));
         items.add(sendToOneScanItem);
-        sendToOneScanItem.addActionListener((event) -> new Thread(() -> {
-            IHttpRequestResponse[] messages = invocation.getSelectedMessages();
-            for (IHttpRequestResponse httpReqResp : messages) {
-                doScan(httpReqResp, FROM_SEND);
+        sendToOneScanItem.addActionListener((actionEvent) -> new Thread(() -> {
+            // Montoya API: 获取选中的消息 (处理不同的事件类型)
+            List<burp.api.montoya.http.message.HttpRequestResponse> messages = new ArrayList<>();
+
+            // 从消息编辑器获取
+            if (event.messageEditorRequestResponse().isPresent()) {
+                burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp =
+                        event.messageEditorRequestResponse().get();
+                // 构建 HttpRequestResponse
+                messages.add(createHttpRequestResponse(editorReqResp));
+            }
+            // 从选中的请求中获取
+            else if (!event.selectedRequestResponses().isEmpty()) {
+                messages.addAll(event.selectedRequestResponses());
+            }
+
+            for (burp.api.montoya.http.message.HttpRequestResponse httpReqResp : messages) {
+                // 转换为旧 API 格式 (TODO: MIGRATE-201 完全迁移到 Montoya API)
+                IHttpRequestResponse legacyReqResp = convertToLegacyRequestResponse(httpReqResp);
+                doScan(legacyReqResp, FROM_SEND);
                 if (isTaskThreadPoolShutdown()) {
                     return;
                 }
@@ -334,7 +356,7 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         if (!payloadList.isEmpty() && payloadList.size() > 1) {
             JMenu menu = new JMenu(L.get("use_payload_scan"));
             items.add(menu);
-            ActionListener listener = createDynamicPayloadScanListener(invocation);
+            ActionListener listener = createDynamicPayloadScanListener(event);
             for (String itemName : payloadList) {
                 JMenuItem item = new JMenuItem(itemName);
                 item.setActionCommand(itemName);
@@ -346,18 +368,123 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
     }
 
     /**
+     * 从消息编辑器的 RequestResponse 创建 HttpRequestResponse
+     */
+    private burp.api.montoya.http.message.HttpRequestResponse createHttpRequestResponse(
+            burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp) {
+        return burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
+                editorReqResp.requestResponse().request(),
+                editorReqResp.requestResponse().response()
+        );
+    }
+
+    /**
+     * 转换 Montoya API 的 HttpRequestResponse 到旧 API 格式
+     * TODO: MIGRATE-201 完全迁移到 Montoya API 后移除此方法
+     */
+    private IHttpRequestResponse convertToLegacyRequestResponse(
+            burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp) {
+        return new IHttpRequestResponse() {
+            @Override
+            public byte[] getRequest() {
+                return montoyaReqResp.request().toByteArray().getBytes();
+            }
+
+            @Override
+            public void setRequest(byte[] message) {
+                // 不支持修改
+            }
+
+            @Override
+            public byte[] getResponse() {
+                return montoyaReqResp.response() != null
+                        ? montoyaReqResp.response().toByteArray().getBytes()
+                        : null;
+            }
+
+            @Override
+            public void setResponse(byte[] message) {
+                // 不支持修改
+            }
+
+            @Override
+            public String getComment() {
+                return montoyaReqResp.annotations().notes();
+            }
+
+            @Override
+            public void setComment(String comment) {
+                // 不支持修改
+            }
+
+            @Override
+            public String getHighlight() {
+                return montoyaReqResp.annotations().highlightColor() != null
+                        ? montoyaReqResp.annotations().highlightColor().name()
+                        : null;
+            }
+
+            @Override
+            public void setHighlight(String color) {
+                // 不支持修改
+            }
+
+            @Override
+            public IHttpService getHttpService() {
+                return new IHttpService() {
+                    @Override
+                    public String getHost() {
+                        return montoyaReqResp.httpService().host();
+                    }
+
+                    @Override
+                    public int getPort() {
+                        return montoyaReqResp.httpService().port();
+                    }
+
+                    @Override
+                    public String getProtocol() {
+                        return montoyaReqResp.httpService().secure() ? "https" : "http";
+                    }
+                };
+            }
+
+            @Override
+            public void setHttpService(IHttpService httpService) {
+                // 不支持修改
+            }
+        };
+    }
+
+    /**
      * 创建使用动态 Payload 的批量扫描 ActionListener
      * Payload 从 ActionEvent.getActionCommand() 获取
      *
-     * @param invocation 上下文菜单调用
+     * @param event 上下文菜单事件 (Montoya API)
      * @return ActionListener
      */
-    private ActionListener createDynamicPayloadScanListener(IContextMenuInvocation invocation) {
-        return (event) -> new Thread(() -> {
-            String payloadItem = event.getActionCommand();
-            IHttpRequestResponse[] messages = invocation.getSelectedMessages();
-            for (IHttpRequestResponse httpReqResp : messages) {
-                doScan(httpReqResp, FROM_SEND, payloadItem);
+    private ActionListener createDynamicPayloadScanListener(burp.api.montoya.ui.contextmenu.ContextMenuEvent event) {
+        return (actionEvent) -> new Thread(() -> {
+            String payloadItem = actionEvent.getActionCommand();
+            // Montoya API: 获取选中的消息 (处理不同的事件类型)
+            List<burp.api.montoya.http.message.HttpRequestResponse> messages = new ArrayList<>();
+
+            // 从消息编辑器获取
+            if (event.messageEditorRequestResponse().isPresent()) {
+                burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp =
+                        event.messageEditorRequestResponse().get();
+                // 构建 HttpRequestResponse
+                messages.add(createHttpRequestResponse(editorReqResp));
+            }
+            // 从选中的请求中获取
+            else if (!event.selectedRequestResponses().isEmpty()) {
+                messages.addAll(event.selectedRequestResponses());
+            }
+
+            for (burp.api.montoya.http.message.HttpRequestResponse httpReqResp : messages) {
+                // 转换为旧 API 格式 (TODO: MIGRATE-201 完全迁移到 Montoya API)
+                IHttpRequestResponse legacyReqResp = convertToLegacyRequestResponse(httpReqResp);
+                doScan(legacyReqResp, FROM_SEND, payloadItem);
                 if (isTaskThreadPoolShutdown()) {
                     return;
                 }
@@ -2187,8 +2314,7 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         mCallbacks.removeProxyListener(this);
         // 移除信息辅助面板
         mCallbacks.removeMessageEditorTabFactory(this);
-        // 移除注册的菜单
-        mCallbacks.removeContextMenuFactory(this);
+        // 上下文菜单通过 Montoya API 注册,自动清理,无需手动移除
         // 停止状态栏刷新定时器
         mStatusRefresh.stop();
         // 关闭扫描引擎(包含所有线程池)
