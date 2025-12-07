@@ -69,7 +69,8 @@ import java.util.stream.Collectors;
  *
  * 4. UI 控制 (已迁移到 Montoya API)
  *    - api.userInterface().registerSuiteTab(): 插件 Tab 注册
- *    - IMessageEditorController: 消息编辑器控制
+ *    - RawEditor: 消息编辑器 (mRequestTextEditor, mResponseTextEditor)
+ *    - IMessageEditorController: 消息编辑器控制 (待迁移)
  *
  * 5. 任务表事件处理
  *    - TaskTable.OnTaskTableEventListener: 任务表操作事件

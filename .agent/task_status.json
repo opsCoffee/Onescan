@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T15:53:32.397035+00:00",
+  "lastUpdate": "2025-12-07T16:39:45.760444+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 21,
+    "completedTasks": 22,
     "inProgressTasks": 1,
-    "pendingTasks": 9,
+    "pendingTasks": 8,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 60,
+    "progressPercentage": 62,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
   "current_phase": "7.1",
-  "current_task": "MIGRATE-303-C",
+  "current_task": "MIGRATE-303-D",
   "completed_phases": [
     "0",
     "1"
@@ -43,10 +43,11 @@
     "MIGRATE-604",
     "MIGRATE-605",
     "MIGRATE-303-A",
-    "MIGRATE-303-B"
+    "MIGRATE-303-B",
+    "MIGRATE-303-C"
   ],
   "in_progress_tasks": [
-    "MIGRATE-303-C"
+    "MIGRATE-303-D"
   ],
   "skipped_tasks": [
     "MIGRATE-102",
@@ -391,13 +392,16 @@
       "commit": "2bbe1708af43e3a0ac272d63f479db51e609b549"
     },
     "MIGRATE-303-C": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "将 mRequestTextEditor 和 mResponseTextEditor 类型改为 RawEditor,移除 RawEditorAdapter 的使用,更新所有相关的方法调用",
-      "started_at": "2025-12-07T15:53:31.304643+00:00"
+      "started_at": "2025-12-07T15:53:31.304643+00:00",
+      "completed_at": "2025-12-07T16:38:01.781713+00:00",
+      "commit": "4dd5f23ad1f29e6f2d7126f303ae96df1dd297c1"
     },
     "MIGRATE-303-D": {
-      "status": "pending",
-      "description": "删除 RawEditorAdapter.java 文件,移除 IMessageEditor 相关导入,完整测试消息编辑器功能,更新相关文档和注释"
+      "status": "in_progress",
+      "description": "删除 RawEditorAdapter.java 文件,移除 IMessageEditor 相关导入,完整测试消息编辑器功能,更新相关文档和注释",
+      "started_at": "2025-12-07T16:39:45.760409+00:00"
     },
     "MIGRATE-401-A": {
       "status": "pending",
