@@ -1,253 +1,226 @@
 #!/usr/bin/env python3
 """
-任务状态同步工具
-用于在完成任务后同步更新 task_status.json 和 prompt.md
+任务状态管理器 - 用于管理和追踪项目任务进度
 """
 
 import json
-import re
-from datetime import datetime
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+
 
 class TaskStatusManager:
-    def __init__(self, project_root: str = "."):
-        self.project_root = Path(project_root)
-        self.status_file = self.project_root / ".agent" / "task_status.json"
-        self.prompt_file = self.project_root / "prompt.md"
-        
-    def load_status(self) -> Dict:
+    def __init__(self, status_file=".agent/task_status.json"):
+        self.status_file = Path(status_file)
+        self.data = self._load()
+
+    def _load(self):
         """加载任务状态"""
         if not self.status_file.exists():
-            return self._create_initial_status()
-        
+            return self._create_default()
         with open(self.status_file, 'r', encoding='utf-8') as f:
             return json.load(f)
-    
-    def save_status(self, status: Dict):
-        """保存任务状态"""
-        status['last_update'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00")
-        
-        with open(self.status_file, 'w', encoding='utf-8') as f:
-            json.dump(status, f, ensure_ascii=False, indent=2)
-    
-    def mark_task_completed(self, task_id: str, commit_hash: Optional[str] = None):
-        """标记任务为已完成"""
-        status = self.load_status()
-        
-        # 更新任务状态
-        if task_id in status.get('in_progress_tasks', []):
-            status['in_progress_tasks'].remove(task_id)
-        
-        if task_id not in status.get('completed_tasks', []):
-            status['completed_tasks'].append(task_id)
-        
-        # 更新任务详情
-        if 'task_details' not in status:
-            status['task_details'] = {}
-        
-        status['task_details'][task_id] = {
-            'status': 'completed',
-            'completed_at': datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00"),
-            'commit': commit_hash or 'N/A',
-            'description': status['task_details'].get(task_id, {}).get('description', '')
-        }
-        
-        # 更新计数
-        status['completed_count'] = len(status['completed_tasks'])
-        status['pending_count'] = status['total_tasks'] - status['completed_count'] - len(status.get('in_progress_tasks', []))
-        status['progress_percentage'] = int((status['completed_count'] / status['total_tasks']) * 100)
-        
-        # 保存状态
-        self.save_status(status)
-        
-        # 同步到 prompt.md
-        self._sync_to_prompt(task_id, 'completed')
-        
-        print(f"✅ 任务 {task_id} 已标记为完成")
-        print(f"📊 总进度: {status['completed_count']}/{status['total_tasks']} ({status['progress_percentage']}%)")
-    
-    def mark_task_in_progress(self, task_id: str):
-        """标记任务为进行中"""
-        status = self.load_status()
-        
-        if task_id not in status.get('in_progress_tasks', []):
-            status['in_progress_tasks'].append(task_id)
-        
-        # 更新当前任务
-        status['current_task'] = task_id
-        
-        # 更新任务详情
-        if 'task_details' not in status:
-            status['task_details'] = {}
-        
-        if task_id not in status['task_details']:
-            status['task_details'][task_id] = {}
-        
-        status['task_details'][task_id]['status'] = 'in_progress'
-        status['task_details'][task_id]['started_at'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00")
-        
-        # 更新计数
-        status['in_progress_count'] = len(status['in_progress_tasks'])
-        
-        # 保存状态
-        self.save_status(status)
-        
-        # 同步到 prompt.md
-        self._sync_to_prompt(task_id, 'in_progress')
-        
-        print(f"🔄 任务 {task_id} 已标记为进行中")
-    
-    def get_next_task(self) -> Optional[str]:
-        """获取下一个待执行的任务"""
-        status = self.load_status()
 
-        # 从 tasks 数组中动态获取任务列表（按定义顺序）
-        all_tasks = []
-        if 'tasks' in status:
-            # 新格式：从 tasks 数组中读取
-            all_tasks = [task['taskId'] for task in status['tasks']]
-        else:
-            # 旧格式：硬编码任务列表（向后兼容）
-            all_tasks = [
-                # Phase 1.1
-                "CLIPPY-1", "CLIPPY-2", "CLIPPY-3", "CLIPPY-4", "CLIPPY-5", "CLIPPY-6", "CLIPPY-7",
-                # Phase 1.2
-                "SECURITY-001", "LOGIC-001", "LOGIC-002", "CONCURRENCY-001",
-                "DATAFLOW-001", "ERRORS-001", "PERFORMANCE-001", "MEMORY-001",
-                # Phase 2.1
-                "SECURITY-002", "CONCURRENCY-002", "LOGIC-003", "PERFORMANCE-002",
-                "DATAFLOW-002", "SECURITY-003", "DATAFLOW-003", "LOGIC-004",
-                "PERFORMANCE-003", "PERFORMANCE-004", "CONCURRENCY-003", "SECURITY-004",
-                # Phase 3.1
-                "ARCH-001", "ARCH-002", "ARCH-003",
-            ]
-
-        completed = set(status.get('completed_tasks', []))
-        in_progress = set(status.get('in_progress_tasks', []))
-        skipped = set(status.get('skipped_tasks', []))
-
-        for task_id in all_tasks:
-            if task_id not in completed and task_id not in in_progress and task_id not in skipped:
-                return task_id
-
-        return None
-    
-    def _sync_to_prompt(self, task_id: str, status: str):
-        """同步状态到 prompt.md"""
-        if not self.prompt_file.exists():
-            print(f"⚠️  警告: {self.prompt_file} 不存在")
-            return
-        
-        with open(self.prompt_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        # 根据状态更新复选框
-        if status == 'completed':
-            # 查找并替换 [ ] 为 [x]，并添加 ✅ 标记
-            pattern = rf'(- \[ \] \*\*\[{task_id}\]\*\*.*?)(?=\n|$)'
-            replacement = rf'- [x] **[{task_id}]** \1 ✅'
-            content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
-        
-        elif status == 'in_progress':
-            # 添加 🔄 标记
-            pattern = rf'(- \[ \] \*\*\[{task_id}\]\*\*.*?)(?=\n|$)'
-            replacement = rf'\1 🔄 **← 当前任务**'
-            content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
-        
-        with open(self.prompt_file, 'w', encoding='utf-8') as f:
-            f.write(content)
-        
-        print(f"📝 已同步状态到 prompt.md")
-    
-    def _create_initial_status(self) -> Dict:
-        """创建初始状态"""
+    def _create_default(self):
+        """创建默认状态文件"""
         return {
-            "version": "1.0",
-            "last_update": datetime.now().strftime("%Y-%m-%dT%H:%M:%S+08:00"),
-            "current_phase": "1.1",
-            "current_task": "CLIPPY-1",
-            "completed_phases": [],
+            "version": "2.0",
+            "lastUpdate": datetime.now(timezone.utc).isoformat(),
+            "current_phase": None,
+            "current_task": None,
             "completed_tasks": [],
             "in_progress_tasks": [],
             "skipped_tasks": [],
             "failed_tasks": [],
             "task_details": {},
-            "total_tasks": 35,
-            "completed_count": 0,
-            "in_progress_count": 0,
-            "pending_count": 35,
-            "progress_percentage": 0,
-            "phases": {
-                "1.1": {"name": "Clippy 错误修复", "status": "pending", "total_tasks": 7, "completed_tasks": 0},
-                "1.2": {"name": "高风险问题修复", "status": "pending", "total_tasks": 8, "completed_tasks": 0},
-                "2.1": {"name": "中风险问题修复", "status": "pending", "total_tasks": 12, "completed_tasks": 0},
-                "3.1": {"name": "超大文件拆分", "status": "pending", "total_tasks": 3, "completed_tasks": 0},
-                "4.1": {"name": "低风险问题优化", "status": "pending", "total_tasks": 5, "completed_tasks": 0}
+            "summary": {
+                "totalTasks": 0,
+                "completedTasks": 0,
+                "inProgressTasks": 0,
+                "pendingTasks": 0,
+                "progressPercentage": 0
             }
         }
-    
-    def show_status(self):
+
+    def _save(self):
+        """保存任务状态"""
+        self.data["lastUpdate"] = datetime.now(timezone.utc).isoformat()
+        self._update_summary()
+        with open(self.status_file, 'w', encoding='utf-8') as f:
+            json.dump(self.data, f, indent=2, ensure_ascii=False)
+
+    def _update_summary(self):
+        """更新统计信息"""
+        total = len(self.data.get("tasks", []))
+        completed = len(self.data.get("completed_tasks", []))
+        in_progress = len(self.data.get("in_progress_tasks", []))
+        pending = total - completed - in_progress - len(self.data.get("skipped_tasks", []))
+
+        self.data["summary"].update({
+            "totalTasks": total,
+            "completedTasks": completed,
+            "inProgressTasks": in_progress,
+            "pendingTasks": pending,
+            "progressPercentage": int((completed / total * 100) if total > 0 else 0)
+        })
+
+    def status(self):
         """显示当前状态"""
-        status = self.load_status()
-        
-        print("\n" + "="*60)
-        print("📊 任务执行状态")
-        print("="*60)
-        print(f"当前阶段: {status.get('current_phase', 'N/A')}")
-        print(f"当前任务: {status.get('current_task', 'N/A')}")
-        print(f"总进度: {status.get('completed_count', 0)}/{status.get('total_tasks', 0)} ({status.get('progress_percentage', 0)}%)")
-        print(f"已完成: {len(status.get('completed_tasks', []))}")
-        print(f"进行中: {len(status.get('in_progress_tasks', []))}")
-        print(f"待处理: {status.get('pending_count', 0)}")
-        print(f"最后更新: {status.get('last_update', 'N/A')}")
-        print("="*60 + "\n")
+        summary = self.data.get("summary", {})
+        current_task = self.data.get("current_task")
+        in_progress = self.data.get("in_progress_tasks", [])
+
+        print(f"📊 任务状态概览")
+        print(f"总任务数: {summary.get('totalTasks', 0)}")
+        print(f"已完成: {summary.get('completedTasks', 0)}")
+        print(f"进行中: {summary.get('inProgressTasks', 0)}")
+        print(f"待处理: {summary.get('pendingTasks', 0)}")
+        print(f"进度: {summary.get('progressPercentage', 0)}%")
+        print()
+
+        if in_progress:
+            print(f"🔄 当前任务: {in_progress[0]}")
+            task_detail = self.data.get("task_details", {}).get(in_progress[0], {})
+            if "sub_tasks" in task_detail:
+                print(f"   子任务:")
+                for sub in task_detail["sub_tasks"]:
+                    status_icon = "✅" if sub["status"] == "completed" else "⏳" if sub["status"] == "in_progress" else "⬜"
+                    print(f"   {status_icon} {sub['id']}: {sub['title']}")
+        else:
+            print(f"⏸️  无正在进行的任务")
+
+        return 0
+
+    def next_task(self):
+        """获取下一个待执行任务"""
+        # 检查是否有进行中的任务
+        in_progress = self.data.get("in_progress_tasks", [])
+        if in_progress:
+            print(f"⚠️  任务 {in_progress[0]} 仍在进行中")
+            print(f"请先完成或跳过该任务")
+            return 1
+
+        # 查找下一个待处理任务
+        tasks = self.data.get("tasks", [])
+        completed = set(self.data.get("completed_tasks", []))
+        skipped = set(self.data.get("skipped_tasks", []))
+
+        for task in tasks:
+            task_id = task["taskId"]
+            if task_id not in completed and task_id not in skipped:
+                # 检查依赖是否满足
+                deps = task.get("dependencies", [])
+                if all(dep in completed or dep in skipped for dep in deps):
+                    # 标记为进行中
+                    self.data["in_progress_tasks"] = [task_id]
+                    self.data["current_task"] = task_id
+                    self.data["current_phase"] = task["phaseId"]
+
+                    # 更新任务详情
+                    if task_id not in self.data["task_details"]:
+                        self.data["task_details"][task_id] = {}
+                    self.data["task_details"][task_id]["status"] = "in_progress"
+                    self.data["task_details"][task_id]["started_at"] = datetime.now(timezone.utc).isoformat()
+
+                    self._save()
+
+                    print(f"✅ 开始任务: {task_id}")
+                    print(f"标题: {task['title']}")
+                    print(f"描述: {task['description']}")
+                    return 0
+
+        print("✅ 所有任务已完成!")
+        return 0
+
+    def complete(self, task_id, commit_hash=""):
+        """标记任务完成"""
+        if task_id not in self.data.get("in_progress_tasks", []):
+            print(f"⚠️  任务 {task_id} 不在进行中")
+            return 1
+
+        # 移除进行中标记
+        self.data["in_progress_tasks"].remove(task_id)
+
+        # 添加到已完成列表
+        if task_id not in self.data["completed_tasks"]:
+            self.data["completed_tasks"].append(task_id)
+
+        # 更新任务详情
+        if task_id not in self.data["task_details"]:
+            self.data["task_details"][task_id] = {}
+
+        self.data["task_details"][task_id].update({
+            "status": "completed",
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "commit": commit_hash
+        })
+
+        self._save()
+
+        print(f"✅ 任务 {task_id} 已完成")
+        if commit_hash:
+            print(f"Commit: {commit_hash}")
+        return 0
+
+    def skip(self, task_id, reason=""):
+        """跳过任务"""
+        if task_id in self.data.get("in_progress_tasks", []):
+            self.data["in_progress_tasks"].remove(task_id)
+
+        if task_id not in self.data["skipped_tasks"]:
+            self.data["skipped_tasks"].append(task_id)
+
+        if task_id not in self.data["task_details"]:
+            self.data["task_details"][task_id] = {}
+
+        self.data["task_details"][task_id].update({
+            "status": "skipped",
+            "notes": [reason] if reason else []
+        })
+
+        self._save()
+
+        print(f"⏭️  任务 {task_id} 已跳过")
+        if reason:
+            print(f"原因: {reason}")
+        return 0
 
 
 def main():
-    import sys
-    
-    manager = TaskStatusManager()
-    
     if len(sys.argv) < 2:
-        print("用法:")
-        print("  python task_status_manager.py status              # 显示当前状态")
-        print("  python task_status_manager.py next                # 获取下一个任务")
-        print("  python task_status_manager.py start <TASK_ID>     # 开始任务")
-        print("  python task_status_manager.py complete <TASK_ID> [COMMIT_HASH]  # 完成任务")
-        sys.exit(1)
-    
+        print("用法: python task_status_manager.py <command> [args]")
+        print("命令:")
+        print("  status              - 显示当前状态")
+        print("  next                - 获取并开始下一个任务")
+        print("  complete <task_id> [commit] - 标记任务完成")
+        print("  skip <task_id> [reason]     - 跳过任务")
+        return 1
+
+    manager = TaskStatusManager()
     command = sys.argv[1]
-    
+
     if command == "status":
-        manager.show_status()
-    
+        return manager.status()
     elif command == "next":
-        next_task = manager.get_next_task()
-        if next_task:
-            print(f"下一个任务: {next_task}")
-        else:
-            print("✅ 所有任务已完成!")
-    
-    elif command == "start":
-        if len(sys.argv) < 3:
-            print("错误: 请提供任务ID")
-            sys.exit(1)
-        task_id = sys.argv[2]
-        manager.mark_task_in_progress(task_id)
-    
+        return manager.next_task()
     elif command == "complete":
         if len(sys.argv) < 3:
-            print("错误: 请提供任务ID")
-            sys.exit(1)
+            print("错误: 需要提供 task_id")
+            return 1
         task_id = sys.argv[2]
-        commit_hash = sys.argv[3] if len(sys.argv) > 3 else None
-        manager.mark_task_completed(task_id, commit_hash)
-    
+        commit = sys.argv[3] if len(sys.argv) > 3 else ""
+        return manager.complete(task_id, commit)
+    elif command == "skip":
+        if len(sys.argv) < 3:
+            print("错误: 需要提供 task_id")
+            return 1
+        task_id = sys.argv[2]
+        reason = sys.argv[3] if len(sys.argv) > 3 else ""
+        return manager.skip(task_id, reason)
     else:
         print(f"未知命令: {command}")
-        sys.exit(1)
+        return 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
