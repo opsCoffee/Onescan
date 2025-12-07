@@ -62,8 +62,8 @@ import java.util.stream.Collectors;
  *    - 任务调度和去重 (sRepeatFilter, sTimeoutReqHost)
  *    - 任务计数器 (mTaskOverCounter, mTaskCommitCounter)
  *
- * 3. 代理监听
- *    - IProxyListener: 代理流量拦截和处理
+ * 3. 代理监听 (已迁移到 Montoya API)
+ *    - ProxyResponseHandler: 代理响应拦截和处理
  *
  * 4. UI 控制 (已迁移到 Montoya API)
  *    - api.userInterface().registerSuiteTab(): 插件 Tab 注册
@@ -87,7 +87,7 @@ import java.util.stream.Collectors;
  *    - HTTP 请求发送和响应处理
  * ============================================================
  */
-public class BurpExtender implements BurpExtension, IProxyListener, IMessageEditorController,
+public class BurpExtender implements BurpExtension, IMessageEditorController,
         TaskTable.OnTaskTableEventListener, OnTabEventListener, IMessageEditorTabFactory {
 
     /**
@@ -294,8 +294,8 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
     }
 
     private void initEvent() {
-        // 监听代理的包
-        mCallbacks.registerProxyListener(this);
+        // 监听代理的响应 (Montoya API)
+        api.proxy().registerResponseHandler(new OneScanProxyResponseHandler());
         // 注册上下文菜单 (Montoya API)
         api.userInterface().registerContextMenuItemsProvider(new burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider() {
             @Override
@@ -493,23 +493,50 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
     }
 
     // ============================================================
-    // 职责 3: 代理监听
-    // 实现接口: IProxyListener
+    // 职责 3: 代理监听 (已迁移到 Montoya API)
+    // 实现接口: ProxyResponseHandler
     // ============================================================
 
-    @Override
-    public void processProxyMessage(boolean messageIsRequest, IInterceptedProxyMessage message) {
-        // 当请求和响应都有的时候，才进行下一步操作
-        if (messageIsRequest) {
-            return;
+    /**
+     * 代理响应处理器 (Montoya API)
+     * <p>
+     * 替代传统的 IProxyListener.processProxyMessage() 方法
+     * 优势: 不需要 boolean 判断,直接处理响应阶段
+     */
+    private class OneScanProxyResponseHandler implements burp.api.montoya.proxy.http.ProxyResponseHandler {
+
+        @Override
+        public burp.api.montoya.proxy.http.ProxyResponseReceivedAction handleResponseReceived(
+                burp.api.montoya.proxy.http.InterceptedResponse interceptedResponse) {
+            // 检测开关状态
+            if (!mDataBoardTab.hasListenProxyMessage()) {
+                return burp.api.montoya.proxy.http.ProxyResponseReceivedAction.continueWith(interceptedResponse);
+            }
+
+            // 获取请求响应对象 (Montoya API)
+            // InterceptedResponse 本身实现了 HttpResponse,而 initiatingRequest() 返回 HttpRequest
+            burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp =
+                    burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
+                            interceptedResponse.initiatingRequest(),
+                            interceptedResponse  // InterceptedResponse 就是 HttpResponse
+                    );
+
+            // 转换为旧 API 格式 (使用现有适配器)
+            IHttpRequestResponse legacyReqResp = convertToLegacyRequestResponse(montoyaReqResp);
+
+            // 扫描任务
+            doScan(legacyReqResp, FROM_PROXY);
+
+            // 继续传递响应 (不修改)
+            return burp.api.montoya.proxy.http.ProxyResponseReceivedAction.continueWith(interceptedResponse);
         }
-        // 检测开关状态
-        if (!mDataBoardTab.hasListenProxyMessage()) {
-            return;
+
+        @Override
+        public burp.api.montoya.proxy.http.ProxyResponseToBeSentAction handleResponseToBeSent(
+                burp.api.montoya.proxy.http.InterceptedResponse interceptedResponse) {
+            // 不需要在发送前阶段进行处理
+            return burp.api.montoya.proxy.http.ProxyResponseToBeSentAction.continueWith(interceptedResponse);
         }
-        IHttpRequestResponse httpReqResp = message.getMessageInfo();
-        // 扫描任务
-        doScan(httpReqResp, FROM_PROXY);
     }
 
     // ============================================================
@@ -2310,8 +2337,7 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
      * 通过 api.extension().registerUnloadingHandler() 注册
      */
     private void extensionUnloaded() {
-        // 移除代理监听器
-        mCallbacks.removeProxyListener(this);
+        // 代理监听器通过 Montoya API 注册,自动清理,无需手动移除
         // 移除信息辅助面板
         mCallbacks.removeMessageEditorTabFactory(this);
         // 上下文菜单通过 Montoya API 注册,自动清理,无需手动移除
