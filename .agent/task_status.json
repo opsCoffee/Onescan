@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T08:07:07.280652+00:00",
+  "lastUpdate": "2025-12-07T11:01:44.529135+00:00",
   "summary": {
-    "totalTasks": 18,
-    "completedTasks": 12,
+    "totalTasks": 23,
+    "completedTasks": 15,
     "inProgressTasks": 0,
-    "pendingTasks": 2,
+    "pendingTasks": 4,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 66,
-    "estimatedTotalHours": 80,
+    "progressPercentage": 65,
+    "estimatedTotalHours": 91.5,
     "actualHours": 19.8
   },
-  "current_phase": "5",
-  "current_task": "MIGRATE-501",
+  "current_phase": "6",
+  "current_task": "MIGRATE-601",
   "completed_phases": [
     "0",
     "1"
@@ -34,7 +34,10 @@
     "MIGRATE-301",
     "MIGRATE-302",
     "MIGRATE-403",
-    "MIGRATE-501"
+    "MIGRATE-501",
+    "MIGRATE-502",
+    "MIGRATE-503",
+    "MIGRATE-601"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [
@@ -300,6 +303,41 @@
       "started_at": "2025-12-07T07:52:19.608836+00:00",
       "completed_at": "2025-12-07T08:07:07.280641+00:00",
       "commit": "15629f2d3f6a9184c60415043aebdc8c372719a0"
+    },
+    "MIGRATE-502": {
+      "status": "completed",
+      "started_at": "2025-12-07T08:09:05.675812+00:00",
+      "completed_at": "2025-12-07T08:26:43.763345+00:00",
+      "commit": "c6639e7b65bbd09db6f02e0e8cd8f6c6b6ab584b"
+    },
+    "MIGRATE-503": {
+      "status": "completed",
+      "started_at": "2025-12-07T08:27:19.745994+00:00",
+      "completed_at": "2025-12-07T08:42:43.143099+00:00",
+      "commit": "c6639e7b65bbd09db6f02e0e8cd8f6c6b6ab584b"
+    },
+    "MIGRATE-601": {
+      "status": "completed",
+      "description": "扫描所有源代码文件,确认无残留的传统 API 引用,检查所有 burp.* 包的导入语句是否已清理,验证所有已迁移的类是否正确使用 Montoya API,生成迁移完整性报告",
+      "started_at": "2025-12-07T10:53:02.872810+00:00",
+      "completed_at": "2025-12-07T11:01:44.529124+00:00",
+      "commit": "c7222eb13b44e964bec992eae9fa24333e8f4e23"
+    },
+    "MIGRATE-602": {
+      "status": "pending",
+      "description": "评审已迁移代码的质量和规范性,检查异常处理是否完善,验证日志输出是否统一使用 Montoya Logging API,检查资源管理和内存泄漏风险,评估代码可维护性和可读性"
+    },
+    "MIGRATE-603": {
+      "status": "pending",
+      "description": "验证 Montoya API 的使用是否符合最佳实践,检查是否有不推荐的 API 使用方式,确认线程安全性和并发处理,验证 UI 组件的注册和注销是否正确"
+    },
+    "MIGRATE-604": {
+      "status": "pending",
+      "description": "整理跳过的迁移任务(MIGRATE-303, MIGRATE-401),评估技术债务的影响和优先级,制定后续优化计划,更新 .agent/TECHNICAL_DEBT.md"
+    },
+    "MIGRATE-605": {
+      "status": "pending",
+      "description": "检查代码注释是否完整和准确,验证 README.md 是否需要更新,确认迁移相关文档的完整性,生成最终迁移总结报告"
     }
   },
   "phases": {
@@ -361,6 +399,16 @@
       "total_tasks": 3,
       "completed_tasks": 0,
       "estimatedHours": 12,
+      "actualHours": 0
+    },
+    "6": {
+      "name": "迁移验证与评审",
+      "description": "全面检查迁移完成情况,评审代码质量,确保无遗漏",
+      "priority": "P1",
+      "status": "pending",
+      "total_tasks": 5,
+      "completed_tasks": 0,
+      "estimatedHours": 11.5,
       "actualHours": 0
     }
   },
@@ -759,6 +807,106 @@
       "deliverables": [],
       "dependencies": [
         "MIGRATE-502"
+      ],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "MIGRATE-601",
+      "phaseId": "6",
+      "title": "迁移完整性检查",
+      "description": "扫描所有源代码文件,确认无残留的传统 API 引用,检查所有 burp.* 包的导入语句是否已清理,验证所有已迁移的类是否正确使用 Montoya API,生成迁移完整性报告",
+      "priority": "P1",
+      "severity": "高",
+      "category": "验证",
+      "impact": "全局",
+      "estimatedHours": 2.5,
+      "actualHours": 0,
+      "affectedFiles": [],
+      "deliverables": [],
+      "dependencies": [
+        "MIGRATE-503"
+      ],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "MIGRATE-602",
+      "phaseId": "6",
+      "title": "代码质量评审",
+      "description": "评审已迁移代码的质量和规范性,检查异常处理是否完善,验证日志输出是否统一使用 Montoya Logging API,检查资源管理和内存泄漏风险,评估代码可维护性和可读性",
+      "priority": "P1",
+      "severity": "高",
+      "category": "评审",
+      "impact": "全局",
+      "estimatedHours": 3.5,
+      "actualHours": 0,
+      "affectedFiles": [],
+      "deliverables": [],
+      "dependencies": [
+        "MIGRATE-601"
+      ],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "MIGRATE-603",
+      "phaseId": "6",
+      "title": "API 使用规范性检查",
+      "description": "验证 Montoya API 的使用是否符合最佳实践,检查是否有不推荐的 API 使用方式,确认线程安全性和并发处理,验证 UI 组件的注册和注销是否正确",
+      "priority": "P1",
+      "severity": "中",
+      "category": "验证",
+      "impact": "全局",
+      "estimatedHours": 2.5,
+      "actualHours": 0,
+      "affectedFiles": [],
+      "deliverables": [],
+      "dependencies": [
+        "MIGRATE-602"
+      ],
+      "status": "pending",
+      "testRequired": true,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "MIGRATE-604",
+      "phaseId": "6",
+      "title": "技术债务评估",
+      "description": "整理跳过的迁移任务(MIGRATE-303, MIGRATE-401),评估技术债务的影响和优先级,制定后续优化计划,更新 .agent/TECHNICAL_DEBT.md",
+      "priority": "P2",
+      "severity": "中",
+      "category": "评估",
+      "impact": "全局",
+      "estimatedHours": 1.5,
+      "actualHours": 0,
+      "affectedFiles": [],
+      "deliverables": [],
+      "dependencies": [
+        "MIGRATE-603"
+      ],
+      "status": "pending",
+      "testRequired": false,
+      "documentationRequired": true
+    },
+    {
+      "taskId": "MIGRATE-605",
+      "phaseId": "6",
+      "title": "文档完整性检查",
+      "description": "检查代码注释是否完整和准确,验证 README.md 是否需要更新,确认迁移相关文档的完整性,生成最终迁移总结报告",
+      "priority": "P2",
+      "severity": "中",
+      "category": "文档",
+      "impact": "全局",
+      "estimatedHours": 1.5,
+      "actualHours": 0,
+      "affectedFiles": [],
+      "deliverables": [],
+      "dependencies": [
+        "MIGRATE-604"
       ],
       "status": "pending",
       "testRequired": false,
