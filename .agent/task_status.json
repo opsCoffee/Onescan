@@ -4,15 +4,15 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T04:36:49.428717+00:00",
+  "lastUpdate": "2025-12-07T07:19:32.329983+00:00",
   "summary": {
     "totalTasks": 18,
-    "completedTasks": 6,
-    "inProgressTasks": 1,
+    "completedTasks": 7,
+    "inProgressTasks": 0,
     "pendingTasks": 10,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 33,
+    "progressPercentage": 38,
     "estimatedTotalHours": 80,
     "actualHours": 19.8
   },
@@ -28,11 +28,10 @@
     "MIGRATE-003",
     "MIGRATE-004",
     "MIGRATE-101",
-    "MIGRATE-201"
-  ],
-  "in_progress_tasks": [
+    "MIGRATE-201",
     "MIGRATE-202"
   ],
+  "in_progress_tasks": [],
   "skipped_tasks": [
     "MIGRATE-102"
   ],
@@ -214,8 +213,10 @@
       ]
     },
     "MIGRATE-202": {
-      "status": "in_progress",
-      "started_at": "2025-12-07T04:36:49.428701+00:00"
+      "status": "completed",
+      "started_at": "2025-12-07T04:36:49.428701+00:00",
+      "completed_at": "2025-12-07T07:19:32.329972+00:00",
+      "commit": "49e63abd4d2790a64e5b7a963844e7606bf8e303"
     }
   },
   "phases": {

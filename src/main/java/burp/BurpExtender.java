@@ -482,6 +482,151 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         };
     }
 
+    /**
+     * 从 URL 字符串构建 Montoya API 的 HttpRequestResponse
+     * MIGRATE-202: HTTP 消息处理迁移的一部分
+     *
+     * @param url URL 字符串
+     * @return HttpRequestResponse 实例
+     * @throws IllegalArgumentException 如果 URL 格式错误
+     */
+    private burp.api.montoya.http.message.HttpRequestResponse buildMontoyaRequestFromUrl(String url)
+            throws IllegalArgumentException {
+        if (StringUtils.isEmpty(url)) {
+            throw new IllegalArgumentException("url is null");
+        }
+        if (!UrlUtils.isHTTP(url)) {
+            throw new IllegalArgumentException(url + " does not include the protocol.");
+        }
+        try {
+            URL u = new URL(url);
+            String host = UrlUtils.getHostByURL(u);
+            String pqf = UrlUtils.toPQF(u);
+            byte[] requestBytes = buildSimpleGetRequest(host, pqf);
+
+            burp.api.montoya.http.HttpService service = burp.api.montoya.http.HttpService.httpService(
+                u.getHost(),
+                u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
+                u.getProtocol().equals("https")
+            );
+
+            burp.api.montoya.http.message.requests.HttpRequest request =
+                burp.api.montoya.http.message.requests.HttpRequest.httpRequest(service,
+                    burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+
+            return burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
+                request,
+                null  // 导入URL时没有响应
+            );
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Url: " + url + " format error.");
+        }
+    }
+
+    /**
+     * 从重定向信息构建 Montoya API 的 HttpRequestResponse
+     * MIGRATE-202: 用于处理重定向场景
+     *
+     * @param service 旧API的HttpService
+     * @param urlOrPqf 完整URL或路径
+     * @param headers 请求头列表
+     * @param cookies Cookie列表
+     * @return HttpRequestResponse 实例
+     * @throws IllegalArgumentException 如果参数错误
+     */
+    private burp.api.montoya.http.message.HttpRequestResponse buildMontoyaRequestFromRedirect(
+            IHttpService service, String urlOrPqf, List<String> headers, List<String> cookies)
+            throws IllegalArgumentException {
+
+        burp.api.montoya.http.HttpService montoyaService = burp.api.montoya.http.HttpService.httpService(
+            service.getHost(),
+            service.getPort(),
+            service.getProtocol().equals("https")
+        );
+
+        // 构建请求字节数组
+        byte[] requestBytes;
+        if (UrlUtils.isHTTP(urlOrPqf)) {
+            // 完整URL
+            try {
+                URL u = new URL(urlOrPqf);
+                String pqf = UrlUtils.toPQF(u);
+                requestBytes = buildRequestWithHeadersAndCookies(pqf, headers, cookies, montoyaService);
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("Invalid URL: " + urlOrPqf);
+            }
+        } else {
+            // 只有路径
+            requestBytes = buildRequestWithHeadersAndCookies(urlOrPqf, headers, cookies, montoyaService);
+        }
+
+        burp.api.montoya.http.message.requests.HttpRequest request =
+            burp.api.montoya.http.message.requests.HttpRequest.httpRequest(montoyaService,
+                burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+
+        return burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
+            request,
+            null  // 重定向请求时没有响应
+        );
+    }
+
+    /**
+     * 构建包含headers和cookies的请求字节数组
+     */
+    private byte[] buildRequestWithHeadersAndCookies(String reqPQF, List<String> headers,
+                                                      List<String> cookies,
+                                                      burp.api.montoya.http.HttpService service) {
+        boolean existsCookie = headers != null && headers.stream()
+            .anyMatch(h -> h.toLowerCase().startsWith("cookie: "));
+
+        StringBuilder builder = new StringBuilder();
+        String host = service.host() + (service.port() == 80 || service.port() == 443 ? "" : ":" + service.port());
+
+        builder.append("GET ").append(reqPQF).append(" HTTP/1.1").append("\r\n");
+        builder.append("Host: ").append(host).append("\r\n");
+
+        if (headers != null && headers.size() > 1) {
+            for (int i = 1; i < headers.size(); i++) {
+                String item = headers.get(i);
+                // 排除 Host 请求头
+                if (item.toLowerCase().startsWith("host: ")) {
+                    continue;
+                }
+                // 处理 Cookie
+                if (!existsCookie && i == 2 && cookies != null && !cookies.isEmpty()) {
+                    builder.append("Cookie: ").append(String.join("; ", cookies)).append("\r\n");
+                } else if (item.toLowerCase().startsWith("cookie: ")) {
+                    if (cookies != null && !cookies.isEmpty()) {
+                        builder.append("Cookie: ").append(String.join("; ", cookies)).append("\r\n");
+                    } else {
+                        builder.append(item).append("\r\n");
+                    }
+                    continue;
+                }
+                builder.append(item).append("\r\n");
+            }
+        }
+        builder.append("\r\n");
+        return builder.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 构建简单的 GET 请求字节数组
+     *
+     * @param host   主机名
+     * @param reqPQF 请求路径 (Path + Query + Fragment)
+     * @return 请求字节数组
+     */
+    private static byte[] buildSimpleGetRequest(String host, String reqPQF) {
+        return ("GET " + reqPQF + " HTTP/1.1\r\n" +
+                "Host: " + host + "\r\n" +
+                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n" +
+                "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8\r\n" +
+                "Accept-Encoding: gzip, deflate\r\n" +
+                "Cache-Control: max-age=0\r\n" +
+                "\r\n").getBytes(StandardCharsets.UTF_8);
+    }
+
     // ============================================================
     // 职责 9: 请求处理核心逻辑
     // 包含: 扫描任务调度、请求过滤、Payload处理、HTTP请求发送
@@ -1098,7 +1243,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * 处理跟随重定向
      */
     private void handleFollowRedirect(TaskData data) {
-        // 如果未启用“跟随重定向”功能，不继续执行
+        // 如果未启用"跟随重定向"功能，不继续执行
         if (!Config.getBoolean(Config.KEY_FOLLOW_REDIRECT)) {
             return;
         }
@@ -1127,7 +1272,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         String reqHost = data.getHost();
         String reqPath = data.getUrl();
         try {
-            HttpReqRespAdapter httpReqResp;
+            burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp;
             IRequestInfo reqInfo = mHelpers.analyzeRequest(reqResp);
             List<String> headers = reqInfo.getHeaders();
             // 兼容完整 Host 地址
@@ -1135,14 +1280,14 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
                 URL originUrl = UrlUtils.parseURL(reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
                 IHttpService service = reqResp.getHttpService();
-                httpReqResp = HttpReqRespAdapter.from(service, redirectUrl.toString(), headers, cookies);
+                montoyaReqResp = buildMontoyaRequestFromRedirect(service, redirectUrl.toString(), headers, cookies);
             } else {
                 URL originUrl = UrlUtils.parseURL(reqHost + reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
                 IHttpService service = buildHttpServiceByURL(redirectUrl);
-                httpReqResp = HttpReqRespAdapter.from(service, UrlUtils.toPQF(redirectUrl), headers, cookies);
+                montoyaReqResp = buildMontoyaRequestFromRedirect(service, UrlUtils.toPQF(redirectUrl), headers, cookies);
             }
-            doScan(httpReqResp, FROM_REDIRECT + "（" + data.getId() + "）");
+            doScan(montoyaReqResp, FROM_REDIRECT + "（" + data.getId() + "）");
         } catch (IllegalArgumentException e) {
             Logger.error("Follow redirect error: " + e.getMessage());
         }
@@ -2207,8 +2352,10 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             for (Object item : list) {
                 try {
                     String url = String.valueOf(item);
-                    IHttpRequestResponse httpReqResp = HttpReqRespAdapter.from(url);
-                    doScan(httpReqResp, FROM_IMPORT);
+                    // 使用 Montoya API 构建 HTTP 请求
+                    burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp =
+                        buildMontoyaRequestFromUrl(url);
+                    doScan(montoyaReqResp, FROM_IMPORT);
                 } catch (IllegalArgumentException e) {
                     Logger.error("Import error: " + e.getMessage());
                 }
