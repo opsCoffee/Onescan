@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T18:39:03.532419+00:00",
+  "lastUpdate": "2025-12-07T18:54:28.331114+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 26,
+    "completedTasks": 27,
     "inProgressTasks": 1,
-    "pendingTasks": 4,
+    "pendingTasks": 3,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 74,
+    "progressPercentage": 77,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
   "current_phase": "7.2",
-  "current_task": "MIGRATE-401-D",
+  "current_task": "MIGRATE-401-E",
   "completed_phases": [
     "0",
     "1"
@@ -48,10 +48,11 @@
     "MIGRATE-303-D",
     "MIGRATE-401-A",
     "MIGRATE-401-B",
-    "MIGRATE-401-C"
+    "MIGRATE-401-C",
+    "MIGRATE-401-D"
   ],
   "in_progress_tasks": [
-    "MIGRATE-401-D"
+    "MIGRATE-401-E"
   ],
   "skipped_tasks": [
     "MIGRATE-102",
@@ -431,13 +432,16 @@
       "commit": "bed5be6"
     },
     "MIGRATE-401-D": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "重构 TaskData 类,移除 IHttpRequestResponse 依赖,更新 TaskPool 和相关扫描引擎代码,使用 Montoya 原生类型或自定义数据类,确保扫描功能完整性",
-      "started_at": "2025-12-07T18:39:02.895089+00:00"
+      "started_at": "2025-12-07T18:39:02.895089+00:00",
+      "completed_at": "2025-12-07T18:54:09.811426+00:00",
+      "commit": "f0a634c"
     },
     "MIGRATE-401-E": {
-      "status": "pending",
-      "description": "删除 HttpReqRespAdapter.java(如果不再需要),移除所有 IHttpRequestResponse 和 IHttpService 导入,从 pom.xml 移除 burp-extender-api 依赖,完整回归测试所有功能"
+      "status": "in_progress",
+      "description": "删除 HttpReqRespAdapter.java(如果不再需要),移除所有 IHttpRequestResponse 和 IHttpService 导入,从 pom.xml 移除 burp-extender-api 依赖,完整回归测试所有功能",
+      "started_at": "2025-12-07T18:54:28.331102+00:00"
     },
     "MIGRATE-701": {
       "status": "pending",
