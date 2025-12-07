@@ -1,8 +1,7 @@
 package burp.onescan.common;
 
 import burp.BurpExtender;
-import burp.IHttpRequestResponse;
-import burp.IHttpService;
+import burp.api.montoya.http.HttpService;
 import burp.common.utils.StringUtils;
 import burp.common.utils.UrlUtils;
 
@@ -13,13 +12,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * IHttpRequestResponse 接口适配器
+ * HttpRequestResponse 数据适配器
+ * <p>
+ * 注意: 此类实现的 IHttpRequestResponse 接口是本包内定义的接口,不是 Burp 旧 API 的接口
+ * 已完全迁移到 Montoya API
  * <p>
  * Created by vaycore on 2023-07-09.
  */
 public class HttpReqRespAdapter implements IHttpRequestResponse {
 
-    private IHttpService service;
+    private HttpService service;
     private byte[] requestBytes;
     private byte[] responseBytes;
     private String comment;
@@ -34,7 +36,7 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
         }
         try {
             URL u = new URL(url);
-            IHttpService service = BurpExtender.buildHttpServiceByURL(u);
+            HttpService service = BurpExtender.buildHttpServiceByURL(u);
             String host = UrlUtils.getHostByURL(u);
             byte[] requestBytes = buildRequestBytes(host, UrlUtils.toPQF(u));
             return new HttpReqRespAdapter(service, requestBytes);
@@ -43,7 +45,7 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
         }
     }
 
-    public static HttpReqRespAdapter from(IHttpService service, String reqPQF,
+    public static HttpReqRespAdapter from(HttpService service, String reqPQF,
                                           List<String> headers, List<String> cookies) {
         boolean existsCookie = existsCookieByHeader(headers);
         StringBuilder builder = new StringBuilder();
@@ -80,7 +82,7 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
         return new HttpReqRespAdapter(service, requestBytes);
     }
 
-    public static HttpReqRespAdapter from(IHttpService service, byte[] requestBytes) {
+    public static HttpReqRespAdapter from(HttpService service, byte[] requestBytes) {
         return new HttpReqRespAdapter(service, requestBytes);
     }
 
@@ -168,7 +170,7 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
         throw new IllegalAccessError("class not support create instance.");
     }
 
-    private HttpReqRespAdapter(IHttpService service, byte[] requestBytes) {
+    private HttpReqRespAdapter(HttpService service, byte[] requestBytes) {
         if (service == null || requestBytes == null) {
             throw new IllegalArgumentException("service or request bytes is null");
         }
@@ -241,12 +243,12 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
     }
 
     @Override
-    public IHttpService getHttpService() {
+    public HttpService getHttpService() {
         return this.service;
     }
 
     @Override
-    public void setHttpService(IHttpService iHttpService) {
-        this.service = iHttpService;
+    public void setHttpService(HttpService httpService) {
+        this.service = httpService;
     }
 }

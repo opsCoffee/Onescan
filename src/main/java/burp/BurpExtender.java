@@ -186,7 +186,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     private RawEditor mRequestTextEditor;
     private RawEditor mResponseTextEditor;
     private burp.onescan.engine.ScanEngine mScanEngine;
-    private IHttpRequestResponse mCurrentReqResp;
+    private burp.onescan.common.IHttpRequestResponse mCurrentReqResp;
     private QpsLimiter mQpsLimit;
     private Timer mStatusRefresh;
 
@@ -1016,15 +1016,15 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param from          请求来源
      */
     private void runScanTask(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, String pathWithQuery, String from) {
-        // TODO: MIGRATE-401 - 将 IHttpService 迁移到 HttpService
-        IHttpService service = convertHttpServiceToLegacy(httpReqResp.httpService());
+        burp.api.montoya.http.HttpService service = httpReqResp.httpService();
         // 处理请求头
         byte[] request = handleHeader(httpReqResp, info, pathWithQuery, from);
         // 处理请求头失败时，丢弃该任务
         if (request == null) {
             return;
         }
-        IRequestInfo newInfo = mHelpers.analyzeRequest(service, request);
+        // TODO: MIGRATE-401-C - Remove this conversion after mHelpers migration
+        IRequestInfo newInfo = mHelpers.analyzeRequest(convertHttpServiceToLegacy(service), request);
         String reqId = generateReqId(newInfo, from);
         // 如果当前 URL 已经扫描，中止任务
         if (checkRepeatFilterByReqId(reqId)) {
@@ -1091,7 +1091,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param reqRawBytes 请求数据包
      * @param from        请求来源
      */
-    private void runEnableAndMergeTask(IHttpService service, String reqId, byte[] reqRawBytes, String from) {
+    private void runEnableAndMergeTask(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes, String from) {
         // 获取已经启用并且需要合并的“请求包处理”规则
         List<ProcessingItem> processList = getPayloadProcess()
                 .stream().filter(ProcessingItem::isEnabledAndMerge)
@@ -1125,7 +1125,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param reqId       请求 ID
      * @param reqRawBytes 请求数据包
      */
-    private void runEnabledWithoutMergeProcessingTask(IHttpService service, String reqId, byte[] reqRawBytes) {
+    private void runEnabledWithoutMergeProcessingTask(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes) {
         // 遍历规则列表，进行 Payload Processing 处理后，再次请求数据包
         getPayloadProcess().parallelStream().filter(ProcessingItem::isEnabledWithoutMerge)
                 .forEach((item) -> {
@@ -1152,7 +1152,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param reqRawBytes 请求数据包
      * @param from        请求来源
      */
-    private void doBurpRequest(IHttpService service, String reqId, byte[] reqRawBytes, String from) {
+    private void doBurpRequest(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes, String from) {
         // 线程池关闭后，不接收任何任务
         if (isTaskThreadPoolShutdown()) {
             Logger.debug("doBurpRequest: thread pool is shutdown, intercept req id: %s", reqId);
@@ -1177,7 +1177,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
                 // 获取配置的请求重试次数
                 int retryCount = Config.getInt(Config.KEY_RETRY_COUNT);
                 // 发起请求
-                IHttpRequestResponse newReqResp = doMakeHttpRequest(service, reqRawBytes, retryCount);
+                burp.onescan.common.IHttpRequestResponse newReqResp = doMakeHttpRequest(service, reqRawBytes, retryCount);
                 // 构建展示的数据包
                 TaskData data = buildTaskData(newReqResp, from);
                 mDataBoardTab.getTaskTable().addTaskData(data);
@@ -1261,7 +1261,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             return;
         }
         // 解析响应头的 Location 值
-        IHttpRequestResponse reqResp = (IHttpRequestResponse) data.getReqResp();
+        burp.onescan.common.IHttpRequestResponse reqResp = (burp.onescan.common.IHttpRequestResponse) data.getReqResp();
         IResponseInfo respInfo = mHelpers.analyzeResponse(reqResp.getResponse());
         String location = getLocationByResponseInfo(respInfo);
         if (location == null) {
@@ -1276,19 +1276,20 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         String reqPath = data.getUrl();
         try {
             burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp;
-            IRequestInfo reqInfo = mHelpers.analyzeRequest(reqResp);
+            // TODO: MIGRATE-401-C - Use Montoya API for request analysis
+            IRequestInfo reqInfo = mHelpers.analyzeRequest(reqResp.getRequest());
             List<String> headers = reqInfo.getHeaders();
             // 兼容完整 Host 地址
             if (UrlUtils.isHTTP(reqPath)) {
                 URL originUrl = UrlUtils.parseURL(reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
-                IHttpService service = reqResp.getHttpService();
-                montoyaReqResp = buildMontoyaRequestFromRedirect(service, redirectUrl.toString(), headers, cookies);
+                burp.api.montoya.http.HttpService service = reqResp.getHttpService();
+                montoyaReqResp = buildMontoyaRequestFromRedirect(convertHttpServiceToLegacy(service), redirectUrl.toString(), headers, cookies);
             } else {
                 URL originUrl = UrlUtils.parseURL(reqHost + reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
-                IHttpService service = buildHttpServiceByURL(redirectUrl);
-                montoyaReqResp = buildMontoyaRequestFromRedirect(service, UrlUtils.toPQF(redirectUrl), headers, cookies);
+                burp.api.montoya.http.HttpService service = buildHttpServiceByURL(redirectUrl);
+                montoyaReqResp = buildMontoyaRequestFromRedirect(convertHttpServiceToLegacy(service), UrlUtils.toPQF(redirectUrl), headers, cookies);
             }
             doScan(montoyaReqResp, FROM_REDIRECT + "（" + data.getId() + "）");
         } catch (IllegalArgumentException e) {
@@ -1341,19 +1342,26 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param retryCount  重试次数（为0表示不重试）
      * @return 请求响应数据
      */
-    private IHttpRequestResponse doMakeHttpRequest(IHttpService service, byte[] reqRawBytes, int retryCount) {
-        IHttpRequestResponse reqResp;
+    private burp.onescan.common.IHttpRequestResponse doMakeHttpRequest(burp.api.montoya.http.HttpService service, byte[] reqRawBytes, int retryCount) {
+        burp.onescan.common.IHttpRequestResponse reqResp;
         String reqHost = getReqHostByHttpService(service);
         // 如果启用拦截超时主机，并检测到当前请求主机超时，直接拦截
         if (Config.getBoolean(Config.KEY_INTERCEPT_TIMEOUT_HOST) && checkTimeoutByReqHost(reqHost)) {
             return HttpReqRespAdapter.from(service, reqRawBytes);
         }
         try {
-            reqResp = mCallbacks.makeHttpRequest(service, reqRawBytes);
-            byte[] respRawBytes = reqResp.getResponse();
+            // TODO: MIGRATE-401-C - Use Montoya API for HTTP requests
+            IHttpRequestResponse legacyReqResp = mCallbacks.makeHttpRequest(convertHttpServiceToLegacy(service), reqRawBytes);
+            byte[] respRawBytes = legacyReqResp.getResponse();
             if (respRawBytes != null && respRawBytes.length > 0) {
+                // Convert legacy response to our internal type
+                reqResp = HttpReqRespAdapter.from(service, legacyReqResp.getRequest());
+                reqResp.setResponse(legacyReqResp.getResponse());
+                reqResp.setComment(legacyReqResp.getComment());
+                reqResp.setHighlight(legacyReqResp.getHighlight());
                 return reqResp;
             }
+            reqResp = HttpReqRespAdapter.from(service, reqRawBytes);
         } catch (Exception e) {
             Logger.debug("Do Request error, request host: %s", reqHost);
             reqResp = HttpReqRespAdapter.from(service, reqRawBytes);
@@ -1543,8 +1551,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * 完成请求构建：填充变量并更新 Content-Length
      */
     private byte[] finalizeRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, String requestRaw) {
-        // TODO: MIGRATE-401 - 将 IHttpService 迁移到 HttpService
-        IHttpService service = convertHttpServiceToLegacy(httpReqResp.httpService());
+        burp.api.montoya.http.HttpService service = httpReqResp.httpService();
         URL url = getUrlByRequestInfo(info);
         String processedRequest = setupVariable(service, url, requestRaw);
 
@@ -1611,7 +1618,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param requestRaw 请求数据包字符串
      * @return 处理失败返回null
      */
-    private String setupVariable(IHttpService service, URL url, String requestRaw) {
+    private String setupVariable(burp.api.montoya.http.HttpService service, URL url, String requestRaw) {
         try {
             // 准备基础变量
             VariableContext context = prepareBasicVariables(service, url);
@@ -1651,15 +1658,15 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     /**
      * 准备基础变量值
      */
-    private VariableContext prepareBasicVariables(IHttpService service, URL url) {
+    private VariableContext prepareBasicVariables(burp.api.montoya.http.HttpService service, URL url) {
         VariableContext context = new VariableContext();
 
-        context.protocol = service.getProtocol();
-        context.host = service.getHost() + ":" + service.getPort();
-        if (service.getPort() == HTTP_DEFAULT_PORT || service.getPort() == HTTPS_DEFAULT_PORT) {
-            context.host = service.getHost();
+        context.protocol = service.secure() ? "https" : "http";
+        context.host = service.host() + ":" + service.port();
+        if (service.port() == HTTP_DEFAULT_PORT || service.port() == HTTPS_DEFAULT_PORT) {
+            context.host = service.host();
         }
-        context.domain = service.getHost();
+        context.domain = service.host();
         context.timestamp = String.valueOf(DateUtils.getTimestamp());
         context.randomIP = IPUtils.randomIPv4();
         context.randomLocalIP = IPUtils.randomIPv4ForLocal();
@@ -1904,11 +1911,12 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param requestBytes 请求数据包
      * @return 处理后的数据包
      */
-    private byte[] handlePayloadProcess(IHttpService service, byte[] requestBytes, List<PayloadItem> list) {
+    private byte[] handlePayloadProcess(burp.api.montoya.http.HttpService service, byte[] requestBytes, List<PayloadItem> list) {
         if (requestBytes == null || requestBytes.length == 0 || list == null || list.isEmpty()) {
             return null;
         }
-        IRequestInfo info = mHelpers.analyzeRequest(service, requestBytes);
+        // TODO: MIGRATE-401-C - Remove this conversion after mHelpers migration
+        IRequestInfo info = mHelpers.analyzeRequest(convertHttpServiceToLegacy(service), requestBytes);
         int bodyOffset = info.getBodyOffset();
         int bodySize = requestBytes.length - bodyOffset;
         String url = getReqPathByRequestInfo(info);
@@ -2004,16 +2012,17 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param httpReqResp Burp的请求响应对象
      * @return 列表Item数据
      */
-    private TaskData buildTaskData(IHttpRequestResponse httpReqResp, String from) {
-        IRequestInfo info = mHelpers.analyzeRequest(httpReqResp);
+    private TaskData buildTaskData(burp.onescan.common.IHttpRequestResponse httpReqResp, String from) {
+        // TODO: MIGRATE-401-C - Use Montoya API for request analysis
+        IRequestInfo info = mHelpers.analyzeRequest(httpReqResp.getRequest());
         byte[] respBytes = httpReqResp.getResponse();
         // 获取所需要的参数
         String method = info.getMethod();
-        IHttpService service = httpReqResp.getHttpService();
+        burp.api.montoya.http.HttpService service = httpReqResp.getHttpService();
         String reqHost = getReqHostByHttpService(service);
         String reqUrl = getReqPathByRequestInfo(info);
         String title = HtmlUtils.findTitleByHtmlBody(respBytes);
-        String ip = findIpByHost(service.getHost());
+        String ip = findIpByHost(service.host());
         int status = -1;
         int length = -1;
         // 存在响应对象，获取状态和响应包大小
@@ -2044,15 +2053,15 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     }
 
     /**
-     * 通过 IHttpService 实例，获取请求的 Host 地址（http://x.x.x.x、http://x.x.x.x:8080）
+     * 通过 HttpService 实例,获取请求的 Host 地址 (http://x.x.x.x、http://x.x.x.x:8080)
      *
-     * @param service IHttpService 实例
+     * @param service HttpService 实例
      * @return 返回请求的 Host 地址
      */
-    private String getReqHostByHttpService(IHttpService service) {
-        String protocol = service.getProtocol();
-        String host = service.getHost();
-        int port = service.getPort();
+    private String getReqHostByHttpService(burp.api.montoya.http.HttpService service) {
+        String protocol = service.secure() ? "https" : "http";
+        String host = service.host();
+        int port = service.port();
         if (Utils.isIgnorePort(port)) {
             return protocol + "://" + host;
         }
@@ -2060,16 +2069,16 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     }
 
     /**
-     * 通过 IHttpService 实例，获取请求的 Host 值（示例格式：x.x.x.x、x.x.x.x:8080）
+     * 通过 HttpService 实例,获取请求的 Host 值 (示例格式: x.x.x.x、x.x.x.x:8080)
      *
      * @return 失败返回null
      */
-    public static String getHostByHttpService(IHttpService service) {
+    public static String getHostByHttpService(burp.api.montoya.http.HttpService service) {
         if (service == null) {
             return null;
         }
-        String host = service.getHost();
-        int port = service.getPort();
+        String host = service.host();
+        int port = service.port();
         if (Utils.isIgnorePort(port)) {
             return host;
         }
@@ -2077,35 +2086,21 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     }
 
     /**
-     * 通过 URL 实例，构建 IHttpService 实例
+     * 通过 URL 实例,构建 HttpService 实例 (Montoya API)
      *
      * @return 失败返回null
      */
-    public static IHttpService buildHttpServiceByURL(URL url) {
+    public static burp.api.montoya.http.HttpService buildHttpServiceByURL(URL url) {
         if (url == null) {
             return null;
         }
-        return new IHttpService() {
-            @Override
-            public String getHost() {
-                return url.getHost();
-            }
-
-            @Override
-            public int getPort() {
-                String protocol = getProtocol();
-                int port = url.getPort();
-                if (port == -1) {
-                    port = protocol.equals("https") ? HTTPS_DEFAULT_PORT : HTTP_DEFAULT_PORT;
-                }
-                return port;
-            }
-
-            @Override
-            public String getProtocol() {
-                return url.getProtocol();
-            }
-        };
+        String protocol = url.getProtocol();
+        int port = url.getPort();
+        if (port == -1) {
+            port = protocol.equals("https") ? HTTPS_DEFAULT_PORT : HTTP_DEFAULT_PORT;
+        }
+        boolean secure = protocol.equals("https");
+        return burp.api.montoya.http.HttpService.httpService(url.getHost(), port, secure);
     }
 
     /**
@@ -2157,7 +2152,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     @Override
     public IHttpService getHttpService() {
         if (mCurrentReqResp != null) {
-            return mCurrentReqResp.getHttpService();
+            // TODO: MIGRATE-401-C - Remove this conversion after IMessageEditorController migration
+            return convertHttpServiceToLegacy(mCurrentReqResp.getHttpService());
         }
         return null;
     }
@@ -2190,7 +2186,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             onClearHistory();
             return;
         }
-        mCurrentReqResp = (IHttpRequestResponse) data.getReqResp();
+        mCurrentReqResp = (burp.onescan.common.IHttpRequestResponse) data.getReqResp();
         // 加载请求、响应数据包
         byte[] hintBytes = mHelpers.stringToBytes(L.get("message_editor_loading"));
         mRequestTextEditor.setContents(ByteArray.byteArray(hintBytes));
@@ -2249,7 +2245,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             if (data.getReqResp() == null) {
                 continue;
             }
-            byte[] reqBytes = ((IHttpRequestResponse) data.getReqResp()).getRequest();
+            byte[] reqBytes = ((burp.onescan.common.IHttpRequestResponse) data.getReqResp()).getRequest();
             String url = data.getHost() + data.getUrl();
             try {
                 URL u = new URL(url);
@@ -2270,7 +2266,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         if (data == null || data.getReqResp() == null) {
             return new byte[]{};
         }
-        mCurrentReqResp = (IHttpRequestResponse) data.getReqResp();
+        mCurrentReqResp = (burp.onescan.common.IHttpRequestResponse) data.getReqResp();
         byte[] respBytes = mCurrentReqResp.getResponse();
         if (respBytes == null || respBytes.length == 0) {
             return new byte[]{};
