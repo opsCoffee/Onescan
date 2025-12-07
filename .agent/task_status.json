@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T07:33:19.195303+00:00",
+  "lastUpdate": "2025-12-07T07:45:19.303779+00:00",
   "summary": {
     "totalTasks": 18,
-    "completedTasks": 10,
+    "completedTasks": 11,
     "inProgressTasks": 0,
-    "pendingTasks": 7,
+    "pendingTasks": 3,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 55,
+    "progressPercentage": 61,
     "estimatedTotalHours": 80,
     "actualHours": 19.8
   },
-  "current_phase": "3",
-  "current_task": "MIGRATE-302",
+  "current_phase": "4",
+  "current_task": "MIGRATE-403",
   "completed_phases": [
     "0",
     "1"
@@ -32,11 +32,15 @@
     "MIGRATE-202",
     "MIGRATE-203",
     "MIGRATE-301",
-    "MIGRATE-302"
+    "MIGRATE-302",
+    "MIGRATE-403"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [
-    "MIGRATE-102"
+    "MIGRATE-102",
+    "MIGRATE-303",
+    "MIGRATE-401",
+    "MIGRATE-402"
   ],
   "failed_tasks": [],
   "task_details": {
@@ -262,6 +266,33 @@
         "已验证: ContextMenuItemsProvider 已实现",
         "无需额外工作"
       ]
+    },
+    "MIGRATE-303": {
+      "status": "skipped",
+      "started_at": "2025-12-07T07:34:33.320644+00:00",
+      "notes": [
+        "复杂度高(8h),留待后续执行。参见 .agent/MIGRATE-303-analysis.md"
+      ]
+    },
+    "MIGRATE-401": {
+      "status": "skipped",
+      "started_at": "2025-12-07T07:37:43.322091+00:00",
+      "notes": [
+        "工作量大(6h,16处使用点),留待后续执行"
+      ]
+    },
+    "MIGRATE-402": {
+      "status": "skipped",
+      "started_at": "2025-12-07T07:38:40.322705+00:00",
+      "notes": [
+        "IScannerCheck 未使用,不适用"
+      ]
+    },
+    "MIGRATE-403": {
+      "status": "completed",
+      "started_at": "2025-12-07T07:39:45.764774+00:00",
+      "completed_at": "2025-12-07T07:45:19.303767+00:00",
+      "commit": "b98e451684e5629699cd48f4c3555d88c613cb58"
     }
   },
   "phases": {
