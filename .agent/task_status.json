@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T16:39:45.760444+00:00",
+  "lastUpdate": "2025-12-07T16:50:47.619704+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 22,
+    "completedTasks": 23,
     "inProgressTasks": 1,
-    "pendingTasks": 8,
+    "pendingTasks": 7,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 62,
+    "progressPercentage": 65,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
-  "current_phase": "7.1",
-  "current_task": "MIGRATE-303-D",
+  "current_phase": "7.2",
+  "current_task": "MIGRATE-401-A",
   "completed_phases": [
     "0",
     "1"
@@ -44,10 +44,11 @@
     "MIGRATE-605",
     "MIGRATE-303-A",
     "MIGRATE-303-B",
-    "MIGRATE-303-C"
+    "MIGRATE-303-C",
+    "MIGRATE-303-D"
   ],
   "in_progress_tasks": [
-    "MIGRATE-303-D"
+    "MIGRATE-401-A"
   ],
   "skipped_tasks": [
     "MIGRATE-102",
@@ -399,13 +400,16 @@
       "commit": "4dd5f23ad1f29e6f2d7126f303ae96df1dd297c1"
     },
     "MIGRATE-303-D": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "删除 RawEditorAdapter.java 文件,移除 IMessageEditor 相关导入,完整测试消息编辑器功能,更新相关文档和注释",
-      "started_at": "2025-12-07T16:39:45.760409+00:00"
+      "started_at": "2025-12-07T16:39:45.760409+00:00",
+      "completed_at": "2025-12-07T16:49:34.810560+00:00",
+      "commit": "da8dc592cf89295bf82bf6ab2cb4c34643279694"
     },
     "MIGRATE-401-A": {
-      "status": "pending",
-      "description": "统计 IHttpService 的所有使用位置(27处),分析每个使用场景的迁移策略,确定迁移到 HttpService 的具体方案,识别需要重构的复杂场景"
+      "status": "in_progress",
+      "description": "统计 IHttpService 的所有使用位置(27处),分析每个使用场景的迁移策略,确定迁移到 HttpService 的具体方案,识别需要重构的复杂场景",
+      "started_at": "2025-12-07T16:50:47.619694+00:00"
     },
     "MIGRATE-401-B": {
       "status": "pending",
