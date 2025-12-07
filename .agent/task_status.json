@@ -4,7 +4,7 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T01:10:35+00:00",
+  "lastUpdate": "2025-12-07T01:45:00+00:00",
   "summary": {
     "totalTasks": 17,
     "completedTasks": 4,
@@ -12,9 +12,9 @@
     "pendingTasks": 11,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 24,
+    "progressPercentage": 26,
     "estimatedTotalHours": 80,
-    "actualHours": 14
+    "actualHours": 14.5
   },
   "current_phase": "1",
   "current_task": "MIGRATE-101",
@@ -81,7 +81,8 @@
         "决策: 合并 MIGRATE-101 和 MIGRATE-102 一次性执行",
         "原因: 两个任务操作同一数据,MontoyaApi 和 IBurpExtenderCallbacks 类型不兼容",
         "进度: 已完成 MIGRATE-101-A (核心接口迁移)",
-        "下一步: 执行 MIGRATE-101-B (UI相关API迁移)"
+        "进度: MIGRATE-101-B 部分完成 (addSuiteTab 迁移完成)",
+        "下一步: 继续 MIGRATE-101-C (事件监听器迁移)"
       ],
       "sub_tasks": [
         {
@@ -101,20 +102,41 @@
         {
           "id": "MIGRATE-101-B",
           "title": "UI 相关 API 迁移",
-          "status": "pending",
-          "hours": 2
+          "status": "partial",
+          "started_at": "2025-12-07T01:36:00+00:00",
+          "hours": 0.5,
+          "deliverables": [
+            "✅ 迁移 addSuiteTab() → api.userInterface().registerSuiteTab()",
+            "✅ 移除 ITab 接口实现 (getTabCaption, getUiComponent)",
+            "⏳ registerContextMenuFactory - 留待 MIGRATE-101-C",
+            "⏳ createMessageEditor - 留待 MIGRATE-101-D",
+            "⏳ registerMessageEditorTabFactory - 留待 MIGRATE-101-C",
+            "⏳ registerExtensionStateListener - 留待 MIGRATE-101-C"
+          ],
+          "notes": [
+            "根据 Linus 'Never break userspace' 原则,只完成了确定安全的 API 迁移",
+            "复杂的接口重构留待后续子任务,避免引入破坏性变更"
+          ]
         },
         {
           "id": "MIGRATE-101-C",
           "title": "事件监听器迁移",
           "status": "pending",
-          "hours": 2
+          "hours": 2,
+          "scope_update": [
+            "新增: registerContextMenuFactory() → ContextMenuItemsProvider",
+            "新增: registerMessageEditorTabFactory() → HttpRequestEditorProvider",
+            "新增: registerExtensionStateListener() → Extension.registerUnloadingHandler()"
+          ]
         },
         {
           "id": "MIGRATE-101-D",
           "title": "HTTP 请求处理迁移",
           "status": "pending",
-          "hours": 2
+          "hours": 2,
+          "scope_update": [
+            "新增: createMessageEditor() → api.userInterface API"
+          ]
         },
         {
           "id": "MIGRATE-101-E",

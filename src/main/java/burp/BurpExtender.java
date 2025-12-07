@@ -65,8 +65,8 @@ import java.util.stream.Collectors;
  * 3. 代理监听
  *    - IProxyListener: 代理流量拦截和处理
  *
- * 4. UI 控制
- *    - ITab: 插件 Tab 界面
+ * 4. UI 控制 (已迁移到 Montoya API)
+ *    - api.userInterface().registerSuiteTab(): 插件 Tab 注册
  *    - IMessageEditorController: 消息编辑器控制
  *
  * 5. 任务表事件处理
@@ -88,7 +88,7 @@ import java.util.stream.Collectors;
  * ============================================================
  */
 public class BurpExtender implements BurpExtension, IProxyListener, IMessageEditorController,
-        TaskTable.OnTaskTableEventListener, ITab, OnTabEventListener, IMessageEditorTabFactory,
+        TaskTable.OnTaskTableEventListener, OnTabEventListener, IMessageEditorTabFactory,
         IExtensionStateListener, IContextMenuFactory {
 
     /**
@@ -245,12 +245,12 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         DomainHelper.init("public_suffix_list.json");
         // 初始化QPS限制器
         initQpsLimiter();
-        // 注册 OneScan 信息辅助面板
-        // TODO: MIGRATE-101-B 迁移 registerMessageEditorTabFactory
-        // this.mCallbacks.registerMessageEditorTabFactory(this);
-        // 注册插件卸载监听器
-        // TODO: MIGRATE-101-B 迁移 registerExtensionStateListener
-        // this.mCallbacks.registerExtensionStateListener(this);
+        // TODO: MIGRATE-101-C 迁移 registerMessageEditorTabFactory (涉及接口重构)
+        // 旧: this.mCallbacks.registerMessageEditorTabFactory(this);
+        // 新: api.userInterface().registerHttpRequestEditorProvider(...)
+        // TODO: MIGRATE-101-C 迁移 registerExtensionStateListener (使用 Lambda)
+        // 旧: this.mCallbacks.registerExtensionStateListener(this);
+        // 新: api.extension().registerUnloadingHandler(() -> extensionUnloaded());
     }
 
     /**
@@ -283,8 +283,8 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         // 注册事件
         mDataBoardTab.setOnTabEventListener(this);
         mOneScan.getConfigPanel().setOnTabEventListener(this);
-        // 将页面添加到 BurpSuite
-        mCallbacks.addSuiteTab(this);
+        // 将页面添加到 BurpSuite (使用 Montoya API)
+        api.userInterface().registerSuiteTab(Constants.PLUGIN_NAME, mOneScan);
         // 创建请求和响应控件
         mRequestTextEditor = mCallbacks.createMessageEditor(this, false);
         mResponseTextEditor = mCallbacks.createMessageEditor(this, false);
@@ -364,21 +364,6 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
                 }
             }
         }).start();
-    }
-
-    // ============================================================
-    // 职责 4: UI 控制
-    // 实现接口: ITab
-    // ============================================================
-
-    @Override
-    public String getTabCaption() {
-        return Constants.PLUGIN_NAME;
-    }
-
-    @Override
-    public Component getUiComponent() {
-        return mOneScan;
     }
 
     // ============================================================
