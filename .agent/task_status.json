@@ -4,7 +4,7 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T01:58:21+00:00",
+  "lastUpdate": "2025-12-07T03:45:00+00:00",
   "summary": {
     "totalTasks": 17,
     "completedTasks": 4,
@@ -120,30 +120,41 @@
         {
           "id": "MIGRATE-101-C",
           "title": "事件监听器迁移",
-          "status": "partial",
+          "status": "completed",
           "started_at": "2025-12-07T01:55:00+00:00",
-          "hours": 0.3,
+          "completed_at": "2025-12-07T03:45:00+00:00",
+          "commit": "pending",
+          "hours": 1.8,
           "deliverables": [
-            "✅ 迁移 registerExtensionStateListener() → api.extension().registerUnloadingHandler()",
-            "✅ 移除 IExtensionStateListener 接口实现",
-            "✅ 将 extensionUnloaded() 改为私有方法",
-            "✅ 移除不必要的监听器注销代码",
-            "⏳ registerContextMenuFactory - 留待 MIGRATE-101-C-2",
-            "⏳ registerMessageEditorTabFactory - 留待 MIGRATE-101-C-2"
+            "✅ MIGRATE-101-C-1: registerExtensionStateListener 迁移完成",
+            "✅ MIGRATE-101-C-2: registerContextMenuFactory 迁移完成",
+            "✅ 移除 IContextMenuFactory 接口实现",
+            "✅ 实现 ContextMenuItemsProvider",
+            "✅ 创建 Montoya API 适配器: convertToLegacyRequestResponse()",
+            "✅ 更新卸载逻辑,移除手动清理上下文菜单的代码"
           ],
           "notes": [
             "拆分为两个子任务: C-1(简单迁移) 和 C-2(复杂迁移)",
             "MIGRATE-101-C-1 已完成: registerExtensionStateListener 迁移",
-            "MIGRATE-101-C-2 待执行: 涉及接口重构的复杂API迁移"
+            "MIGRATE-101-C-2 已完成: registerContextMenuFactory 迁移",
+            "registerMessageEditorTabFactory 推迟到 MIGRATE-303 (依赖 OneScanInfoTab 重构)"
           ]
         },
         {
           "id": "MIGRATE-101-D",
-          "title": "HTTP 请求处理迁移",
+          "title": "HTTP 请求处理和消息编辑器迁移",
           "status": "pending",
           "hours": 2,
           "scope_update": [
-            "新增: createMessageEditor() → api.userInterface API"
+            "新增: createMessageEditor() → api.userInterface API",
+            "新增: OneScanInfoTab 重构 (IMessageEditorTab → Montoya API)",
+            "前置条件: 必须先完成此任务,才能执行 MIGRATE-303"
+          ],
+          "deliverables": [
+            "迁移 createMessageEditor() 到 Montoya API",
+            "重构 OneScanInfoTab 类",
+            "移除 IExtensionHelpers 依赖",
+            "移除 IMessageEditorController 依赖"
           ]
         },
         {
