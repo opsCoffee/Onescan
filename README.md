@@ -37,6 +37,19 @@ https://www.xxxxxx.com/a/b/c/api-docs
 https://www.xxxxxx.com/a/b/c/xxxxxx.zip
 ```
 
+## 系统要求
+
+- **Burp Suite**: Professional/Community 2025.5 或更高版本 (推荐)
+- **Java**: JDK 17 或更高版本 (JDK 21 也支持)
+- **API**: 基于 Montoya API 2025.5
+
+**兼容性说明**:
+- ✅ 推荐使用 Burp Suite 2025.5+ 以获得最佳兼容性
+- ⚠️ Burp Suite 2025.1-2025.4 可能兼容,但未经充分测试
+- ❌ 不支持 Burp Suite 2024.x 及更早版本
+
+**技术说明**: OneScan v2.2.0 已从传统 Burp Extender API 迁移到 Montoya API,详见 [迁移文档](.agent/migration_plan.md)
+
 ## 插件安装
 
 BurpSuite 安装流程如下（不同版本可能有所差异）：

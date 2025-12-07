@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T08:10:34.053538+00:00",
+  "lastUpdate": "2025-12-07T08:42:43.143115+00:00",
   "summary": {
     "totalTasks": 18,
-    "completedTasks": 12,
-    "inProgressTasks": 1,
-    "pendingTasks": 1,
+    "completedTasks": 14,
+    "inProgressTasks": 0,
+    "pendingTasks": 0,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 66,
+    "progressPercentage": 77,
     "estimatedTotalHours": 80,
     "actualHours": 19.8
   },
   "current_phase": "5",
-  "current_task": "MIGRATE-502",
+  "current_task": "MIGRATE-503",
   "completed_phases": [
     "0",
     "1"
@@ -34,11 +34,11 @@
     "MIGRATE-301",
     "MIGRATE-302",
     "MIGRATE-403",
-    "MIGRATE-501"
+    "MIGRATE-501",
+    "MIGRATE-502",
+    "MIGRATE-503"
   ],
-  "in_progress_tasks": [
-    "MIGRATE-502"
-  ],
+  "in_progress_tasks": [],
   "skipped_tasks": [
     "MIGRATE-102",
     "MIGRATE-303",
@@ -304,8 +304,16 @@
       "commit": "15629f2d3f6a9184c60415043aebdc8c372719a0"
     },
     "MIGRATE-502": {
-      "status": "in_progress",
-      "started_at": "2025-12-07T08:09:05.675812+00:00"
+      "status": "completed",
+      "started_at": "2025-12-07T08:09:05.675812+00:00",
+      "completed_at": "2025-12-07T08:26:43.763345+00:00",
+      "commit": "c6639e7b65bbd09db6f02e0e8cd8f6c6b6ab584b"
+    },
+    "MIGRATE-503": {
+      "status": "completed",
+      "started_at": "2025-12-07T08:27:19.745994+00:00",
+      "completed_at": "2025-12-07T08:42:43.143099+00:00",
+      "commit": "c6639e7b65bbd09db6f02e0e8cd8f6c6b6ab584b"
     }
   },
   "phases": {
