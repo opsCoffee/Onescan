@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T15:43:49.469938+00:00",
+  "lastUpdate": "2025-12-07T15:53:31.304654+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 20,
+    "completedTasks": 21,
     "inProgressTasks": 1,
-    "pendingTasks": 10,
+    "pendingTasks": 9,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 57,
+    "progressPercentage": 60,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
   "current_phase": "7.1",
-  "current_task": "MIGRATE-303-B",
+  "current_task": "MIGRATE-303-C",
   "completed_phases": [
     "0",
     "1"
@@ -42,10 +42,11 @@
     "MIGRATE-603",
     "MIGRATE-604",
     "MIGRATE-605",
-    "MIGRATE-303-A"
+    "MIGRATE-303-A",
+    "MIGRATE-303-B"
   ],
   "in_progress_tasks": [
-    "MIGRATE-303-B"
+    "MIGRATE-303-C"
   ],
   "skipped_tasks": [
     "MIGRATE-102",
@@ -383,13 +384,16 @@
       "commit": "a53545f"
     },
     "MIGRATE-303-B": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "移除 IMessageEditorTab 接口实现,直接使用 Montoya RawEditor API,更新 UI 组件的数据绑定逻辑,测试 UI 交互功能",
-      "started_at": "2025-12-07T15:43:48.303289+00:00"
+      "started_at": "2025-12-07T15:43:48.303289+00:00",
+      "completed_at": "2025-12-07T15:52:43.069141+00:00",
+      "commit": "2bbe1708af43e3a0ac272d63f479db51e609b549"
     },
     "MIGRATE-303-C": {
-      "status": "pending",
-      "description": "将 mRequestTextEditor 和 mResponseTextEditor 类型改为 RawEditor,移除 RawEditorAdapter 的使用,更新所有相关的方法调用"
+      "status": "in_progress",
+      "description": "将 mRequestTextEditor 和 mResponseTextEditor 类型改为 RawEditor,移除 RawEditorAdapter 的使用,更新所有相关的方法调用",
+      "started_at": "2025-12-07T15:53:31.304643+00:00"
     },
     "MIGRATE-303-D": {
       "status": "pending",
