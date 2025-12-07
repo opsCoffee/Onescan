@@ -4,15 +4,15 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T15:36:46.537115+00:00",
+  "lastUpdate": "2025-12-07T15:42:06.356578+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 19,
-    "inProgressTasks": 1,
+    "completedTasks": 20,
+    "inProgressTasks": 0,
     "pendingTasks": 11,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 54,
+    "progressPercentage": 57,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
@@ -41,11 +41,10 @@
     "MIGRATE-602",
     "MIGRATE-603",
     "MIGRATE-604",
-    "MIGRATE-605"
-  ],
-  "in_progress_tasks": [
+    "MIGRATE-605",
     "MIGRATE-303-A"
   ],
+  "in_progress_tasks": [],
   "skipped_tasks": [
     "MIGRATE-102",
     "MIGRATE-303",
@@ -375,9 +374,11 @@
       "commit": "2c524771cc344b311d40482deeb694823c0b6d78"
     },
     "MIGRATE-303-A": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "分析 RawEditorAdapter.java 的实现和使用场景,识别所有依赖 IMessageEditor 的组件,分析 OneScanInfoTab 的 UI 结构和数据流,制定详细的重构方案",
-      "started_at": "2025-12-07T15:36:46.537103+00:00"
+      "started_at": "2025-12-07T15:36:46.537103+00:00",
+      "completed_at": "2025-12-07T15:42:06.356566+00:00",
+      "commit": "a53545f"
     },
     "MIGRATE-303-B": {
       "status": "pending",
