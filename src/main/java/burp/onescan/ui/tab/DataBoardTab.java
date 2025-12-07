@@ -85,7 +85,7 @@ public class DataBoardTab extends BaseTab implements ImportUrlWindow.OnImportUrl
                 data.setFingerprint(list);
             }
             data.setFrom("Proxy");
-            data.setReqResp(new Object());
+            data.setReqResp(null);  // 测试数据,无实际请求响应
             getTaskTable().addTaskData(data);
         }
     }

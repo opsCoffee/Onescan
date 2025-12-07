@@ -15,6 +15,7 @@ import burp.onescan.OneScan;
 import burp.onescan.bean.FpData;
 import burp.onescan.bean.TaskData;
 import burp.onescan.common.*;
+import burp.onescan.common.IHttpRequestResponse;  // 显式导入,避免与 burp.IHttpRequestResponse 冲突
 import burp.onescan.info.OneScanInfoTab;
 import burp.onescan.manager.FpManager;
 import burp.onescan.manager.WordlistManager;
@@ -1259,7 +1260,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             return;
         }
         // 解析响应头的 Location 值
-        burp.onescan.common.IHttpRequestResponse reqResp = (burp.onescan.common.IHttpRequestResponse) data.getReqResp();
+        IHttpRequestResponse reqResp = data.getReqResp();
         HttpResponse httpResponse = HttpResponse.httpResponse(ByteArray.byteArray(reqResp.getResponse()));
         String location = getLocationByResponseInfo(httpResponse);
         if (location == null) {
@@ -2193,7 +2194,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             onClearHistory();
             return;
         }
-        mCurrentReqResp = (burp.onescan.common.IHttpRequestResponse) data.getReqResp();
+        mCurrentReqResp = data.getReqResp();
         // 加载请求、响应数据包
         byte[] hintBytes = L.get("message_editor_loading").getBytes(StandardCharsets.UTF_8);
         mRequestTextEditor.setContents(ByteArray.byteArray(hintBytes));
@@ -2252,8 +2253,9 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             if (data.getReqResp() == null) {
                 continue;
             }
-            byte[] reqBytes = ((burp.onescan.common.IHttpRequestResponse) data.getReqResp()).getRequest();
-            burp.api.montoya.http.HttpService service = ((burp.onescan.common.IHttpRequestResponse) data.getReqResp()).getHttpService();
+            IHttpRequestResponse reqResp = data.getReqResp();
+            byte[] reqBytes = reqResp.getRequest();
+            burp.api.montoya.http.HttpService service = reqResp.getHttpService();
             try {
                 HttpRequest httpRequest = HttpRequest.httpRequest(service, ByteArray.byteArray(reqBytes));
                 api.repeater().sendToRepeater(httpRequest);
@@ -2268,7 +2270,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         if (data == null || data.getReqResp() == null) {
             return new byte[]{};
         }
-        mCurrentReqResp = (burp.onescan.common.IHttpRequestResponse) data.getReqResp();
+        mCurrentReqResp = data.getReqResp();
         byte[] respBytes = mCurrentReqResp.getResponse();
         if (respBytes == null || respBytes.length == 0) {
             return new byte[]{};
