@@ -25,28 +25,28 @@
 
 **目标**: 全面分析项目中传统 API 的使用情况，制定详细的迁移计划
 
-- [x] **[MIGRATE-001]** 扫描传统 API 使用
+- [ ] **[MIGRATE-001]** 扫描传统 API 使用
   - 识别所有使用 `burp.*` 包的类和方法
   - 统计各个传统 API 接口的使用频率
   - 生成 API 使用清单（按模块分类）
   - **状态**: ✅ 已完成 (2025-12-06)
   - **产出**: `.agent/api_usage_report.md`, `.agent/api_quick_reference.md`, `.agent/burp_api_usage.csv`
 
-- [x] **[MIGRATE-002]** API 映射关系分析
+- [ ] **[MIGRATE-002]** API 映射关系分析
   - 建立传统 API 到 Montoya API 的映射表
   - 识别需要重构的复杂场景
   - 标记无直接对应的 API（需要特殊处理）
   - **状态**: ✅ 已完成 (2025-12-06)
   - **产出**: `.agent/api_mapping.md`
 
-- [x] **[MIGRATE-003]** 依赖关系分析
+- [ ] **[MIGRATE-003]** 依赖关系分析
   - 分析各模块间的 API 依赖关系
   - 确定迁移的优先级和顺序
   - 识别可能的风险点
   - **状态**: ✅ 已完成 (2025-12-06)
   - **产出**: `.agent/dependency_analysis.md`
 
-- [x] **[MIGRATE-004]** 生成迁移计划
+- [ ] **[MIGRATE-004]** 生成迁移计划
   - 创建 `.agent/migration_plan.md`
   - 创建 `.agent/api_mapping.md`(API 映射表)
   - 更新 `.agent/task_status.json`
@@ -59,13 +59,13 @@
 
 **目标**: 迁移插件的主入口和核心初始化逻辑
 
-- [x] **[MIGRATE-101]** BurpExtender 类迁移
+- [ ] **[MIGRATE-101]** BurpExtender 类迁移
   - 从 `IBurpExtender` 迁移到 `BurpExtension`
   - 从 `registerExtenderCallbacks` 迁移到 `initialize`
   - 更新回调接口的注册方式
   - **状态**: ✅ 已完成 (2025-12-07)
 
-- [x] **[MIGRATE-102]** 扩展上下文迁移
+- [ ] **[MIGRATE-102]** 扩展上下文迁移
   - 从 `IBurpExtenderCallbacks` 迁移到 `MontoyaApi`
   - 更新所有使用回调接口的代码
   - 适配新的服务获取方式
@@ -77,19 +77,19 @@
 
 **目标**: 迁移 HTTP 请求/响应处理相关的 API
 
-- [x] **[MIGRATE-201]** HTTP 监听器迁移
+- [ ] **[MIGRATE-201]** HTTP 监听器迁移
   - 从 `IHttpListener` 迁移到 `HttpHandler`
   - 更新请求/响应处理逻辑
   - 适配新的消息编辑器 API
   - **状态**: ✅ 已完成 (2025-12-07)
 
-- [x] **[MIGRATE-202]** HTTP 消息处理
+- [ ] **[MIGRATE-202]** HTTP 消息处理
   - 从 `IHttpRequestResponse` 迁移到 `HttpRequestResponse`
   - 更新请求/响应解析逻辑
   - 适配新的 HTTP 服务 API
   - **状态**: ✅ 已完成 (2025-12-07)
 
-- [x] **[MIGRATE-203]** 代理监听器迁移
+- [ ] **[MIGRATE-203]** 代理监听器迁移
   - 从 `IProxyListener` 迁移到 `ProxyRequestHandler`/`ProxyResponseHandler`
   - 更新拦截和修改逻辑
   - **状态**: ✅ 已完成 (2025-12-07)
@@ -100,13 +100,13 @@
 
 **目标**: 迁移用户界面相关的 API
 
-- [x] **[MIGRATE-301]** 标签页迁移
+- [ ] **[MIGRATE-301]** 标签页迁移
   - 从 `ITab` 迁移到 `UserInterface.registerSuiteTab()`
   - 更新标签页注册方式（使用 `api.userInterface().registerSuiteTab(title, component)`）
   - 适配新的 UI 组件模型
   - **状态**: ✅ 已完成 (2025-12-07)
 
-- [x] **[MIGRATE-302]** 上下文菜单迁移
+- [ ] **[MIGRATE-302]** 上下文菜单迁移
   - 从 `IContextMenuFactory` 迁移到 `ContextMenuItemsProvider`
   - 实现 `provideMenuItems()` 方法（支持 HTTP、WebSocket、AuditIssue 三种事件）
   - 使用 `api.userInterface().registerContextMenuItemsProvider()` 注册
@@ -132,12 +132,12 @@
   - **状态**: 🔄 已拆分（见 MIGRATE-401-A 到 MIGRATE-401-E）
   - **预计总工作量**: 16 小时
 
-- [x] **[MIGRATE-402]** 扫描器集成迁移
+- [ ] **[MIGRATE-402]** 扫描器集成迁移
   - 从 `IScannerCheck` 迁移到 `Scanner` API
   - 更新扫描逻辑和问题报告
   - **状态**: ✅ 不适用（项目未使用 IScannerCheck 接口）
 
-- [x] **[MIGRATE-403]** 日志和输出迁移
+- [ ] **[MIGRATE-403]** 日志和输出迁移
   - 从 `stdout`/`stderr` 迁移到 `Logging` API
   - 统一日志输出方式
   - **状态**: ✅ 已完成 (2025-12-07)
@@ -148,20 +148,20 @@
 
 **目标**: 确保迁移后的功能完整性和稳定性
 
-- [x] **[MIGRATE-501]** 功能测试
+- [ ] **[MIGRATE-501]** 功能测试
   - 测试所有核心功能
   - 验证 UI 交互
   - 检查性能表现
   - **状态**: ✅ 已完成 (2025-12-07)
   - **产出**: `.agent/test_report.md`
 
-- [x] **[MIGRATE-502]** 兼容性测试
+- [ ] **[MIGRATE-502]** 兼容性测试
   - 测试不同 Burp Suite 版本
   - 验证与其他插件的兼容性
   - **状态**: ✅ 已完成 (2025-12-07)
   - **产出**: `.agent/compatibility_report.md`
 
-- [x] **[MIGRATE-503]** 清理工作
+- [ ] **[MIGRATE-503]** 清理工作
   - 更新文档和注释
   - 代码格式化和优化
   - 记录技术债务
@@ -173,7 +173,7 @@
 
 **目标**: 全面检查迁移完成情况，评审代码质量，确保无遗漏
 
-- [x] **[MIGRATE-601]** 迁移完整性检查
+- [ ] **[MIGRATE-601]** 迁移完整性检查
   - 扫描所有源代码文件，确认无残留的传统 API 引用
   - 检查所有 `burp.*` 包的导入语句是否已清理
   - 验证所有已迁移的类是否正确使用 Montoya API
@@ -384,9 +384,9 @@
 ## 评审检查清单
 
 ### 代码层面
-- [x] 核心入口点使用 Montoya API ✅
-- [x] HTTP 处理使用 Montoya API ✅
-- [x] 日志统一使用 `api.logging()` ✅
+- [ ] 核心入口点使用 Montoya API ✅
+- [ ] HTTP 处理使用 Montoya API ✅
+- [ ] 日志统一使用 `api.logging()` ✅
 - [ ] 无残留的 `burp.*` 包导入 ⚠️ (2 个适配器待处理)
 - [ ] UI 组件完全使用 Montoya API ⚠️ (MIGRATE-303 待完成)
 - [ ] 数据模型完全使用 Montoya API ⚠️ (MIGRATE-401 待完成)
@@ -394,18 +394,18 @@
 - [ ] 线程安全性验证 🔄 (评审中)
 
 ### 功能层面
-- [x] 核心扫描功能正常 ✅
-- [x] UI 交互响应正确 ✅
-- [x] 上下文菜单可用 ✅
-- [x] 代理拦截工作正常 ✅
-- [x] 配置持久化正常 ✅
+- [ ] 核心扫描功能正常 ✅
+- [ ] UI 交互响应正确 ✅
+- [ ] 上下文菜单可用 ✅
+- [ ] 代理拦截工作正常 ✅
+- [ ] 配置持久化正常 ✅
 - [ ] 性能测试 ⏳ (MIGRATE-702)
 - [ ] 稳定性测试 ⏳ (MIGRATE-702)
 
 ### 文档层面
-- [x] 迁移计划文档 ✅
-- [x] API 映射文档 ✅
-- [x] 完整性检查报告 ✅
+- [ ] 迁移计划文档 ✅
+- [ ] API 映射文档 ✅
+- [ ] 完整性检查报告 ✅
 - [ ] 代码注释完整准确 🔄 (MIGRATE-605)
 - [ ] README.md 更新 ⏳ (MIGRATE-703)
 - [ ] 技术债务记录 🔄 (MIGRATE-604)
