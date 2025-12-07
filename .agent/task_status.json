@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T11:40:39.954678+00:00",
+  "lastUpdate": "2025-12-07T12:22:58.031586+00:00",
   "summary": {
     "totalTasks": 23,
-    "completedTasks": 17,
+    "completedTasks": 19,
     "inProgressTasks": 0,
-    "pendingTasks": 2,
+    "pendingTasks": 0,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 73,
+    "progressPercentage": 82,
     "estimatedTotalHours": 91.5,
     "actualHours": 19.8
   },
   "current_phase": "6",
-  "current_task": "MIGRATE-603",
+  "current_task": "MIGRATE-605",
   "completed_phases": [
     "0",
     "1"
@@ -39,7 +39,9 @@
     "MIGRATE-503",
     "MIGRATE-601",
     "MIGRATE-602",
-    "MIGRATE-603"
+    "MIGRATE-603",
+    "MIGRATE-604",
+    "MIGRATE-605"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [
@@ -357,12 +359,18 @@
       "commit": "d19cd3404572600e753537f215477a0982ad4b7e"
     },
     "MIGRATE-604": {
-      "status": "pending",
-      "description": "整理跳过的迁移任务(MIGRATE-303, MIGRATE-401),评估技术债务的影响和优先级,制定后续优化计划,更新 .agent/TECHNICAL_DEBT.md"
+      "status": "completed",
+      "description": "整理跳过的迁移任务(MIGRATE-303, MIGRATE-401),评估技术债务的影响和优先级,制定后续优化计划,更新 .agent/TECHNICAL_DEBT.md",
+      "started_at": "2025-12-07T11:41:36.341121+00:00",
+      "completed_at": "2025-12-07T12:13:17.920135+00:00",
+      "commit": "690568c27d4e5cfeb14cf05ca8351d9d64618802"
     },
     "MIGRATE-605": {
-      "status": "pending",
-      "description": "检查代码注释是否完整和准确,验证 README.md 是否需要更新,确认迁移相关文档的完整性,生成最终迁移总结报告"
+      "status": "completed",
+      "description": "检查代码注释是否完整和准确,验证 README.md 是否需要更新,确认迁移相关文档的完整性,生成最终迁移总结报告",
+      "started_at": "2025-12-07T12:14:26.311936+00:00",
+      "completed_at": "2025-12-07T12:22:58.031574+00:00",
+      "commit": "2c524771cc344b311d40482deeb694823c0b6d78"
     }
   },
   "phases": {
