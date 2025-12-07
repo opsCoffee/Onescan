@@ -1,5 +1,7 @@
 package burp;
 
+import burp.api.montoya.BurpExtension;
+import burp.api.montoya.MontoyaApi;
 import burp.common.helper.DomainHelper;
 import burp.common.helper.QpsLimiter;
 import burp.common.helper.UIHelper;
@@ -85,7 +87,7 @@ import java.util.stream.Collectors;
  *    - HTTP 请求发送和响应处理
  * ============================================================
  */
-public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEditorController,
+public class BurpExtender implements BurpExtension, IProxyListener, IMessageEditorController,
         TaskTable.OnTaskTableEventListener, ITab, OnTabEventListener, IMessageEditorTabFactory,
         IExtensionStateListener, IContextMenuFactory {
 
@@ -174,6 +176,7 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
      */
     private final Set<String> sTimeoutReqHost = ConcurrentHashMap.newKeySet();
 
+    private MontoyaApi api;
     private IBurpExtenderCallbacks mCallbacks;
     private IExtensionHelpers mHelpers;
     private OneScan mOneScan;
@@ -215,25 +218,27 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
     // ============================================================
 
     @Override
-    public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
-        initData(callbacks);
+    public void initialize(MontoyaApi api) {
+        initData(api);
         initView();
         initEvent();
         Logger.debug("register Extender ok! Log: %b", Constants.DEBUG);
     }
 
-    private void initData(IBurpExtenderCallbacks callbacks) {
-        this.mCallbacks = callbacks;
-        this.mHelpers = callbacks.getHelpers();
+    private void initData(MontoyaApi api) {
+        this.api = api;
+        // 临时保留旧API兼容性 - 将在后续子任务中完全移除
+        this.mCallbacks = null; // TODO: MIGRATE-101-E 移除
+        this.mHelpers = null; // TODO: MIGRATE-101-E 移除
         // 初始化扫描引擎
         this.mScanEngine = new burp.onescan.engine.ScanEngine(
                 TASK_THREAD_COUNT,
                 LF_TASK_THREAD_COUNT,
                 FP_THREAD_COUNT
         );
-        this.mCallbacks.setExtensionName(Constants.PLUGIN_NAME + " v" + Constants.PLUGIN_VERSION);
+        api.extension().setName(Constants.PLUGIN_NAME + " v" + Constants.PLUGIN_VERSION);
         // 初始化日志打印
-        Logger.init(Constants.DEBUG, mCallbacks.getStdout(), mCallbacks.getStderr());
+        Logger.init(Constants.DEBUG, System.out, System.err); // TODO: MIGRATE-403 使用 api.logging()
         // 初始化默认配置
         Config.init(getWorkDir());
         // 初始化域名辅助类
@@ -241,16 +246,18 @@ public class BurpExtender implements IBurpExtender, IProxyListener, IMessageEdit
         // 初始化QPS限制器
         initQpsLimiter();
         // 注册 OneScan 信息辅助面板
-        this.mCallbacks.registerMessageEditorTabFactory(this);
+        // TODO: MIGRATE-101-B 迁移 registerMessageEditorTabFactory
+        // this.mCallbacks.registerMessageEditorTabFactory(this);
         // 注册插件卸载监听器
-        this.mCallbacks.registerExtensionStateListener(this);
+        // TODO: MIGRATE-101-B 迁移 registerExtensionStateListener
+        // this.mCallbacks.registerExtensionStateListener(this);
     }
 
     /**
      * 获取工作目录路径（优先获取当前插件 jar 包所在目录配置文件，如果配置不存在，则使用默认工作目录）
      */
     private String getWorkDir() {
-        String workDir = Paths.get(mCallbacks.getExtensionFilename())
+        String workDir = Paths.get(api.extension().filename())
                 .getParent().toString() + File.separator + "OneScan" + File.separator;
         if (FileUtils.isDir(workDir)) {
             return workDir;
