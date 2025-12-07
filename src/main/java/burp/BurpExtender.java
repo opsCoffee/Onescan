@@ -2,6 +2,8 @@ package burp;
 
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.ui.editor.RawEditor;
 import burp.common.helper.DomainHelper;
 import burp.common.helper.QpsLimiter;
 import burp.common.helper.UIHelper;
@@ -180,8 +182,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     private IExtensionHelpers mHelpers;
     private OneScan mOneScan;
     private DataBoardTab mDataBoardTab;
-    private IMessageEditor mRequestTextEditor;
-    private IMessageEditor mResponseTextEditor;
+    private RawEditor mRequestTextEditor;
+    private RawEditor mResponseTextEditor;
     private burp.onescan.engine.ScanEngine mScanEngine;
     private IHttpRequestResponse mCurrentReqResp;
     private QpsLimiter mQpsLimit;
@@ -287,9 +289,9 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         // 将页面添加到 BurpSuite (使用 Montoya API)
         api.userInterface().registerSuiteTab(Constants.PLUGIN_NAME, mOneScan);
         // 创建请求和响应控件 (使用 Montoya API)
-        mRequestTextEditor = new burp.common.adapter.RawEditorAdapter(api.userInterface().createRawEditor());
-        mResponseTextEditor = new burp.common.adapter.RawEditorAdapter(api.userInterface().createRawEditor());
-        mDataBoardTab.init(mRequestTextEditor.getComponent(), mResponseTextEditor.getComponent());
+        mRequestTextEditor = api.userInterface().createRawEditor();
+        mResponseTextEditor = api.userInterface().createRawEditor();
+        mDataBoardTab.init(mRequestTextEditor.uiComponent(), mResponseTextEditor.uiComponent());
         mDataBoardTab.getTaskTable().setOnTaskTableEventListener(this);
     }
 
@@ -2190,8 +2192,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         mCurrentReqResp = (IHttpRequestResponse) data.getReqResp();
         // 加载请求、响应数据包
         byte[] hintBytes = mHelpers.stringToBytes(L.get("message_editor_loading"));
-        mRequestTextEditor.setMessage(hintBytes, true);
-        mResponseTextEditor.setMessage(hintBytes, false);
+        mRequestTextEditor.setContents(ByteArray.byteArray(hintBytes));
+        mResponseTextEditor.setContents(ByteArray.byteArray(hintBytes));
         mScanEngine.submitRefreshTask(this::refreshReqRespMessage);
     }
 
@@ -2205,8 +2207,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         // 清空超时的请求主机集合
         sTimeoutReqHost.clear();
         // 清空显示的请求、响应数据包
-        mRequestTextEditor.setMessage(EMPTY_BYTES, true);
-        mResponseTextEditor.setMessage(EMPTY_BYTES, false);
+        mRequestTextEditor.setContents(ByteArray.byteArray(EMPTY_BYTES));
+        mResponseTextEditor.setContents(ByteArray.byteArray(EMPTY_BYTES));
         // 清除指纹识别历史记录
         FpManager.clearHistory();
     }
@@ -2233,8 +2235,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             String hint = L.get("message_editor_response_length_limit_hint");
             response = mHelpers.stringToBytes(hint);
         }
-        mRequestTextEditor.setMessage(request, true);
-        mResponseTextEditor.setMessage(response, false);
+        mRequestTextEditor.setContents(ByteArray.byteArray(request));
+        mResponseTextEditor.setContents(ByteArray.byteArray(response));
     }
 
     @Override
@@ -2421,7 +2423,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
 
     @Override
     public IMessageEditorTab createNewInstance(IMessageEditorController iMessageEditorController, boolean editable) {
-        return new OneScanInfoTab(api, iMessageEditorController);
+        return new burp.common.adapter.MessageEditorTabAdapter(new OneScanInfoTab(api));
     }
 
     // ============================================================
