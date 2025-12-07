@@ -343,9 +343,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             }
 
             for (burp.api.montoya.http.message.HttpRequestResponse httpReqResp : messages) {
-                // 转换为旧 API 格式 (TODO: MIGRATE-201 完全迁移到 Montoya API)
-                IHttpRequestResponse legacyReqResp = convertToLegacyRequestResponse(httpReqResp);
-                doScan(legacyReqResp, FROM_SEND);
+                doScan(httpReqResp, FROM_SEND);
                 if (isTaskThreadPoolShutdown()) {
                     return;
                 }
@@ -379,84 +377,6 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     }
 
     /**
-     * 转换 Montoya API 的 HttpRequestResponse 到旧 API 格式
-     * TODO: MIGRATE-201 完全迁移到 Montoya API 后移除此方法
-     */
-    private IHttpRequestResponse convertToLegacyRequestResponse(
-            burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp) {
-        return new IHttpRequestResponse() {
-            @Override
-            public byte[] getRequest() {
-                return montoyaReqResp.request().toByteArray().getBytes();
-            }
-
-            @Override
-            public void setRequest(byte[] message) {
-                // 不支持修改
-            }
-
-            @Override
-            public byte[] getResponse() {
-                return montoyaReqResp.response() != null
-                        ? montoyaReqResp.response().toByteArray().getBytes()
-                        : null;
-            }
-
-            @Override
-            public void setResponse(byte[] message) {
-                // 不支持修改
-            }
-
-            @Override
-            public String getComment() {
-                return montoyaReqResp.annotations().notes();
-            }
-
-            @Override
-            public void setComment(String comment) {
-                // 不支持修改
-            }
-
-            @Override
-            public String getHighlight() {
-                return montoyaReqResp.annotations().highlightColor() != null
-                        ? montoyaReqResp.annotations().highlightColor().name()
-                        : null;
-            }
-
-            @Override
-            public void setHighlight(String color) {
-                // 不支持修改
-            }
-
-            @Override
-            public IHttpService getHttpService() {
-                return new IHttpService() {
-                    @Override
-                    public String getHost() {
-                        return montoyaReqResp.httpService().host();
-                    }
-
-                    @Override
-                    public int getPort() {
-                        return montoyaReqResp.httpService().port();
-                    }
-
-                    @Override
-                    public String getProtocol() {
-                        return montoyaReqResp.httpService().secure() ? "https" : "http";
-                    }
-                };
-            }
-
-            @Override
-            public void setHttpService(IHttpService httpService) {
-                // 不支持修改
-            }
-        };
-    }
-
-    /**
      * 创建使用动态 Payload 的批量扫描 ActionListener
      * Payload 从 ActionEvent.getActionCommand() 获取
      *
@@ -482,9 +402,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
             }
 
             for (burp.api.montoya.http.message.HttpRequestResponse httpReqResp : messages) {
-                // 转换为旧 API 格式 (TODO: MIGRATE-201 完全迁移到 Montoya API)
-                IHttpRequestResponse legacyReqResp = convertToLegacyRequestResponse(httpReqResp);
-                doScan(legacyReqResp, FROM_SEND, payloadItem);
+                doScan(httpReqResp, FROM_SEND, payloadItem);
                 if (isTaskThreadPoolShutdown()) {
                     return;
                 }
@@ -521,11 +439,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
                             interceptedResponse  // InterceptedResponse 就是 HttpResponse
                     );
 
-            // 转换为旧 API 格式 (使用现有适配器)
-            IHttpRequestResponse legacyReqResp = convertToLegacyRequestResponse(montoyaReqResp);
-
             // 扫描任务
-            doScan(legacyReqResp, FROM_PROXY);
+            doScan(montoyaReqResp, FROM_PROXY);
 
             // 继续传递响应 (不修改)
             return burp.api.montoya.proxy.http.ProxyResponseReceivedAction.continueWith(interceptedResponse);
@@ -540,11 +455,39 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     }
 
     // ============================================================
+    // 辅助方法: Montoya API 类型转换 (临时方案)
+    // TODO: MIGRATE-401 完全迁移后移除
+    // ============================================================
+
+    /**
+     * 将 Montoya API 的 HttpService 转换为旧 API 的 IHttpService
+     * TODO: MIGRATE-401 完全迁移后移除此方法
+     */
+    private IHttpService convertHttpServiceToLegacy(burp.api.montoya.http.HttpService montoyaService) {
+        return new IHttpService() {
+            @Override
+            public String getHost() {
+                return montoyaService.host();
+            }
+
+            @Override
+            public int getPort() {
+                return montoyaService.port();
+            }
+
+            @Override
+            public String getProtocol() {
+                return montoyaService.secure() ? "https" : "http";
+            }
+        };
+    }
+
+    // ============================================================
     // 职责 9: 请求处理核心逻辑
     // 包含: 扫描任务调度、请求过滤、Payload处理、HTTP请求发送
     // ============================================================
 
-    private void doScan(IHttpRequestResponse httpReqResp, String from) {
+    private void doScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, String from) {
         String item = WordlistManager.getItem(WordlistManager.KEY_PAYLOAD);
         doScan(httpReqResp, from, item);
     }
@@ -587,13 +530,18 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         return urlPath;
     }
 
-    private void doScan(IHttpRequestResponse httpReqResp, String from, String payloadItem) {
-        if (httpReqResp == null || httpReqResp.getHttpService() == null) {
+    private void doScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, String from, String payloadItem) {
+        if (httpReqResp == null || httpReqResp.httpService() == null) {
             return;
         }
 
-        IRequestInfo info = mHelpers.analyzeRequest(httpReqResp);
-        String host = httpReqResp.getHttpService().getHost();
+        byte[] requestBytes = httpReqResp.request().toByteArray().getBytes();
+        byte[] responseBytes = httpReqResp.response() != null
+            ? httpReqResp.response().toByteArray().getBytes()
+            : new byte[0];
+
+        IRequestInfo info = mHelpers.analyzeRequest(requestBytes);
+        String host = httpReqResp.httpService().host();
 
         // 应用过滤规则
         if (shouldFilterRequest(from, host, info.getMethod())) {
@@ -601,7 +549,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
         }
 
         // 提交指纹识别任务
-        submitFingerprintTask(httpReqResp.getRequest(), httpReqResp.getResponse());
+        submitFingerprintTask(requestBytes, responseBytes);
 
         // 处理原始请求
         URL url = getUrlByRequestInfo(info);
@@ -652,7 +600,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     /**
      * 处理原始请求（非递归扫描）
      */
-    private void processOriginalRequest(IHttpRequestResponse httpReqResp, IRequestInfo info, URL url, String from) {
+    private void processOriginalRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, URL url, String from) {
         if (!proxyExcludeSuffixFilter(url.getPath())) {
             runScanTask(httpReqResp, info, null, from);
         } else {
@@ -663,7 +611,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     /**
      * 执行递归目录扫描
      */
-    private void performRecursiveScan(IHttpRequestResponse httpReqResp, IRequestInfo info, URL url, String payloadItem) {
+    private void performRecursiveScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, URL url, String payloadItem) {
         String reqPath = getReqPathByRequestInfo(info);
         String reqHost = getReqHostByReqPath(reqPath);
         Logger.debug("doScan receive: %s", url.toString());
@@ -919,8 +867,9 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param pathWithQuery 路径+query参数
      * @param from          请求来源
      */
-    private void runScanTask(IHttpRequestResponse httpReqResp, IRequestInfo info, String pathWithQuery, String from) {
-        IHttpService service = httpReqResp.getHttpService();
+    private void runScanTask(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, String pathWithQuery, String from) {
+        // TODO: MIGRATE-401 - 将 IHttpService 迁移到 HttpService
+        IHttpService service = convertHttpServiceToLegacy(httpReqResp.httpService());
         // 处理请求头
         byte[] request = handleHeader(httpReqResp, info, pathWithQuery, from);
         // 处理请求头失败时，丢弃该任务
@@ -1308,7 +1257,7 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * @param from          数据来源
      * @return 处理完成的数据包，失败时返回null
      */
-    private byte[] handleHeader(IHttpRequestResponse httpReqResp, IRequestInfo info, String pathWithQuery, String from) {
+    private byte[] handleHeader(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, String pathWithQuery, String from) {
         List<String> configHeaders = getHeader();
         List<String> removeHeaders = getRemoveHeaders();
         List<String> originalHeaders = info.getHeaders();
@@ -1429,12 +1378,12 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     /**
      * 添加请求 body（仅非扫描请求）
      */
-    private void appendRequestBody(StringBuilder requestRaw, IHttpRequestResponse httpReqResp, IRequestInfo info, String from) {
+    private void appendRequestBody(StringBuilder requestRaw, burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, String from) {
         if (from.equals(FROM_SCAN)) {
             return;
         }
 
-        byte[] httpRequest = httpReqResp.getRequest();
+        byte[] httpRequest = httpReqResp.request().toByteArray().getBytes();
         int bodyOffset = info.getBodyOffset();
         int bodySize = httpRequest.length - bodyOffset;
         if (bodySize > 0) {
@@ -1445,8 +1394,9 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     /**
      * 完成请求构建：填充变量并更新 Content-Length
      */
-    private byte[] finalizeRequest(IHttpRequestResponse httpReqResp, IRequestInfo info, String requestRaw) {
-        IHttpService service = httpReqResp.getHttpService();
+    private byte[] finalizeRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, IRequestInfo info, String requestRaw) {
+        // TODO: MIGRATE-401 - 将 IHttpService 迁移到 HttpService
+        IHttpService service = convertHttpServiceToLegacy(httpReqResp.httpService());
         URL url = getUrlByRequestInfo(info);
         String processedRequest = setupVariable(service, url, requestRaw);
 
