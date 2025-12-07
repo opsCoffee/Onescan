@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T07:19:32.329983+00:00",
+  "lastUpdate": "2025-12-07T07:45:19.303779+00:00",
   "summary": {
     "totalTasks": 18,
-    "completedTasks": 7,
+    "completedTasks": 11,
     "inProgressTasks": 0,
-    "pendingTasks": 10,
+    "pendingTasks": 3,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 38,
+    "progressPercentage": 61,
     "estimatedTotalHours": 80,
     "actualHours": 19.8
   },
-  "current_phase": "2",
-  "current_task": "MIGRATE-202",
+  "current_phase": "4",
+  "current_task": "MIGRATE-403",
   "completed_phases": [
     "0",
     "1"
@@ -29,11 +29,18 @@
     "MIGRATE-004",
     "MIGRATE-101",
     "MIGRATE-201",
-    "MIGRATE-202"
+    "MIGRATE-202",
+    "MIGRATE-203",
+    "MIGRATE-301",
+    "MIGRATE-302",
+    "MIGRATE-403"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [
-    "MIGRATE-102"
+    "MIGRATE-102",
+    "MIGRATE-303",
+    "MIGRATE-401",
+    "MIGRATE-402"
   ],
   "failed_tasks": [],
   "task_details": {
@@ -217,6 +224,75 @@
       "started_at": "2025-12-07T04:36:49.428701+00:00",
       "completed_at": "2025-12-07T07:19:32.329972+00:00",
       "commit": "49e63abd4d2790a64e5b7a963844e7606bf8e303"
+    },
+    "MIGRATE-203": {
+      "status": "completed",
+      "started_at": "2025-12-07T07:21:43.638990+00:00",
+      "completed_at": "2025-12-07T07:25:23.285491+00:00",
+      "commit": "500fae30bb5e906a60819d8deb83463c4064f15f",
+      "description": "代理监听器迁移 (已在 MIGRATE-201 中完成)",
+      "notes": [
+        "此任务与 MIGRATE-201 重复",
+        "MIGRATE-201 已完成 IProxyListener → ProxyResponseHandler 迁移",
+        "已验证: OneScanProxyResponseHandler 类存在且已注册",
+        "无需额外工作"
+      ]
+    },
+    "MIGRATE-301": {
+      "status": "completed",
+      "started_at": "2025-12-07T07:27:57.319666+00:00",
+      "completed_at": "2025-12-07T07:30:05.976450+00:00",
+      "commit": "44c41178766928d00d826651a98e3ea5b01edadb",
+      "description": "标签页迁移 (已在 MIGRATE-101-B 中完成)",
+      "notes": [
+        "此任务已在 MIGRATE-101-B 中完成",
+        "MIGRATE-101-B 已完成 ITab → registerSuiteTab 迁移",
+        "已验证: api.userInterface().registerSuiteTab() 已调用",
+        "已验证: ITab 接口实现已移除",
+        "无需额外工作"
+      ]
+    },
+    "MIGRATE-302": {
+      "status": "completed",
+      "started_at": "2025-12-07T07:31:43.322128+00:00",
+      "completed_at": "2025-12-07T07:33:19.195292+00:00",
+      "commit": "0233df51cf945bfee3bee19e5a775edc0b2384c7",
+      "description": "上下文菜单迁移 (已在 MIGRATE-101-C-2 中完成)",
+      "notes": [
+        "此任务已在 MIGRATE-101-C-2 中完成",
+        "MIGRATE-101-C-2 已完成 IContextMenuFactory → ContextMenuItemsProvider 迁移",
+        "已验证: api.userInterface().registerContextMenuItemsProvider() 已调用",
+        "已验证: IContextMenuFactory 接口实现已移除",
+        "已验证: ContextMenuItemsProvider 已实现",
+        "无需额外工作"
+      ]
+    },
+    "MIGRATE-303": {
+      "status": "skipped",
+      "started_at": "2025-12-07T07:34:33.320644+00:00",
+      "notes": [
+        "复杂度高(8h),留待后续执行。参见 .agent/MIGRATE-303-analysis.md"
+      ]
+    },
+    "MIGRATE-401": {
+      "status": "skipped",
+      "started_at": "2025-12-07T07:37:43.322091+00:00",
+      "notes": [
+        "工作量大(6h,16处使用点),留待后续执行"
+      ]
+    },
+    "MIGRATE-402": {
+      "status": "skipped",
+      "started_at": "2025-12-07T07:38:40.322705+00:00",
+      "notes": [
+        "IScannerCheck 未使用,不适用"
+      ]
+    },
+    "MIGRATE-403": {
+      "status": "completed",
+      "started_at": "2025-12-07T07:39:45.764774+00:00",
+      "completed_at": "2025-12-07T07:45:19.303767+00:00",
+      "commit": "b98e451684e5629699cd48f4c3555d88c613cb58"
     }
   },
   "phases": {

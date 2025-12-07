@@ -239,8 +239,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
                 FP_THREAD_COUNT
         );
         api.extension().setName(Constants.PLUGIN_NAME + " v" + Constants.PLUGIN_VERSION);
-        // 初始化日志打印
-        Logger.init(Constants.DEBUG, System.out, System.err); // TODO: MIGRATE-403 使用 api.logging()
+        // 初始化日志打印 (MIGRATE-403: 使用 Montoya API)
+        Logger.init(Constants.DEBUG, api);
         // 初始化默认配置
         Config.init(getWorkDir());
         // 初始化域名辅助类
