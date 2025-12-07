@@ -4,12 +4,12 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T15:42:06.356578+00:00",
+  "lastUpdate": "2025-12-07T15:43:48.303299+00:00",
   "summary": {
     "totalTasks": 35,
     "completedTasks": 20,
-    "inProgressTasks": 0,
-    "pendingTasks": 11,
+    "inProgressTasks": 1,
+    "pendingTasks": 10,
     "skippedTasks": 1,
     "failedTasks": 0,
     "progressPercentage": 57,
@@ -17,7 +17,7 @@
     "actualHours": 19.8
   },
   "current_phase": "7.1",
-  "current_task": "MIGRATE-303-A",
+  "current_task": "MIGRATE-303-B",
   "completed_phases": [
     "0",
     "1"
@@ -44,7 +44,9 @@
     "MIGRATE-605",
     "MIGRATE-303-A"
   ],
-  "in_progress_tasks": [],
+  "in_progress_tasks": [
+    "MIGRATE-303-B"
+  ],
   "skipped_tasks": [
     "MIGRATE-102",
     "MIGRATE-303",
@@ -381,8 +383,9 @@
       "commit": "a53545f"
     },
     "MIGRATE-303-B": {
-      "status": "pending",
-      "description": "移除 IMessageEditorTab 接口实现,直接使用 Montoya RawEditor API,更新 UI 组件的数据绑定逻辑,测试 UI 交互功能"
+      "status": "in_progress",
+      "description": "移除 IMessageEditorTab 接口实现,直接使用 Montoya RawEditor API,更新 UI 组件的数据绑定逻辑,测试 UI 交互功能",
+      "started_at": "2025-12-07T15:43:48.303289+00:00"
     },
     "MIGRATE-303-C": {
       "status": "pending",
