@@ -1,6 +1,7 @@
 package burp.onescan.bean;
 
 import burp.common.utils.StringUtils;
+import burp.onescan.common.IHttpRequestResponse;
 import burp.onescan.manager.FpManager;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class TaskData {
     private Map<String, String> params;
 
     // 请求响应数据
-    private Object reqResp;
+    private IHttpRequestResponse reqResp;
 
     public int getId() {
         return id;
@@ -146,11 +147,11 @@ public class TaskData {
         }
     }
 
-    public Object getReqResp() {
+    public IHttpRequestResponse getReqResp() {
         return reqResp;
     }
 
-    public void setReqResp(Object reqResp) {
+    public void setReqResp(IHttpRequestResponse reqResp) {
         this.reqResp = reqResp;
     }
 
