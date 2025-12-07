@@ -5,9 +5,9 @@
 ## 当前状态
 
 - **项目版本**: 2.2.0
-- **迁移状态**: 迁移检查与评审阶段
-- **当前阶段**: 阶段 6 - 迁移验证与评审
-- **总进度**: 14/18 (77%) - 核心功能已迁移
+- **迁移状态**: 全面完成阶段
+- **当前阶段**: 阶段 7 - 完成剩余技术债务
+- **总进度**: 15/28 (54%) - 核心功能已迁移，剩余技术债务待完成
 
 ## API 版本信息
 
@@ -112,11 +112,12 @@
   - 使用 `api.userInterface().registerContextMenuItemsProvider()` 注册
   - **状态**: ✅ 已完成 (2025-12-07)
 
-- [ ] **[MIGRATE-303]** 消息编辑器迁移
+- [ ] **[MIGRATE-303]** 消息编辑器迁移（已拆分为子任务，见阶段 7）
   - 从 `IMessageEditorController` 迁移到 `HttpRequestEditorProvider`/`HttpResponseEditorProvider`
   - 实现 `ExtensionProvidedHttpRequestEditor`/`ExtensionProvidedHttpResponseEditor` 接口
   - 使用 `api.userInterface().registerHttpRequestEditorProvider()` 注册
-  - **状态**: ⏭️ 已跳过 (复杂度高 8h,留待后续)
+  - **状态**: 🔄 已拆分（见 MIGRATE-303-A 到 MIGRATE-303-D）
+  - **预计总工作量**: 8 小时
 
 ---
 
@@ -124,16 +125,17 @@
 
 **目标**: 迁移工具类和辅助功能相关的 API
 
-- [ ] **[MIGRATE-401]** 辅助工具类迁移
+- [ ] **[MIGRATE-401]** 辅助工具类迁移（已拆分为子任务，见阶段 7）
   - 从 `IExtensionHelpers` 迁移到各个专用服务
   - 更新 URL 解析、编码/解码等工具方法
   - 适配新的参数处理 API
-  - **状态**: ⏭️ 已跳过 (工作量大 16处使用点,留待后续)
+  - **状态**: 🔄 已拆分（见 MIGRATE-401-A 到 MIGRATE-401-E）
+  - **预计总工作量**: 16 小时
 
-- [ ] **[MIGRATE-402]** 扫描器集成迁移
+- [x] **[MIGRATE-402]** 扫描器集成迁移
   - 从 `IScannerCheck` 迁移到 `Scanner` API
   - 更新扫描逻辑和问题报告
-  - **状态**: ⏭️ 已跳过 (IScannerCheck 未使用,不适用)
+  - **状态**: ✅ 不适用（项目未使用 IScannerCheck 接口）
 
 - [x] **[MIGRATE-403]** 日志和输出迁移
   - 从 `stdout`/`stderr` 迁移到 `Logging` API
@@ -179,6 +181,7 @@
   - **预计工作量**: 2-3 小时
   - **状态**: ✅ 已完成 (2025-12-07)
   - **产出**: `.agent/MIGRATE-601-integrity-report.md`
+  - **结论**: 核心迁移完成 90%，剩余为已知技术债务
 
 - [ ] **[MIGRATE-602]** 代码质量评审
   - 评审已迁移代码的质量和规范性
@@ -187,7 +190,7 @@
   - 检查资源管理和内存泄漏风险
   - 评估代码可维护性和可读性
   - **预计工作量**: 3-4 小时
-  - **状态**: ⏳ 待开始
+  - **状态**: 🔄 进行中
 
 - [ ] **[MIGRATE-603]** API 使用规范性检查
   - 验证 Montoya API 的使用是否符合最佳实践
@@ -195,7 +198,7 @@
   - 确认线程安全性和并发处理
   - 验证 UI 组件的注册和注销是否正确
   - **预计工作量**: 2-3 小时
-  - **状态**: ⏳ 待开始
+  - **状态**: 🔄 进行中
 
 - [ ] **[MIGRATE-604]** 技术债务评估
   - 整理跳过的迁移任务（MIGRATE-303, MIGRATE-401）
@@ -203,7 +206,7 @@
   - 制定后续优化计划
   - 更新 `.agent/TECHNICAL_DEBT.md`
   - **预计工作量**: 1-2 小时
-  - **状态**: ⏳ 待开始
+  - **状态**: 🔄 进行中
 
 - [ ] **[MIGRATE-605]** 文档完整性检查
   - 检查代码注释是否完整和准确
@@ -211,7 +214,135 @@
   - 确认迁移相关文档的完整性
   - 生成最终迁移总结报告
   - **预计工作量**: 1-2 小时
+  - **状态**: 🔄 进行中
+
+---
+
+### 阶段 7：完成剩余技术债务
+
+**目标**: 完成所有跳过的迁移任务，实现 100% Montoya API 迁移
+
+#### 子阶段 7.1：消息编辑器迁移 (MIGRATE-303 拆分)
+
+- [ ] **[MIGRATE-303-A]** 分析现有消息编辑器使用情况
+  - 分析 `RawEditorAdapter.java` 的实现和使用场景
+  - 识别所有依赖 `IMessageEditor` 的组件
+  - 分析 `OneScanInfoTab` 的 UI 结构和数据流
+  - 制定详细的重构方案
+  - **预计工作量**: 1.5 小时
   - **状态**: ⏳ 待开始
+  - **产出**: `.agent/MIGRATE-303-A-analysis.md`
+
+- [ ] **[MIGRATE-303-B]** 重构 OneScanInfoTab 使用 Montoya RawEditor
+  - 移除 `IMessageEditorTab` 接口实现
+  - 直接使用 Montoya `RawEditor` API
+  - 更新 UI 组件的数据绑定逻辑
+  - 测试 UI 交互功能
+  - **预计工作量**: 3 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-303-A
+
+- [ ] **[MIGRATE-303-C]** 更新 BurpExtender 中的编辑器引用
+  - 将 `mRequestTextEditor` 和 `mResponseTextEditor` 类型改为 `RawEditor`
+  - 移除 `RawEditorAdapter` 的使用
+  - 更新所有相关的方法调用
+  - **预计工作量**: 2 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-303-B
+
+- [ ] **[MIGRATE-303-D]** 清理和测试
+  - 删除 `RawEditorAdapter.java` 文件
+  - 移除 `IMessageEditor` 相关导入
+  - 完整测试消息编辑器功能
+  - 更新相关文档和注释
+  - **预计工作量**: 1.5 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-303-C
+  - **产出**: `.agent/MIGRATE-303-completion-report.md`
+
+---
+
+#### 子阶段 7.2：辅助工具类迁移 (MIGRATE-401 拆分)
+
+- [ ] **[MIGRATE-401-A]** IHttpService 迁移分析和规划
+  - 统计 `IHttpService` 的所有使用位置（27 处）
+  - 分析每个使用场景的迁移策略
+  - 确定迁移到 `HttpService` 的具体方案
+  - 识别需要重构的复杂场景
+  - **预计工作量**: 2 小时
+  - **状态**: ⏳ 待开始
+  - **产出**: `.agent/MIGRATE-401-A-analysis.md`
+
+- [ ] **[MIGRATE-401-B]** 重构 HttpReqRespAdapter
+  - 将 `IHttpRequestResponse` 接口改为内部接口或移除
+  - 将 `IHttpService` 替换为 Montoya `HttpService`
+  - 更新适配器的构造方法和工厂方法
+  - 保持与现有代码的兼容性
+  - **预计工作量**: 3 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-401-A
+
+- [ ] **[MIGRATE-401-C]** 更新 BurpExtender 中的 IHttpService 使用
+  - 批量替换 `IHttpService` 为 `HttpService`
+  - 更新所有工具方法的参数和返回值类型
+  - 修复类型转换和方法调用
+  - 分批测试每个修改的方法
+  - **预计工作量**: 4 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-401-B
+
+- [ ] **[MIGRATE-401-D]** 更新核心数据结构
+  - 重构 `TaskData` 类，移除 `IHttpRequestResponse` 依赖
+  - 更新 `TaskPool` 和相关扫描引擎代码
+  - 使用 Montoya 原生类型或自定义数据类
+  - 确保扫描功能完整性
+  - **预计工作量**: 5 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-401-C
+  - **风险**: 高（涉及核心扫描引擎）
+
+- [ ] **[MIGRATE-401-E]** 清理和验证
+  - 删除 `HttpReqRespAdapter.java`（如果不再需要）
+  - 移除所有 `IHttpRequestResponse` 和 `IHttpService` 导入
+  - 从 `pom.xml` 移除 `burp-extender-api` 依赖
+  - 完整回归测试所有功能
+  - **预计工作量**: 2 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-401-D
+  - **产出**: `.agent/MIGRATE-401-completion-report.md`
+
+---
+
+#### 子阶段 7.3：最终验证和文档
+
+- [ ] **[MIGRATE-701]** 完整性最终验证
+  - 重新扫描所有源代码，确认零传统 API 引用
+  - 验证 `pom.xml` 已移除 `burp-extender-api`
+  - 确认所有代码使用 Montoya API
+  - 生成最终迁移报告
+  - **预计工作量**: 1 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-303-D, MIGRATE-401-E
+  - **产出**: `.agent/MIGRATE-701-final-report.md`
+
+- [ ] **[MIGRATE-702]** 性能和稳定性测试
+  - 压力测试扫描引擎
+  - 内存泄漏检测
+  - 并发场景测试
+  - 长时间运行稳定性测试
+  - **预计工作量**: 2 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-701
+
+- [ ] **[MIGRATE-703]** 文档更新和发布准备
+  - 更新 README.md（API 版本、兼容性说明）
+  - 更新代码注释和 JavaDoc
+  - 编写迁移完成总结报告
+  - 准备发布说明（Release Notes）
+  - **预计工作量**: 2 小时
+  - **状态**: ⏳ 待开始
+  - **依赖**: MIGRATE-702
+  - **产出**: `.agent/migration_final_summary.md`
 
 ---
 
@@ -223,28 +354,62 @@
 4. **充分测试**: 每个阶段完成后进行充分测试
 5. **文档同步**: 及时更新代码注释和文档
 
+## 任务进度统计
+
+### 总体进度
+- **总任务数**: 28 个
+- **已完成**: 15 个 (54%)
+- **进行中**: 4 个 (14%)
+- **待开始**: 9 个 (32%)
+
+### 按阶段统计
+- **阶段 0** (分析): 4/4 ✅ 100%
+- **阶段 1** (入口): 2/2 ✅ 100%
+- **阶段 2** (HTTP): 3/3 ✅ 100%
+- **阶段 3** (UI): 2/3 ⚠️ 67% (MIGRATE-303 已拆分)
+- **阶段 4** (工具): 2/3 ⚠️ 67% (MIGRATE-401 已拆分)
+- **阶段 5** (测试): 3/3 ✅ 100%
+- **阶段 6** (评审): 1/5 🔄 20%
+- **阶段 7** (债务): 0/13 ⏳ 0%
+
+### 关键里程碑
+- ✅ 核心框架迁移完成 (2025-12-07)
+- ✅ 基础功能验证通过 (2025-12-07)
+- 🔄 代码质量评审中
+- ⏳ 技术债务清理待开始
+- ⏳ 100% 迁移目标待完成
+
+---
+
 ## 评审检查清单
 
 ### 代码层面
-- [ ] 无残留的 `burp.*` 包导入
-- [ ] 所有 HTTP 处理使用 Montoya API
-- [ ] UI 组件正确注册和注销
-- [ ] 日志统一使用 `api.logging()`
-- [ ] 异常处理完善
-- [ ] 线程安全性验证
+- [x] 核心入口点使用 Montoya API ✅
+- [x] HTTP 处理使用 Montoya API ✅
+- [x] 日志统一使用 `api.logging()` ✅
+- [ ] 无残留的 `burp.*` 包导入 ⚠️ (2 个适配器待处理)
+- [ ] UI 组件完全使用 Montoya API ⚠️ (MIGRATE-303 待完成)
+- [ ] 数据模型完全使用 Montoya API ⚠️ (MIGRATE-401 待完成)
+- [ ] 异常处理完善 🔄 (评审中)
+- [ ] 线程安全性验证 🔄 (评审中)
 
 ### 功能层面
-- [ ] 核心扫描功能正常
-- [ ] UI 交互响应正确
-- [ ] 上下文菜单可用
-- [ ] 代理拦截工作正常
-- [ ] 配置持久化正常
+- [x] 核心扫描功能正常 ✅
+- [x] UI 交互响应正确 ✅
+- [x] 上下文菜单可用 ✅
+- [x] 代理拦截工作正常 ✅
+- [x] 配置持久化正常 ✅
+- [ ] 性能测试 ⏳ (MIGRATE-702)
+- [ ] 稳定性测试 ⏳ (MIGRATE-702)
 
 ### 文档层面
-- [ ] 代码注释完整准确
-- [ ] README.md 更新
-- [ ] 技术债务记录
-- [ ] 迁移总结报告
+- [x] 迁移计划文档 ✅
+- [x] API 映射文档 ✅
+- [x] 完整性检查报告 ✅
+- [ ] 代码注释完整准确 🔄 (MIGRATE-605)
+- [ ] README.md 更新 ⏳ (MIGRATE-703)
+- [ ] 技术债务记录 🔄 (MIGRATE-604)
+- [ ] 迁移总结报告 ⏳ (MIGRATE-703)
 
 ## 关键 API 映射参考
 
@@ -282,6 +447,73 @@
 - 日志输出：`callbacks.printOutput()` → `api.logging().logToOutput()`
 - 错误输出：`callbacks.printError()` → `api.logging().logToError()`
 
+## 执行建议
+
+### 优先级排序
+
+**P0 - 立即执行** (完成阶段 6 评审):
+1. MIGRATE-602: 代码质量评审
+2. MIGRATE-603: API 使用规范性检查
+3. MIGRATE-604: 技术债务评估
+4. MIGRATE-605: 文档完整性检查
+
+**P1 - 高优先级** (消息编辑器迁移):
+1. MIGRATE-303-A: 分析现有使用情况
+2. MIGRATE-303-B: 重构 OneScanInfoTab
+3. MIGRATE-303-C: 更新 BurpExtender 引用
+4. MIGRATE-303-D: 清理和测试
+
+**P2 - 中优先级** (辅助工具类迁移 - 低风险部分):
+1. MIGRATE-401-A: IHttpService 迁移分析
+2. MIGRATE-401-B: 重构 HttpReqRespAdapter
+3. MIGRATE-401-C: 更新 BurpExtender 使用
+
+**P3 - 高风险任务** (核心引擎重构):
+1. MIGRATE-401-D: 更新核心数据结构
+2. MIGRATE-401-E: 清理和验证
+
+**P4 - 最终验证**:
+1. MIGRATE-701: 完整性最终验证
+2. MIGRATE-702: 性能和稳定性测试
+3. MIGRATE-703: 文档更新和发布准备
+
+### 执行策略
+
+**短期目标** (本周):
+- 完成阶段 6 的所有评审任务
+- 完成 MIGRATE-303 消息编辑器迁移
+- 预计工作量: 12-15 小时
+
+**中期目标** (下周):
+- 完成 MIGRATE-401-A 到 MIGRATE-401-C
+- 预计工作量: 9 小时
+
+**长期目标** (两周后):
+- 完成 MIGRATE-401-D 核心引擎重构（高风险）
+- 完成最终验证和文档
+- 预计工作量: 10 小时
+
+**总预计工作量**: 31-34 小时
+
+### 风险管理
+
+**高风险任务**:
+- MIGRATE-401-D (核心数据结构重构)
+  - 风险: 可能影响扫描引擎稳定性
+  - 缓解: 充分的单元测试和回归测试
+  - 建议: 创建独立分支进行开发
+
+**中风险任务**:
+- MIGRATE-303-B (OneScanInfoTab 重构)
+  - 风险: UI 交互可能出现问题
+  - 缓解: 详细的 UI 测试
+  
+**低风险任务**:
+- 所有评审和分析任务
+- 文档更新任务
+
+---
+
 ## 快速参考
 
 - 📋 **评审规范**: `.claude/skills/code-review/SKILL.md`
@@ -289,3 +521,5 @@
 - 🔧 **Burp API 指南**: `.claude/skills/code-review/references/burp-api-guide.md`
 - 📚 **Montoya API 文档**: https://portswigger.github.io/burp-extensions-montoya-api/
 - 🐍 **任务管理**: `.agent/task_status_manager.py`
+- 📊 **完整性报告**: `.agent/MIGRATE-601-integrity-report.md`
+- 📝 **技术债务**: `.agent/TECHNICAL_DEBT.md`
