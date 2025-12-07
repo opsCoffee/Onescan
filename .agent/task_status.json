@@ -78,7 +78,7 @@
       "status": "completed",
       "started_at": "2025-12-06T17:19:09+00:00",
       "completed_at": "2025-12-07T06:00:00+00:00",
-      "commit": "pending",
+      "commit": "adee4a4",
       "totalHours": 4.8,
       "notes": [
         "决策: 合并 MIGRATE-101 和 MIGRATE-102 一次性执行",
@@ -174,7 +174,7 @@
           "status": "completed",
           "started_at": "2025-12-07T05:00:00+00:00",
           "completed_at": "2025-12-07T06:00:00+00:00",
-          "commit": "pending",
+          "commit": "adee4a4",
           "hours": 1,
           "deliverables": [
             "✅ 代码审查: 确认导入声明已清理",
