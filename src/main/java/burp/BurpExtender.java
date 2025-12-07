@@ -54,8 +54,8 @@ import java.util.stream.Collectors;
  * 职责区域索引 (9 大职责)
  * ============================================================
  * 1. 插件生命周期管理
- *    - IBurpExtender: 插件注册和初始化
- *    - IExtensionStateListener: 插件卸载监听
+ *    - BurpExtension: 插件注册和初始化
+ *    - api.extension().registerUnloadingHandler(): 插件卸载监听 (已迁移)
  *
  * 2. 扫描引擎管理
  *    - 线程池管理 (mTaskThreadPool, mLFTaskThreadPool, mFpThreadPool)
@@ -89,7 +89,7 @@ import java.util.stream.Collectors;
  */
 public class BurpExtender implements BurpExtension, IProxyListener, IMessageEditorController,
         TaskTable.OnTaskTableEventListener, OnTabEventListener, IMessageEditorTabFactory,
-        IExtensionStateListener, IContextMenuFactory {
+        IContextMenuFactory {
 
     /**
      * 任务线程数量
@@ -245,12 +245,11 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
         DomainHelper.init("public_suffix_list.json");
         // 初始化QPS限制器
         initQpsLimiter();
+        // 注册扩展卸载监听器 (Montoya API)
+        api.extension().registerUnloadingHandler(this::extensionUnloaded);
         // TODO: MIGRATE-101-C 迁移 registerMessageEditorTabFactory (涉及接口重构)
         // 旧: this.mCallbacks.registerMessageEditorTabFactory(this);
         // 新: api.userInterface().registerHttpRequestEditorProvider(...)
-        // TODO: MIGRATE-101-C 迁移 registerExtensionStateListener (使用 Lambda)
-        // 旧: this.mCallbacks.registerExtensionStateListener(this);
-        // 新: api.extension().registerUnloadingHandler(() -> extensionUnloaded());
     }
 
     /**
@@ -2175,16 +2174,17 @@ public class BurpExtender implements BurpExtension, IProxyListener, IMessageEdit
     }
 
     // ============================================================
-    // 职责 1: 插件生命周期管理 (续) - IExtensionStateListener
-    // 插件卸载处理
+    // 职责 1: 插件生命周期管理 (续) - 扩展卸载处理
     // ============================================================
 
-    @Override
-    public void extensionUnloaded() {
+    /**
+     * 扩展卸载时的清理操作
+     * <p>
+     * 通过 api.extension().registerUnloadingHandler() 注册
+     */
+    private void extensionUnloaded() {
         // 移除代理监听器
         mCallbacks.removeProxyListener(this);
-        // 移除插件卸载监听器
-        mCallbacks.removeExtensionStateListener(this);
         // 移除信息辅助面板
         mCallbacks.removeMessageEditorTabFactory(this);
         // 移除注册的菜单

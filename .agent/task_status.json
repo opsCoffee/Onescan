@@ -4,7 +4,7 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T01:45:00+00:00",
+  "lastUpdate": "2025-12-07T01:58:21+00:00",
   "summary": {
     "totalTasks": 17,
     "completedTasks": 4,
@@ -108,10 +108,9 @@
           "deliverables": [
             "✅ 迁移 addSuiteTab() → api.userInterface().registerSuiteTab()",
             "✅ 移除 ITab 接口实现 (getTabCaption, getUiComponent)",
-            "⏳ registerContextMenuFactory - 留待 MIGRATE-101-C",
+            "⏳ registerContextMenuFactory - 留待 MIGRATE-101-C-2",
             "⏳ createMessageEditor - 留待 MIGRATE-101-D",
-            "⏳ registerMessageEditorTabFactory - 留待 MIGRATE-101-C",
-            "⏳ registerExtensionStateListener - 留待 MIGRATE-101-C"
+            "⏳ registerMessageEditorTabFactory - 留待 MIGRATE-101-C-2"
           ],
           "notes": [
             "根据 Linus 'Never break userspace' 原则,只完成了确定安全的 API 迁移",
@@ -121,12 +120,21 @@
         {
           "id": "MIGRATE-101-C",
           "title": "事件监听器迁移",
-          "status": "pending",
-          "hours": 2,
-          "scope_update": [
-            "新增: registerContextMenuFactory() → ContextMenuItemsProvider",
-            "新增: registerMessageEditorTabFactory() → HttpRequestEditorProvider",
-            "新增: registerExtensionStateListener() → Extension.registerUnloadingHandler()"
+          "status": "partial",
+          "started_at": "2025-12-07T01:55:00+00:00",
+          "hours": 0.3,
+          "deliverables": [
+            "✅ 迁移 registerExtensionStateListener() → api.extension().registerUnloadingHandler()",
+            "✅ 移除 IExtensionStateListener 接口实现",
+            "✅ 将 extensionUnloaded() 改为私有方法",
+            "✅ 移除不必要的监听器注销代码",
+            "⏳ registerContextMenuFactory - 留待 MIGRATE-101-C-2",
+            "⏳ registerMessageEditorTabFactory - 留待 MIGRATE-101-C-2"
+          ],
+          "notes": [
+            "拆分为两个子任务: C-1(简单迁移) 和 C-2(复杂迁移)",
+            "MIGRATE-101-C-1 已完成: registerExtensionStateListener 迁移",
+            "MIGRATE-101-C-2 待执行: 涉及接口重构的复杂API迁移"
           ]
         },
         {
