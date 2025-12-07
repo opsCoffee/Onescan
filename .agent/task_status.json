@@ -4,12 +4,12 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T17:21:15.781040+00:00",
+  "lastUpdate": "2025-12-07T17:23:39.109854+00:00",
   "summary": {
     "totalTasks": 35,
     "completedTasks": 25,
-    "inProgressTasks": 0,
-    "pendingTasks": 6,
+    "inProgressTasks": 1,
+    "pendingTasks": 5,
     "skippedTasks": 1,
     "failedTasks": 0,
     "progressPercentage": 71,
@@ -17,7 +17,7 @@
     "actualHours": 19.8
   },
   "current_phase": "7.2",
-  "current_task": "MIGRATE-401-B",
+  "current_task": "MIGRATE-401-C",
   "completed_phases": [
     "0",
     "1"
@@ -49,7 +49,9 @@
     "MIGRATE-401-A",
     "MIGRATE-401-B"
   ],
-  "in_progress_tasks": [],
+  "in_progress_tasks": [
+    "MIGRATE-401-C"
+  ],
   "skipped_tasks": [
     "MIGRATE-102",
     "MIGRATE-303",
@@ -421,8 +423,9 @@
       "commit": "890ffc1a8a1323316f7cfcdfd5459ac1f6381831"
     },
     "MIGRATE-401-C": {
-      "status": "pending",
-      "description": "批量替换 IHttpService 为 HttpService,更新所有工具方法的参数和返回值类型,修复类型转换和方法调用,分批测试每个修改的方法"
+      "status": "in_progress",
+      "description": "批量替换 IHttpService 为 HttpService,更新所有工具方法的参数和返回值类型,修复类型转换和方法调用,分批测试每个修改的方法",
+      "started_at": "2025-12-07T17:23:39.109843+00:00"
     },
     "MIGRATE-401-D": {
       "status": "pending",
