@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T16:50:47.619704+00:00",
+  "lastUpdate": "2025-12-07T17:21:15.781040+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 23,
-    "inProgressTasks": 1,
-    "pendingTasks": 7,
+    "completedTasks": 25,
+    "inProgressTasks": 0,
+    "pendingTasks": 6,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 65,
+    "progressPercentage": 71,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
   "current_phase": "7.2",
-  "current_task": "MIGRATE-401-A",
+  "current_task": "MIGRATE-401-B",
   "completed_phases": [
     "0",
     "1"
@@ -45,11 +45,11 @@
     "MIGRATE-303-A",
     "MIGRATE-303-B",
     "MIGRATE-303-C",
-    "MIGRATE-303-D"
+    "MIGRATE-303-D",
+    "MIGRATE-401-A",
+    "MIGRATE-401-B"
   ],
-  "in_progress_tasks": [
-    "MIGRATE-401-A"
-  ],
+  "in_progress_tasks": [],
   "skipped_tasks": [
     "MIGRATE-102",
     "MIGRATE-303",
@@ -407,13 +407,18 @@
       "commit": "da8dc592cf89295bf82bf6ab2cb4c34643279694"
     },
     "MIGRATE-401-A": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "统计 IHttpService 的所有使用位置(27处),分析每个使用场景的迁移策略,确定迁移到 HttpService 的具体方案,识别需要重构的复杂场景",
-      "started_at": "2025-12-07T16:50:47.619694+00:00"
+      "started_at": "2025-12-07T16:50:47.619694+00:00",
+      "completed_at": "2025-12-07T16:58:08.148514+00:00",
+      "commit": "42bd56aef94492b89f00126b49c464421fc4c2b9"
     },
     "MIGRATE-401-B": {
-      "status": "pending",
-      "description": "将 IHttpRequestResponse 接口改为内部接口或移除,将 IHttpService 替换为 Montoya HttpService,更新适配器的构造方法和工厂方法,保持与现有代码的兼容性"
+      "status": "completed",
+      "description": "将 IHttpRequestResponse 接口改为内部接口或移除,将 IHttpService 替换为 Montoya HttpService,更新适配器的构造方法和工厂方法,保持与现有代码的兼容性",
+      "started_at": "2025-12-07T16:58:56.674264+00:00",
+      "completed_at": "2025-12-07T17:21:15.781027+00:00",
+      "commit": "890ffc1a8a1323316f7cfcdfd5459ac1f6381831"
     },
     "MIGRATE-401-C": {
       "status": "pending",
