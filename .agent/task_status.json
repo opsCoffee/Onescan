@@ -4,12 +4,12 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T11:25:58.664341+00:00",
+  "lastUpdate": "2025-12-07T11:31:20.580441+00:00",
   "summary": {
     "totalTasks": 23,
     "completedTasks": 16,
-    "inProgressTasks": 0,
-    "pendingTasks": 3,
+    "inProgressTasks": 1,
+    "pendingTasks": 2,
     "skippedTasks": 1,
     "failedTasks": 0,
     "progressPercentage": 69,
@@ -17,7 +17,7 @@
     "actualHours": 19.8
   },
   "current_phase": "6",
-  "current_task": "MIGRATE-602",
+  "current_task": "MIGRATE-603",
   "completed_phases": [
     "0",
     "1"
@@ -40,7 +40,9 @@
     "MIGRATE-601",
     "MIGRATE-602"
   ],
-  "in_progress_tasks": [],
+  "in_progress_tasks": [
+    "MIGRATE-603"
+  ],
   "skipped_tasks": [
     "MIGRATE-102",
     "MIGRATE-303",
@@ -349,8 +351,9 @@
       ]
     },
     "MIGRATE-603": {
-      "status": "pending",
-      "description": "验证 Montoya API 的使用是否符合最佳实践,检查是否有不推荐的 API 使用方式,确认线程安全性和并发处理,验证 UI 组件的注册和注销是否正确"
+      "status": "in_progress",
+      "description": "验证 Montoya API 的使用是否符合最佳实践,检查是否有不推荐的 API 使用方式,确认线程安全性和并发处理,验证 UI 组件的注册和注销是否正确",
+      "started_at": "2025-12-07T11:31:20.580428+00:00"
     },
     "MIGRATE-604": {
       "status": "pending",
