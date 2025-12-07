@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T04:32:52.467951+00:00",
+  "lastUpdate": "2025-12-07T07:19:32.329983+00:00",
   "summary": {
     "totalTasks": 18,
-    "completedTasks": 6,
+    "completedTasks": 7,
     "inProgressTasks": 0,
-    "pendingTasks": 11,
+    "pendingTasks": 10,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 33,
+    "progressPercentage": 38,
     "estimatedTotalHours": 80,
-    "actualHours": 19.3
+    "actualHours": 19.8
   },
   "current_phase": "2",
-  "current_task": "MIGRATE-201",
+  "current_task": "MIGRATE-202",
   "completed_phases": [
     "0",
     "1"
@@ -28,7 +28,8 @@
     "MIGRATE-003",
     "MIGRATE-004",
     "MIGRATE-101",
-    "MIGRATE-201"
+    "MIGRATE-201",
+    "MIGRATE-202"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [
@@ -202,7 +203,20 @@
       "status": "completed",
       "started_at": "2025-12-07T04:17:30.355420+00:00",
       "completed_at": "2025-12-07T04:32:52.467940+00:00",
-      "commit": "955d9499acace161820f5679b9e7497dbe495552"
+      "commit": "6cb1f58",
+      "description": "代理监听器迁移: IProxyListener → ProxyResponseHandler",
+      "deliverables": [
+        "创建 OneScanProxyResponseHandler 内部类",
+        "消除 boolean messageIsRequest 判断",
+        "更新 initEvent() 和 extensionUnloaded() 代码",
+        "编译验证通过"
+      ]
+    },
+    "MIGRATE-202": {
+      "status": "completed",
+      "started_at": "2025-12-07T04:36:49.428701+00:00",
+      "completed_at": "2025-12-07T07:19:32.329972+00:00",
+      "commit": "49e63abd4d2790a64e5b7a963844e7606bf8e303"
     }
   },
   "phases": {
@@ -230,11 +244,11 @@
       "name": "HTTP 处理迁移",
       "description": "迁移 HTTP 请求/响应处理相关的 API",
       "priority": "P1",
-      "status": "pending",
+      "status": "in_progress",
       "total_tasks": 3,
-      "completed_tasks": 0,
+      "completed_tasks": 1,
       "estimatedHours": 16,
-      "actualHours": 0
+      "actualHours": 0.5
     },
     "3": {
       "name": "UI 组件迁移",
