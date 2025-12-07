@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T15:36:46.537115+00:00",
+  "lastUpdate": "2025-12-07T16:50:47.619704+00:00",
   "summary": {
     "totalTasks": 35,
-    "completedTasks": 19,
+    "completedTasks": 23,
     "inProgressTasks": 1,
-    "pendingTasks": 11,
+    "pendingTasks": 7,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 54,
+    "progressPercentage": 65,
     "estimatedTotalHours": 120.5,
     "actualHours": 19.8
   },
-  "current_phase": "7.1",
-  "current_task": "MIGRATE-303-A",
+  "current_phase": "7.2",
+  "current_task": "MIGRATE-401-A",
   "completed_phases": [
     "0",
     "1"
@@ -41,10 +41,14 @@
     "MIGRATE-602",
     "MIGRATE-603",
     "MIGRATE-604",
-    "MIGRATE-605"
+    "MIGRATE-605",
+    "MIGRATE-303-A",
+    "MIGRATE-303-B",
+    "MIGRATE-303-C",
+    "MIGRATE-303-D"
   ],
   "in_progress_tasks": [
-    "MIGRATE-303-A"
+    "MIGRATE-401-A"
   ],
   "skipped_tasks": [
     "MIGRATE-102",
@@ -375,25 +379,37 @@
       "commit": "2c524771cc344b311d40482deeb694823c0b6d78"
     },
     "MIGRATE-303-A": {
-      "status": "in_progress",
+      "status": "completed",
       "description": "分析 RawEditorAdapter.java 的实现和使用场景,识别所有依赖 IMessageEditor 的组件,分析 OneScanInfoTab 的 UI 结构和数据流,制定详细的重构方案",
-      "started_at": "2025-12-07T15:36:46.537103+00:00"
+      "started_at": "2025-12-07T15:36:46.537103+00:00",
+      "completed_at": "2025-12-07T15:42:06.356566+00:00",
+      "commit": "a53545f"
     },
     "MIGRATE-303-B": {
-      "status": "pending",
-      "description": "移除 IMessageEditorTab 接口实现,直接使用 Montoya RawEditor API,更新 UI 组件的数据绑定逻辑,测试 UI 交互功能"
+      "status": "completed",
+      "description": "移除 IMessageEditorTab 接口实现,直接使用 Montoya RawEditor API,更新 UI 组件的数据绑定逻辑,测试 UI 交互功能",
+      "started_at": "2025-12-07T15:43:48.303289+00:00",
+      "completed_at": "2025-12-07T15:52:43.069141+00:00",
+      "commit": "2bbe1708af43e3a0ac272d63f479db51e609b549"
     },
     "MIGRATE-303-C": {
-      "status": "pending",
-      "description": "将 mRequestTextEditor 和 mResponseTextEditor 类型改为 RawEditor,移除 RawEditorAdapter 的使用,更新所有相关的方法调用"
+      "status": "completed",
+      "description": "将 mRequestTextEditor 和 mResponseTextEditor 类型改为 RawEditor,移除 RawEditorAdapter 的使用,更新所有相关的方法调用",
+      "started_at": "2025-12-07T15:53:31.304643+00:00",
+      "completed_at": "2025-12-07T16:38:01.781713+00:00",
+      "commit": "4dd5f23ad1f29e6f2d7126f303ae96df1dd297c1"
     },
     "MIGRATE-303-D": {
-      "status": "pending",
-      "description": "删除 RawEditorAdapter.java 文件,移除 IMessageEditor 相关导入,完整测试消息编辑器功能,更新相关文档和注释"
+      "status": "completed",
+      "description": "删除 RawEditorAdapter.java 文件,移除 IMessageEditor 相关导入,完整测试消息编辑器功能,更新相关文档和注释",
+      "started_at": "2025-12-07T16:39:45.760409+00:00",
+      "completed_at": "2025-12-07T16:49:34.810560+00:00",
+      "commit": "da8dc592cf89295bf82bf6ab2cb4c34643279694"
     },
     "MIGRATE-401-A": {
-      "status": "pending",
-      "description": "统计 IHttpService 的所有使用位置(27处),分析每个使用场景的迁移策略,确定迁移到 HttpService 的具体方案,识别需要重构的复杂场景"
+      "status": "in_progress",
+      "description": "统计 IHttpService 的所有使用位置(27处),分析每个使用场景的迁移策略,确定迁移到 HttpService 的具体方案,识别需要重构的复杂场景",
+      "started_at": "2025-12-07T16:50:47.619694+00:00"
     },
     "MIGRATE-401-B": {
       "status": "pending",
