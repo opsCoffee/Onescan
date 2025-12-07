@@ -4,20 +4,20 @@
   "projectVersion": "2.2.0",
   "taskType": "Burp API Migration",
   "reviewDate": "2025-12-06",
-  "lastUpdate": "2025-12-07T07:30:05.976461+00:00",
+  "lastUpdate": "2025-12-07T07:33:19.195303+00:00",
   "summary": {
     "totalTasks": 18,
-    "completedTasks": 9,
+    "completedTasks": 10,
     "inProgressTasks": 0,
-    "pendingTasks": 8,
+    "pendingTasks": 7,
     "skippedTasks": 1,
     "failedTasks": 0,
-    "progressPercentage": 50,
+    "progressPercentage": 55,
     "estimatedTotalHours": 80,
     "actualHours": 19.8
   },
   "current_phase": "3",
-  "current_task": "MIGRATE-301",
+  "current_task": "MIGRATE-302",
   "completed_phases": [
     "0",
     "1"
@@ -31,7 +31,8 @@
     "MIGRATE-201",
     "MIGRATE-202",
     "MIGRATE-203",
-    "MIGRATE-301"
+    "MIGRATE-301",
+    "MIGRATE-302"
   ],
   "in_progress_tasks": [],
   "skipped_tasks": [
@@ -244,6 +245,21 @@
         "MIGRATE-101-B 已完成 ITab → registerSuiteTab 迁移",
         "已验证: api.userInterface().registerSuiteTab() 已调用",
         "已验证: ITab 接口实现已移除",
+        "无需额外工作"
+      ]
+    },
+    "MIGRATE-302": {
+      "status": "completed",
+      "started_at": "2025-12-07T07:31:43.322128+00:00",
+      "completed_at": "2025-12-07T07:33:19.195292+00:00",
+      "commit": "0233df51cf945bfee3bee19e5a775edc0b2384c7",
+      "description": "上下文菜单迁移 (已在 MIGRATE-101-C-2 中完成)",
+      "notes": [
+        "此任务已在 MIGRATE-101-C-2 中完成",
+        "MIGRATE-101-C-2 已完成 IContextMenuFactory → ContextMenuItemsProvider 迁移",
+        "已验证: api.userInterface().registerContextMenuItemsProvider() 已调用",
+        "已验证: IContextMenuFactory 接口实现已移除",
+        "已验证: ContextMenuItemsProvider 已实现",
         "无需额外工作"
       ]
     }
