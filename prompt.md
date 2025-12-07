@@ -15,6 +15,10 @@
 - **目标 API**: montoya-api 2025.5 (已在 pom.xml 中引入)
 - **Java 版本**: 17
 
+## 文件更新
+
+- 每个任务完成以后，需要同步更新 `.agent/task_status.json` 和 `prompt.md`
+
 ## 迁移任务清单
 
 ### 阶段 0：API 使用情况分析

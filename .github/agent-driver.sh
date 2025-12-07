@@ -64,4 +64,17 @@ fi
 
 # 6. 【自驱动核心】完成本轮后，自动触发下一轮
 echo "🔄 还有待处理任务 ($NEXT_TASK)，触发下一轮..."
-gh workflow run "Claude 代码处理" --ref $(git rev-parse --abbrev-ref HEAD)
+# 通过更新 task_status.json 并推送来触发下一轮 workflow
+# Gitea 会自动同步到 GitHub，GitHub 检测到文件变更后触发 workflow
+python3 -c "
+import json
+from datetime import datetime, timezone
+with open('.agent/task_status.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+data['lastUpdate'] = datetime.now(timezone.utc).isoformat()
+with open('.agent/task_status.json', 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+"
+git add .agent/task_status.json
+git commit -m "chore: 触发下一轮任务处理 - $NEXT_TASK" || true
+git push origin HEAD
