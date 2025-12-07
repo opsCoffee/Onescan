@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'prompt.md'
+      - '.agent/task_status.json'
   schedule:
     - cron: '0 16 * * *'  # 东八区凌晨0点 (UTC 16:00)
 
