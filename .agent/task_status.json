@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "last_update": "2025-12-08T09:00:00+08:00",
+  "last_update": "2025-12-08T02:15:00+08:00",
   "current_phase": "8.1",
   "current_task": null,
   "completed_phases": ["0", "1", "2", "3", "4", "5", "6", "7.1", "7.2", "7.3"],
-  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803"],
+  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803", "CLEANUP-804"],
   "in_progress_tasks": [],
   "skipped_tasks": [],
   "failed_tasks": [],
@@ -41,11 +41,19 @@
       "notes": ["已删除 convertHttpServiceToLegacy() 方法"]
     },
     "CLEANUP-804": {
-      "status": "pending",
+      "status": "completed",
       "description": "移除传统 API 依赖",
       "priority": "P1",
       "estimated_hours": 0.1,
-      "depends_on": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803"]
+      "actual_hours": 0.1,
+      "completed_at": "2025-12-08T02:15:00+08:00",
+      "commit": "pending",
+      "depends_on": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803"],
+      "notes": [
+        "从 pom.xml 中移除 burp-extender-api 依赖",
+        "从 properties 中移除 burp-extender-api.version",
+        "验证编译和打包成功"
+      ]
     },
     "CLEANUP-805": {
       "status": "pending",
@@ -87,16 +95,16 @@
     }
   },
   "total_tasks": 10,
-  "completed_count": 3,
+  "completed_count": 4,
   "in_progress_count": 0,
-  "pending_count": 7,
-  "progress_percentage": 30,
+  "pending_count": 6,
+  "progress_percentage": 40,
   "phases": {
     "8.1": {
       "name": "传统 API 清理",
-      "status": "in_progress",
+      "status": "completed",
       "total_tasks": 4,
-      "completed_tasks": 3
+      "completed_tasks": 4
     },
     "8.2": {
       "name": "代码质量优化",
