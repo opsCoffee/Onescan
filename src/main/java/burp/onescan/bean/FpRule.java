@@ -5,7 +5,6 @@ import burp.onescan.common.FpMethodHandler;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -113,6 +112,6 @@ public class FpRule implements Serializable {
      */
     public static List<String> getMethods() {
         String[] methods = FpMethodHandler.METHOD_ITEMS;
-        return Arrays.asList(methods);
+        return List.of(methods);
     }
 }
