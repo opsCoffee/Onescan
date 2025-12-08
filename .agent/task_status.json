@@ -16,7 +16,7 @@
       "estimated_hours": 0.5,
       "actual_hours": 0.3,
       "completed_at": "2025-12-08T01:35:00+08:00",
-      "commit": "pending"
+      "commit": "eac7962ed4e0022a1edf0a27c1d166bb50f1e792"
     },
     "CLEANUP-802": {
       "status": "pending",
