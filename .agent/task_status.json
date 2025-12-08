@@ -105,7 +105,7 @@
       "estimated_hours": 1,
       "actual_hours": 0.15,
       "completed_at": "2025-12-08T02:32:00+08:00",
-      "commit": "",
+      "commit": "ee5e58b9461980c6cf0b6bf9475bc22abb6b54ba",
       "depends_on": ["CLEANUP-808"],
       "notes": [
         "✅ 更新版本号为 v2.2.1",
