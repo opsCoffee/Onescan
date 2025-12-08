@@ -19,7 +19,7 @@
 
 ## 文件更新
 
-- 每个任务完成以后，需要同步更新 `.agent/task_status.json` 和 `prompt.md`
+- 每个任务完成以后，**必须**同步更新 `.agent/task_status.json` 和 `prompt.md`
 
 ## 迁移任务清单
 
