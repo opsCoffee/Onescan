@@ -99,16 +99,14 @@ public class FpManager {
         String content = FileUtils.readFileToString(sFilePath);
         if (StringUtils.isEmpty(content)) {
             throw new IllegalArgumentException(
-                    "Fingerprint config file is empty: " + sFilePath
-            );
+                    "Fingerprint config file is empty: " + sFilePath);
         }
 
         // 仅支持 .yaml/.yml
         if (!(sFilePath.endsWith(".yaml") || sFilePath.endsWith(".yml"))) {
             throw new IllegalArgumentException(
                     "Unsupported fingerprint config format: " + sFilePath +
-                            ". Only .yaml/.yml supported."
-            );
+                            ". Only .yaml/.yml supported.");
         }
 
         // 解析新格式：
@@ -153,13 +151,15 @@ public class FpManager {
 
         List<FpData> dataList = new ArrayList<>();
         for (Object it : (List<?>) items) {
-            if (!(it instanceof Map)) continue;
+            if (!(it instanceof Map))
+                continue;
             Map<String, Object> m = (Map<String, Object>) it;
             String itemName = valueAsString(m.get("name"));
             Boolean enabled = valueAsBoolean(m.get("enabled"), Boolean.TRUE);
             String color = valueAsString(m.get("color"));
             String matchersCondition = valueAsString(m.get("matchers-condition"));
-            if (StringUtils.isEmpty(matchersCondition)) matchersCondition = "and"; // 默认 and
+            if (StringUtils.isEmpty(matchersCondition))
+                matchersCondition = "and"; // 默认 and
             Object matchersObj = m.get("matchers");
             if (!(matchersObj instanceof List)) {
                 throw new IllegalArgumentException("'matchers' must be an array for item: " + itemName);
@@ -203,11 +203,15 @@ public class FpManager {
     }
 
     private static Boolean valueAsBoolean(Object v, Boolean defVal) {
-        if (v == null) return defVal;
-        if (v instanceof Boolean) return (Boolean) v;
+        if (v == null)
+            return defVal;
+        if (v instanceof Boolean)
+            return (Boolean) v;
         String s = String.valueOf(v);
-        if ("true".equalsIgnoreCase(s)) return Boolean.TRUE;
-        if ("false".equalsIgnoreCase(s)) return Boolean.FALSE;
+        if ("true".equalsIgnoreCase(s))
+            return Boolean.TRUE;
+        if ("false".equalsIgnoreCase(s))
+            return Boolean.FALSE;
         return defVal;
     }
 
@@ -217,14 +221,14 @@ public class FpManager {
         char a = (char) ('a' + (h % 26));
         char b = (char) ('a' + ((h / 26) % 26));
         char c = (char) ('a' + ((h / (26 * 26)) % 26));
-        return new String(new char[]{a, b, c});
+        return new String(new char[] { a, b, c });
     }
 
     /**
      * 将新格式 matchers 转换为内部 rules（外层 OR、组内 AND）
      */
     private static ArrayList<ArrayList<FpRule>> convertMatchersToRules(List<Map<String, Object>> matchers,
-                                                                       String matchersCondition) {
+            String matchersCondition) {
         boolean topAnd = "and".equalsIgnoreCase(matchersCondition);
         if (topAnd) {
             // 从一个空组开始，逐步扩展
@@ -290,7 +294,7 @@ public class FpManager {
 
     // 现有组（AND 组集合） 与 新 matcher 组集合（每元素是 AND 组）做笛卡尔乘积并合并（组内 AND）
     private static ArrayList<ArrayList<FpRule>> andMerge(ArrayList<ArrayList<FpRule>> base,
-                                                         ArrayList<ArrayList<FpRule>> addon) {
+            ArrayList<ArrayList<FpRule>> addon) {
         ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
         for (ArrayList<FpRule> g1 : base) {
             for (ArrayList<FpRule> g2 : addon) {
@@ -320,10 +324,12 @@ public class FpManager {
             return;
         }
         for (FpData data : config.getList()) {
-            if (data == null || data.getRules() == null) continue;
+            if (data == null || data.getRules() == null)
+                continue;
             List<ArrayList> groups = (List) data.getRules();
             for (ArrayList group : groups) {
-                if (group == null) continue;
+                if (group == null)
+                    continue;
                 for (int i = 0; i < group.size(); i++) {
                     Object obj = group.get(i);
                     FpRule rule;
@@ -347,22 +353,20 @@ public class FpManager {
         }
         List<ArrayList> groups = (List) data.getRules();
         for (ArrayList group : groups) {
-            if (group == null) continue;
+            if (group == null)
+                continue;
             for (int i = 0; i < group.size(); i++) {
                 Object obj = group.get(i);
-                FpRule rule;
-                if (obj instanceof FpRule) {
-                    rule = (FpRule) obj;
-                } else {
-                    continue;
+                if (obj instanceof FpRule rule) {
+                    compileRule(rule);
                 }
-                compileRule(rule);
             }
         }
     }
 
     private static void compileRule(FpRule rule) {
-        if (rule == null) return;
+        if (rule == null)
+            return;
         String method = rule.getMethod();
         String content = rule.getContent();
         try {
@@ -382,8 +386,6 @@ public class FpManager {
             Logger.error("Regex precompile error: %s", e.getMessage());
         }
     }
-
-    
 
     /**
      * 校验配置文件格式
@@ -438,7 +440,8 @@ public class FpManager {
         List<String> dataSources = FpRule.getDataSources();
 
         // 列 id 集合
-        Set<String> columnIdSet = columns.stream().filter(Objects::nonNull).map(FpColumn::getId).collect(Collectors.toSet());
+        Set<String> columnIdSet = columns.stream().filter(Objects::nonNull).map(FpColumn::getId)
+                .collect(Collectors.toSet());
 
         for (int i = 0; i < list.size(); i++) {
             FpData data = list.get(i);
@@ -497,8 +500,7 @@ public class FpManager {
                 for (int r = 0; r < group.size(); r++) {
                     Object obj = group.get(r);
                     String ds = null, f = null, m = null, ctn = null;
-                    if (obj instanceof FpRule) {
-                        FpRule rule = (FpRule) obj;
+                    if (obj instanceof FpRule rule) {
                         ds = rule.getDataSource();
                         f = rule.getField();
                         m = rule.getMethod();
@@ -509,29 +511,29 @@ public class FpManager {
                     }
 
                     if (ds == null || ds.trim().isEmpty()) {
-                        errors.add(loc(i,g,r) + "dataSource(ds) is empty");
+                        errors.add(loc(i, g, r) + "dataSource(ds) is empty");
                     } else if (!dataSources.contains(ds)) {
-                        errors.add(loc(i,g,r) + "Unknown dataSource '" + ds + "'");
+                        errors.add(loc(i, g, r) + "Unknown dataSource '" + ds + "'");
                     } else {
                         // 字段校验
                         List<String> fields = FpRule.getFieldsByDataSource(ds);
                         if (f == null || f.trim().isEmpty()) {
-                            errors.add(loc(i,g,r) + "field(f) is empty");
+                            errors.add(loc(i, g, r) + "field(f) is empty");
                         } else if (!fields.contains(f)) {
-                            errors.add(loc(i,g,r) + "Unknown field '" + f + "' for dataSource '" + ds + "'");
+                            errors.add(loc(i, g, r) + "Unknown field '" + f + "' for dataSource '" + ds + "'");
                         }
                     }
 
                     if (m == null || m.trim().isEmpty()) {
-                        errors.add(loc(i,g,r) + "method(m) is empty");
+                        errors.add(loc(i, g, r) + "method(m) is empty");
                     } else if (!methods.contains(m)) {
-                        errors.add(loc(i,g,r) + "Unknown method '" + m + "'");
+                        errors.add(loc(i, g, r) + "Unknown method '" + m + "'");
                     }
 
                     if (ctn == null) {
-                        errors.add(loc(i,g,r) + "content(c) is null");
+                        errors.add(loc(i, g, r) + "content(c) is null");
                     } else if (ctn.isEmpty()) {
-                        errors.add(loc(i,g,r) + "content(c) is empty");
+                        errors.add(loc(i, g, r) + "content(c) is empty");
                     }
 
                     // 正则方法内容合法性
@@ -543,7 +545,7 @@ public class FpManager {
                                 java.util.regex.Pattern.compile(ctn);
                             }
                         } catch (Exception e) {
-                            errors.add(loc(i,g,r) + "invalid regex: " + e.getMessage());
+                            errors.add(loc(i, g, r) + "invalid regex: " + e.getMessage());
                         }
                     }
                 }
@@ -551,7 +553,8 @@ public class FpManager {
         }
 
         if (!errors.isEmpty()) {
-            throw new IllegalArgumentException("Fingerprint config validation failed: \n - " + String.join("\n - ", errors));
+            throw new IllegalArgumentException(
+                    "Fingerprint config validation failed: \n - " + String.join("\n - ", errors));
         }
     }
 
@@ -1051,7 +1054,6 @@ public class FpManager {
         }
         sFpColumnModifyListeners.add(l);
     }
-
 
     /**
      * 移除指纹字段修改监听器

@@ -2343,8 +2343,7 @@ public class BurpExtender implements BurpExtension,
             return;
         }
         for (Runnable run : list) {
-            if (run instanceof TaskRunnable) {
-                TaskRunnable task = (TaskRunnable) run;
+            if (run instanceof TaskRunnable task) {
                 String reqId = task.getReqId();
                 String from = task.getFrom();
                 // 将未执行的任务从去重过滤集合中移除
