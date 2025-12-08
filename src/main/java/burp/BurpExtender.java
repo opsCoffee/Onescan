@@ -5,7 +5,8 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
-import burp.api.montoya.ui.editor.RawEditor;
+import burp.api.montoya.ui.editor.HttpRequestEditor;
+import burp.api.montoya.ui.editor.HttpResponseEditor;
 import burp.common.helper.DomainHelper;
 import burp.common.helper.QpsLimiter;
 import burp.common.helper.UIHelper;
@@ -72,7 +73,7 @@ import java.util.stream.Collectors;
  *
  * 4. UI 控制 (已迁移到 Montoya API)
  *    - api.userInterface().registerSuiteTab(): 插件 Tab 注册
- *    - RawEditor: 消息编辑器 (mRequestTextEditor, mResponseTextEditor)
+ *    - HttpRequestEditor/HttpResponseEditor: HTTP 消息编辑器 (mRequestTextEditor, mResponseTextEditor)
  *
  * 5. 任务表事件处理
  *    - TaskTable.OnTaskTableEventListener: 任务表操作事件
@@ -177,8 +178,8 @@ public class BurpExtender implements BurpExtension,
     private MontoyaApi api;
     private OneScan mOneScan;
     private DataBoardTab mDataBoardTab;
-    private RawEditor mRequestTextEditor;
-    private RawEditor mResponseTextEditor;
+    private HttpRequestEditor mRequestTextEditor;
+    private HttpResponseEditor mResponseTextEditor;
     private burp.onescan.engine.ScanEngine mScanEngine;
     private burp.onescan.common.IHttpRequestResponse mCurrentReqResp;
     private QpsLimiter mQpsLimit;
@@ -277,9 +278,9 @@ public class BurpExtender implements BurpExtension,
         mOneScan.getConfigPanel().setOnTabEventListener(this);
         // 将页面添加到 BurpSuite (使用 Montoya API)
         api.userInterface().registerSuiteTab(Constants.PLUGIN_NAME, mOneScan);
-        // 创建请求和响应控件 (使用 Montoya API)
-        mRequestTextEditor = api.userInterface().createRawEditor();
-        mResponseTextEditor = api.userInterface().createRawEditor();
+        // 创建请求和响应编辑器 (使用 Montoya API - 带语法高亮和多视图)
+        mRequestTextEditor = api.userInterface().createHttpRequestEditor();
+        mResponseTextEditor = api.userInterface().createHttpResponseEditor();
         mDataBoardTab.init(mRequestTextEditor.uiComponent(), mResponseTextEditor.uiComponent());
         mDataBoardTab.getTaskTable().setOnTaskTableEventListener(this);
     }
@@ -2128,8 +2129,8 @@ public class BurpExtender implements BurpExtension,
         mCurrentReqResp = data.getReqResp();
         // 加载请求、响应数据包
         byte[] hintBytes = L.get("message_editor_loading").getBytes(StandardCharsets.UTF_8);
-        mRequestTextEditor.setContents(ByteArray.byteArray(hintBytes));
-        mResponseTextEditor.setContents(ByteArray.byteArray(hintBytes));
+        mRequestTextEditor.setRequest(HttpRequest.httpRequest(ByteArray.byteArray(hintBytes)));
+        mResponseTextEditor.setResponse(HttpResponse.httpResponse(ByteArray.byteArray(hintBytes)));
         mScanEngine.submitRefreshTask(this::refreshReqRespMessage);
     }
 
@@ -2143,8 +2144,8 @@ public class BurpExtender implements BurpExtension,
         // 清空超时的请求主机集合
         sTimeoutReqHost.clear();
         // 清空显示的请求、响应数据包
-        mRequestTextEditor.setContents(ByteArray.byteArray(EMPTY_BYTES));
-        mResponseTextEditor.setContents(ByteArray.byteArray(EMPTY_BYTES));
+        mRequestTextEditor.setRequest(HttpRequest.httpRequest(ByteArray.byteArray(EMPTY_BYTES)));
+        mResponseTextEditor.setResponse(HttpResponse.httpResponse(ByteArray.byteArray(EMPTY_BYTES)));
         // 清除指纹识别历史记录
         FpManager.clearHistory();
     }
@@ -2171,8 +2172,8 @@ public class BurpExtender implements BurpExtension,
             String hint = L.get("message_editor_response_length_limit_hint");
             response = hint.getBytes(StandardCharsets.UTF_8);
         }
-        mRequestTextEditor.setContents(ByteArray.byteArray(request));
-        mResponseTextEditor.setContents(ByteArray.byteArray(response));
+        mRequestTextEditor.setRequest(HttpRequest.httpRequest(ByteArray.byteArray(request)));
+        mResponseTextEditor.setResponse(HttpResponse.httpResponse(ByteArray.byteArray(response)));
     }
 
     @Override

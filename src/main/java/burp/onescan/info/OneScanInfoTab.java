@@ -241,6 +241,16 @@ public class OneScanInfoTab implements IMessageEditorTab {
      */
     private String getHostByHttpService() {
         IHttpService service = mController.getHttpService();
-        return BurpExtender.getHostByHttpService(service);
+        if (service == null) {
+            return null;
+        }
+        // 直接从旧版 IHttpService 获取信息
+        String host = service.getHost();
+        int port = service.getPort();
+        // 忽略默认端口（80/443）
+        if (port == 80 || port == 443) {
+            return host;
+        }
+        return host + ":" + port;
     }
 }
