@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
  * Created by vaycore on 2022-08-07.
  * <p>
  * ============================================================
- * 职责区域索引 (9 大职责)
+ * 职责区域索引 (7 大职责)
  * ============================================================
  * 1. 插件生命周期管理
  *    - BurpExtension: 插件注册和初始化
@@ -73,7 +73,6 @@ import java.util.stream.Collectors;
  * 4. UI 控制 (已迁移到 Montoya API)
  *    - api.userInterface().registerSuiteTab(): 插件 Tab 注册
  *    - RawEditor: 消息编辑器 (mRequestTextEditor, mResponseTextEditor)
- *    - IMessageEditorController: 消息编辑器控制 (待迁移)
  *
  * 5. 任务表事件处理
  *    - TaskTable.OnTaskTableEventListener: 任务表操作事件
@@ -81,20 +80,14 @@ import java.util.stream.Collectors;
  * 6. Tab 事件处理
  *    - OnTabEventListener: 配置 Tab 事件
  *
- * 7. 右键菜单
- *    - IContextMenuFactory: 上下文菜单创建
- *
- * 8. 编辑器 Tab 工厂
- *    - IMessageEditorTabFactory: OneScan 信息 Tab 创建
- *
- * 9. 请求处理核心逻辑
+ * 7. 请求处理核心逻辑
  *    - 请求过滤和验证
  *    - Payload 处理和变量替换
  *    - HTTP 请求发送和响应处理
  * ============================================================
  */
-public class BurpExtender implements BurpExtension, IMessageEditorController,
-        TaskTable.OnTaskTableEventListener, OnTabEventListener, IMessageEditorTabFactory {
+public class BurpExtender implements BurpExtension,
+        TaskTable.OnTaskTableEventListener, OnTabEventListener {
 
     /**
      * 任务线程数量
@@ -2152,37 +2145,6 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
     }
 
     // ============================================================
-    // 职责 4: UI 控制 (续) - IMessageEditorController
-    // 消息编辑器控制接口实现
-    // ============================================================
-
-    @Override
-    public IHttpService getHttpService() {
-        if (mCurrentReqResp != null) {
-            // TODO: MIGRATE-401-D - IMessageEditorController 接口仍在使用,需要保留此转换
-            // 当 IMessageEditorController 接口被移除后,此方法也将被移除
-            return convertHttpServiceToLegacy(mCurrentReqResp.getHttpService());
-        }
-        return null;
-    }
-
-    @Override
-    public byte[] getRequest() {
-        if (mCurrentReqResp != null) {
-            return mCurrentReqResp.getRequest();
-        }
-        return new byte[0];
-    }
-
-    @Override
-    public byte[] getResponse() {
-        if (mCurrentReqResp != null) {
-            return mCurrentReqResp.getResponse();
-        }
-        return new byte[0];
-    }
-
-    // ============================================================
     // 职责 5: 任务表事件处理
     // 实现接口: TaskTable.OnTaskTableEventListener
     // ============================================================
@@ -2222,8 +2184,8 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
      * 刷新请求响应信息
      */
     private void refreshReqRespMessage() {
-        byte[] request = getRequest();
-        byte[] response = getResponse();
+        byte[] request = (mCurrentReqResp != null) ? mCurrentReqResp.getRequest() : new byte[0];
+        byte[] response = (mCurrentReqResp != null) ? mCurrentReqResp.getResponse() : new byte[0];
         if (request == null || request.length == 0) {
             request = EMPTY_BYTES;
         }
@@ -2415,18 +2377,6 @@ public class BurpExtender implements BurpExtension, IMessageEditorController,
                 }
             }
         }
-    }
-
-    // ============================================================
-    // 职责 8: 编辑器 Tab 工厂
-    // 实现接口: IMessageEditorTabFactory
-    // ============================================================
-
-    @Override
-    public IMessageEditorTab createNewInstance(IMessageEditorController controller, boolean editable) {
-        // 已在 MIGRATE-303-D 中迁移为 RawEditor,不再需要此工厂方法
-        // 保留此方法仅为满足接口要求,实际不被调用
-        return null;
     }
 
     // ============================================================
