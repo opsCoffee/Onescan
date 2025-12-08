@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "last_update": "2025-12-08T01:35:00+08:00",
+  "last_update": "2025-12-08T09:00:00+08:00",
   "current_phase": "8.1",
   "current_task": null,
   "completed_phases": ["0", "1", "2", "3", "4", "5", "6", "7.1", "7.2", "7.3"],
-  "completed_tasks": ["CLEANUP-801"],
+  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803"],
   "in_progress_tasks": [],
   "skipped_tasks": [],
   "failed_tasks": [],
@@ -19,18 +19,26 @@
       "commit": "pending"
     },
     "CLEANUP-802": {
-      "status": "pending",
+      "status": "completed",
       "description": "删除未使用的成员变量",
       "priority": "P1",
       "estimated_hours": 0.1,
-      "depends_on": ["CLEANUP-801"]
+      "actual_hours": 0.05,
+      "completed_at": "2025-12-08T09:00:00+08:00",
+      "commit": "9fb07534464782a2d128a51b902db054b6490758",
+      "depends_on": ["CLEANUP-801"],
+      "notes": ["已删除 mCallbacks 和 mHelpers 成员变量", "已迁移 mCallbacks.unloadExtension() 到 api.extension().unload()"]
     },
     "CLEANUP-803": {
-      "status": "pending",
+      "status": "completed",
       "description": "删除类型转换适配器",
       "priority": "P1",
       "estimated_hours": 0.1,
-      "depends_on": ["CLEANUP-801"]
+      "actual_hours": 0.05,
+      "completed_at": "2025-12-08T09:00:00+08:00",
+      "commit": "9fb07534464782a2d128a51b902db054b6490758",
+      "depends_on": ["CLEANUP-801"],
+      "notes": ["已删除 convertHttpServiceToLegacy() 方法"]
     },
     "CLEANUP-804": {
       "status": "pending",
@@ -79,16 +87,16 @@
     }
   },
   "total_tasks": 10,
-  "completed_count": 1,
+  "completed_count": 3,
   "in_progress_count": 0,
-  "pending_count": 9,
-  "progress_percentage": 10,
+  "pending_count": 7,
+  "progress_percentage": 30,
   "phases": {
     "8.1": {
       "name": "传统 API 清理",
       "status": "in_progress",
       "total_tasks": 4,
-      "completed_tasks": 1
+      "completed_tasks": 3
     },
     "8.2": {
       "name": "代码质量优化",
