@@ -1,10 +1,10 @@
 {
   "version": "1.0",
   "last_update": "2025-12-08T02:15:00+08:00",
-  "current_phase": "8.1",
+  "current_phase": "8.3",
   "current_task": null,
   "completed_phases": ["0", "1", "2", "3", "4", "5", "6", "7.1", "7.2", "7.3", "8.1"],
-  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803", "CLEANUP-804"],
+  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803", "CLEANUP-804", "CLEANUP-808"],
   "in_progress_tasks": [],
   "skipped_tasks": [],
   "failed_tasks": [],
@@ -74,11 +74,23 @@
       "estimated_hours": 1.5
     },
     "CLEANUP-808": {
-      "status": "pending",
+      "status": "completed",
       "description": "完整性验证",
       "priority": "P1",
       "estimated_hours": 1,
-      "depends_on": ["CLEANUP-804"]
+      "actual_hours": 0.05,
+      "completed_at": "2025-12-08T02:24:00+08:00",
+      "commit": "",
+      "depends_on": ["CLEANUP-804"],
+      "notes": [
+        "✅ pom.xml 已完全移除 burp-extender-api",
+        "✅ 零传统 API import 语句",
+        "✅ 核心文件正确使用 Montoya API",
+        "✅ 编译成功",
+        "✅ 打包成功 (onescan-2.2.0.jar, 335KB)",
+        "✅ 100% 迁移完成"
+      ],
+      "output": ".agent/CLEANUP-808-final-verification.md"
     },
     "CLEANUP-809": {
       "status": "pending",
@@ -95,10 +107,10 @@
     }
   },
   "total_tasks": 10,
-  "completed_count": 4,
+  "completed_count": 5,
   "in_progress_count": 0,
-  "pending_count": 6,
-  "progress_percentage": 40,
+  "pending_count": 5,
+  "progress_percentage": 50,
   "phases": {
     "8.1": {
       "name": "传统 API 清理",
@@ -114,9 +126,9 @@
     },
     "8.3": {
       "name": "最终验证",
-      "status": "pending",
+      "status": "in_progress",
       "total_tasks": 3,
-      "completed_tasks": 0
+      "completed_tasks": 1
     }
   }
 }
