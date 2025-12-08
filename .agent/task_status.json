@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "last_update": "2025-12-08T02:24:00+08:00",
+  "last_update": "2025-12-08T02:32:00+08:00",
   "current_phase": "8.3",
   "current_task": null,
-  "completed_phases": ["0", "1", "2", "3", "4", "5", "6", "7.1", "7.2", "7.3", "8.1"],
-  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803", "CLEANUP-804", "CLEANUP-808"],
+  "completed_phases": ["0", "1", "2", "3", "4", "5", "6", "7.1", "7.2", "7.3", "8.1", "8.3"],
+  "completed_tasks": ["CLEANUP-801", "CLEANUP-802", "CLEANUP-803", "CLEANUP-804", "CLEANUP-808", "CLEANUP-810"],
   "in_progress_tasks": [],
   "skipped_tasks": [],
   "failed_tasks": [],
@@ -99,18 +99,28 @@
       "estimated_hours": 5
     },
     "CLEANUP-810": {
-      "status": "pending",
+      "status": "completed",
       "description": "发布准备",
       "priority": "P1",
       "estimated_hours": 1,
-      "depends_on": ["CLEANUP-808"]
+      "actual_hours": 0.15,
+      "completed_at": "2025-12-08T02:32:00+08:00",
+      "commit": "",
+      "depends_on": ["CLEANUP-808"],
+      "notes": [
+        "✅ 更新版本号为 v2.2.1",
+        "✅ 创建 CHANGELOG.md",
+        "✅ 生成 Release Notes",
+        "✅ 打包生成 onescan-2.2.1.jar (335KB)"
+      ],
+      "output": ".agent/RELEASE_NOTES_v2.2.1.md"
     }
   },
   "total_tasks": 10,
-  "completed_count": 5,
+  "completed_count": 6,
   "in_progress_count": 0,
-  "pending_count": 5,
-  "progress_percentage": 50,
+  "pending_count": 4,
+  "progress_percentage": 60,
   "phases": {
     "8.1": {
       "name": "传统 API 清理",
@@ -126,9 +136,9 @@
     },
     "8.3": {
       "name": "最终验证",
-      "status": "in_progress",
+      "status": "completed",
       "total_tasks": 3,
-      "completed_tasks": 1
+      "completed_tasks": 2
     }
   }
 }

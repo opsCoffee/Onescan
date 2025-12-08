@@ -572,16 +572,17 @@ OneScan 项目已成功完成从传统 Burp Extender API 到 Montoya API 的迁�
   - **优先级**: P2（建议完成）
   - **产出**: `.agent/CLEANUP-809-performance-report.md`
 
-- [ ] **[CLEANUP-810]** 发布准备
+- [x] **[CLEANUP-810]** 发布准备
   - 更新版本号为 v2.2.1（清理版本）
   - 编写发布说明（Release Notes）
   - 更新 CHANGELOG.md
   - 生成最终的 jar 包
   - **预计工作量**: 1 小时
-  - **状态**: ⏳ 待开始
+  - **状态**: ✅ 已完成 (2025-12-08)
+  - **实际工作量**: 0.15 小时 (9 分钟)
   - **优先级**: P1（必须完成）
   - **依赖**: CLEANUP-808
-  - **产出**: `OneScan-v2.2.1.jar`, `.agent/RELEASE_NOTES_v2.2.1.md`
+  - **产出**: `target/onescan-2.2.1.jar` (335KB), `.agent/RELEASE_NOTES_v2.2.1.md`, `CHANGELOG.md`
 
 ---
 
