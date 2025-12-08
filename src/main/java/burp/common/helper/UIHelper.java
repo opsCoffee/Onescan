@@ -178,7 +178,8 @@ public class UIHelper {
      * 显示含有确定、取消的消息提示对话框
      *
      * @param message 提示消息
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showOkCancelDialog(String message) {
         return showOkCancelDialog(L.get("hint"), message);
@@ -189,7 +190,8 @@ public class UIHelper {
      *
      * @param message         提示消息
      * @param parentComponent 父级组件
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showOkCancelDialog(String message, Component parentComponent) {
         return showOkCancelDialog(L.get("hint"), message, parentComponent);
@@ -200,7 +202,8 @@ public class UIHelper {
      *
      * @param title   标题
      * @param message 消息
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showOkCancelDialog(String title, String message) {
         return showOkCancelDialog(title, message, UIHelper.getMainFrame());
@@ -212,7 +215,8 @@ public class UIHelper {
      * @param title           标题
      * @param message         消息
      * @param parentComponent 父级组件
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showOkCancelDialog(String title, String message, Component parentComponent) {
         return JOptionPane.showConfirmDialog(parentComponent, message, title,
@@ -224,7 +228,8 @@ public class UIHelper {
      *
      * @param title 标题
      * @param c     组件
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showCustomDialog(String title, JComponent c) {
         return showCustomDialog(title, c, UIHelper.getMainFrame());
@@ -236,7 +241,8 @@ public class UIHelper {
      * @param title           标题
      * @param c               组件
      * @param parentComponent 父级组件
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showCustomDialog(String title, JComponent c, Component parentComponent) {
         return JOptionPane.showConfirmDialog(parentComponent, c, title,
@@ -248,7 +254,8 @@ public class UIHelper {
      *
      * @param title 标题
      * @param c     组件
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showCustomDialog(String title, String[] options, JComponent c) {
         return showCustomDialog(title, options, c, UIHelper.getMainFrame());
@@ -260,7 +267,8 @@ public class UIHelper {
      * @param title           标题
      * @param c               组件
      * @param parentComponent 父级组件
-     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or {@link JOptionPane#CANCEL_OPTION}）
+     * @return 用户的选择（{@link JOptionPane#OK_OPTION} or
+     *         {@link JOptionPane#CANCEL_OPTION}）
      */
     public static int showCustomDialog(String title, String[] options, JComponent c, Component parentComponent) {
         return JOptionPane.showOptionDialog(parentComponent, c, title,
@@ -294,7 +302,7 @@ public class UIHelper {
         if (c == null) {
             return;
         }
-        //SwingUtilities.updateComponentTreeUI(c);
+        // SwingUtilities.updateComponentTreeUI(c);
         c.invalidate();
         c.validate();
         c.repaint();
@@ -313,8 +321,8 @@ public class UIHelper {
         JFrame mainFrame = null;
         for (Frame frame : frames) {
             // 取第一个可见的 JFrame 实例
-            if (frame instanceof JFrame && frame.isVisible()) {
-                mainFrame = (JFrame) frame;
+            if (frame instanceof JFrame jFrame && frame.isVisible()) {
+                mainFrame = jFrame;
                 break;
             }
         }

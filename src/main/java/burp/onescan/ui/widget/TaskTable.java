@@ -46,16 +46,16 @@ public class TaskTable extends JTable implements ActionListener {
      * 预设的列宽比例（总和为100%）
      */
     private static final double[] COLUMN_WIDTH_RATIOS = {
-            0.05,  // # (5%)
-            0.06,  // From (6%)
-            0.06,  // Method (6%)
-            0.15,  // Host (15%)
-            0.20,  // Url (20%)
-            0.18,  // Title (18%)
-            0.10,  // IP (10%)
-            0.06,  // Status (6%)
-            0.08,  // Length (8%)
-            0.06,  // Color (6%)
+            0.05, // # (5%)
+            0.06, // From (6%)
+            0.06, // Method (6%)
+            0.15, // Host (15%)
+            0.20, // Url (20%)
+            0.18, // Title (18%)
+            0.10, // IP (10%)
+            0.06, // Status (6%)
+            0.08, // Length (8%)
+            0.06, // Color (6%)
     };
 
     private static Vector<String> sColumnNames;
@@ -87,8 +87,10 @@ public class TaskTable extends JTable implements ActionListener {
             }
 
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int rowIndex, int columnIndex) {
-                Component c = renderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, columnIndex);
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int rowIndex, int columnIndex) {
+                Component c = renderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex,
+                        columnIndex);
                 TaskData data = getTaskData(rowIndex);
                 String highlight = "";
                 if (data != null) {
@@ -174,8 +176,8 @@ public class TaskTable extends JTable implements ActionListener {
 
         if (parent != null) {
             // 如果父容器是JViewport，使用其宽度
-            if (parent instanceof JViewport) {
-                tableWidth = ((JViewport) parent).getWidth();
+            if (parent instanceof JViewport viewport) {
+                tableWidth = viewport.getWidth();
             } else {
                 tableWidth = parent.getWidth();
             }
@@ -188,8 +190,7 @@ public class TaskTable extends JTable implements ActionListener {
         int columnCount = getColumnModel().getColumnCount();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
             // 获取列宽比例
-            double ratio = (columnIndex < COLUMN_WIDTH_RATIOS.length) ?
-                    COLUMN_WIDTH_RATIOS[columnIndex] : 0.1;
+            double ratio = (columnIndex < COLUMN_WIDTH_RATIOS.length) ? COLUMN_WIDTH_RATIOS[columnIndex] : 0.1;
             int columnWidth = (int) (tableWidth * ratio);
 
             // 设置列宽度
@@ -217,9 +218,9 @@ public class TaskTable extends JTable implements ActionListener {
             @Override
             public void ancestorAdded(AncestorEvent event) {
                 Container parent = getParent();
-                if (parent instanceof JViewport) {
+                if (parent instanceof JViewport viewport) {
                     // 为父容器也添加大小监听
-                    parent.addComponentListener(new ComponentAdapter() {
+                    viewport.addComponentListener(new ComponentAdapter() {
                         @Override
                         public void componentResized(ComponentEvent e) {
                             SwingUtilities.invokeLater(() -> initColumnWidth());
@@ -256,8 +257,8 @@ public class TaskTable extends JTable implements ActionListener {
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
         try {
             JComponent component = (JComponent) super.prepareRenderer(renderer, row, column);
-            if (component instanceof JLabel) {
-                ((JLabel) component).setHorizontalAlignment(JLabel.LEFT);
+            if (component instanceof JLabel label) {
+                label.setHorizontalAlignment(JLabel.LEFT);
             }
             return component;
         } catch (Exception e) {
@@ -333,8 +334,8 @@ public class TaskTable extends JTable implements ActionListener {
     private Color getContrastColor(Color bgColor) {
         // 计算相对亮度：(0.299 * R + 0.587 * G + 0.114 * B) / 255
         double luminance = (0.299 * bgColor.getRed() +
-                           0.587 * bgColor.getGreen() +
-                           0.114 * bgColor.getBlue()) / 255.0;
+                0.587 * bgColor.getGreen() +
+                0.114 * bgColor.getBlue()) / 255.0;
 
         // 如果背景较暗（亮度 < 0.5），使用白色；否则使用黑色
         return luminance < 0.5 ? Color.WHITE : Color.BLACK;
@@ -777,7 +778,7 @@ public class TaskTable extends JTable implements ActionListener {
         area.setEditable(false);
         JScrollPane pane = new JScrollPane(area);
         panel.add(pane, "1w");
-        UIHelper.showCustomDialog(title, new String[]{L.get("close")}, panel);
+        UIHelper.showCustomDialog(title, new String[] { L.get("close") }, panel);
     }
 
     /**
@@ -858,7 +859,7 @@ public class TaskTable extends JTable implements ActionListener {
         /**
          * 预设的字段名
          */
-        private static final String[] PRE_COLUMN_NAMES = new String[]{
+        private static final String[] PRE_COLUMN_NAMES = new String[] {
                 L.get("task_table_columns.id"),
                 L.get("task_table_columns.from"),
                 L.get("task_table_columns.method"),
@@ -876,7 +877,7 @@ public class TaskTable extends JTable implements ActionListener {
 
         public TaskTableModel() {
             mData = Collections.synchronizedList(new ArrayList<>());
-            mCounter = new AtomicInteger(1);  // 从1开始计数，而不是0
+            mCounter = new AtomicInteger(1); // 从1开始计数，而不是0
             mItemLoader = new DataTableItemLoader<>(this, 500);
         }
 

@@ -39,9 +39,9 @@ public class NumberFilter extends KeyAdapter {
         // 被选中场景时的处理
         Object source = e.getSource();
         int length = 0;
-        if (source instanceof JTextComponent) {
-            length = ((JTextComponent) source).getText().length();
-            String selectedText = ((JTextComponent) source).getSelectedText();
+        if (source instanceof JTextComponent textComponent) {
+            length = textComponent.getText().length();
+            String selectedText = textComponent.getSelectedText();
             if (StringUtils.isNotEmpty(selectedText)) {
                 length = length - selectedText.length();
             }

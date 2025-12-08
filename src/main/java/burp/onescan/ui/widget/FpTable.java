@@ -82,22 +82,22 @@ public class FpTable extends JTable {
      */
     private int calculateColumnWidth(int columnIndex) {
         int columnCount = getColumnModel().getColumnCount();
-        
+
         // ID 列、Enabled 列和 Color 列使用固定较小宽度
         if (columnIndex == 0 || columnIndex == 1 || columnIndex == columnCount - 1) {
             return 80;
         }
-        
+
         // 获取列标题宽度
         String columnName = getColumnName(columnIndex);
         FontMetrics headerMetrics = getFontMetrics(getTableHeader().getFont());
         int headerWidth = headerMetrics.stringWidth(columnName);
-        
+
         // 计算内容宽度（扫描所有行以确保宽度足够）
         int maxContentWidth = headerWidth;
         int rowCount = mTableModel.getRowCount();
         FontMetrics cellMetrics = getFontMetrics(getFont());
-        
+
         for (int row = 0; row < rowCount; row++) {
             Object value = mTableModel.getValueAt(row, columnIndex);
             if (value != null) {
@@ -106,22 +106,22 @@ public class FpTable extends JTable {
                 maxContentWidth = Math.max(maxContentWidth, cellWidth);
             }
         }
-        
+
         // 添加内边距（左右各15px，共30px）确保内容不会太挤
         int padding = 30;
         int calculatedWidth = maxContentWidth + padding;
-        
+
         // 设置合理的最小宽度，避免列太窄
         int minWidth = 120;
-        
+
         return Math.max(calculatedWidth, minWidth);
     }
 
     @Override
     public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
         JComponent component = (JComponent) super.prepareRenderer(renderer, row, column);
-        if (component instanceof JLabel) {
-            ((JLabel) component).setHorizontalAlignment(JLabel.LEFT);
+        if (component instanceof JLabel label) {
+            label.setHorizontalAlignment(JLabel.LEFT);
         }
         return component;
     }
@@ -161,7 +161,7 @@ public class FpTable extends JTable {
      * 设置指纹数据
      *
      * @param rowIndex 指纹数据下标
-     * @param data 指纹数据实例
+     * @param data     指纹数据实例
      */
     public void setFpData(int rowIndex, FpData data) {
         if (rowIndex >= 0 && rowIndex < mTableModel.getRowCount()) {
@@ -341,10 +341,10 @@ public class FpTable extends JTable {
                 return;
             }
             boolean enabled;
-            if (aValue instanceof Boolean) {
-                enabled = (Boolean) aValue;
-            } else if (aValue instanceof String) {
-                enabled = Boolean.parseBoolean((String) aValue);
+            if (aValue instanceof Boolean boolValue) {
+                enabled = boolValue;
+            } else if (aValue instanceof String strValue) {
+                enabled = Boolean.parseBoolean(strValue);
             } else {
                 return;
             }
