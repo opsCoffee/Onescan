@@ -16,7 +16,7 @@ import burp.onescan.OneScan;
 import burp.onescan.bean.FpData;
 import burp.onescan.bean.TaskData;
 import burp.onescan.common.*;
-import burp.onescan.common.IHttpRequestResponse;  // 显式导入,避免与 burp.IHttpRequestResponse 冲突
+import burp.onescan.common.IHttpRequestResponse; // 显式导入,避免与 burp.IHttpRequestResponse 冲突
 import burp.onescan.manager.FpManager;
 import burp.onescan.manager.WordlistManager;
 import burp.onescan.ui.tab.DataBoardTab;
@@ -59,31 +59,31 @@ import java.util.stream.Collectors;
  * 职责区域索引 (7 大职责)
  * ============================================================
  * 1. 插件生命周期管理
- *    - BurpExtension: 插件注册和初始化
- *    - api.extension().registerUnloadingHandler(): 插件卸载监听 (已迁移)
+ * - BurpExtension: 插件注册和初始化 (Montoya API)
+ * - api.extension().registerUnloadingHandler(): 插件卸载监听
  *
  * 2. 扫描引擎管理
- *    - 线程池管理 (mTaskThreadPool, mLFTaskThreadPool, mFpThreadPool)
- *    - 任务调度和去重 (sRepeatFilter, sTimeoutReqHost)
- *    - 任务计数器 (mTaskOverCounter, mTaskCommitCounter)
+ * - 线程池管理 (mTaskThreadPool, mLFTaskThreadPool, mFpThreadPool)
+ * - 任务调度和去重 (sRepeatFilter, sTimeoutReqHost)
+ * - 任务计数器 (mTaskOverCounter, mTaskCommitCounter)
  *
- * 3. 代理监听 (已迁移到 Montoya API)
- *    - ProxyResponseHandler: 代理响应拦截和处理
+ * 3. 代理监听 (Montoya API)
+ * - ProxyResponseHandler: 代理响应拦截和处理
  *
- * 4. UI 控制 (已迁移到 Montoya API)
- *    - api.userInterface().registerSuiteTab(): 插件 Tab 注册
- *    - HttpRequestEditor/HttpResponseEditor: HTTP 消息编辑器 (mRequestTextEditor, mResponseTextEditor)
+ * 4. UI 控制 (Montoya API)
+ * - api.userInterface().registerSuiteTab(): 插件 Tab 注册
+ * - HttpRequestEditor/HttpResponseEditor: HTTP 消息编辑器
  *
  * 5. 任务表事件处理
- *    - TaskTable.OnTaskTableEventListener: 任务表操作事件
+ * - TaskTable.OnTaskTableEventListener: 任务表操作事件
  *
  * 6. Tab 事件处理
- *    - OnTabEventListener: 配置 Tab 事件
+ * - OnTabEventListener: 配置 Tab 事件
  *
  * 7. 请求处理核心逻辑
- *    - 请求过滤和验证
- *    - Payload 处理和变量替换
- *    - HTTP 请求发送和响应处理
+ * - 请求过滤和验证
+ * - Payload 处理和变量替换
+ * - HTTP 请求发送和响应处理
  * ============================================================
  */
 public class BurpExtender implements BurpExtension,
@@ -199,18 +199,17 @@ public class BurpExtender implements BurpExtension,
      */
     private static <E> Set<E> createLruSet(int maxSize) {
         return Collections.synchronizedSet(Collections.newSetFromMap(
-            new java.util.LinkedHashMap<E, Boolean>(16, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(java.util.Map.Entry<E, Boolean> eldest) {
-                    return size() > maxSize;
-                }
-            }
-        ));
+                new java.util.LinkedHashMap<E, Boolean>(16, 0.75f, true) {
+                    @Override
+                    protected boolean removeEldestEntry(java.util.Map.Entry<E, Boolean> eldest) {
+                        return size() > maxSize;
+                    }
+                }));
     }
 
     // ============================================================
     // 职责 1: 插件生命周期管理
-    // 实现接口: IBurpExtender, IExtensionStateListener
+    // 实现接口: BurpExtension (Montoya API)
     // ============================================================
 
     @Override
@@ -227,8 +226,7 @@ public class BurpExtender implements BurpExtension,
         this.mScanEngine = new burp.onescan.engine.ScanEngine(
                 TASK_THREAD_COUNT,
                 LF_TASK_THREAD_COUNT,
-                FP_THREAD_COUNT
-        );
+                FP_THREAD_COUNT);
         api.extension().setName(Constants.PLUGIN_NAME + " v" + Constants.PLUGIN_VERSION);
         // 初始化日志打印 (MIGRATE-403: 使用 Montoya API)
         Logger.init(Constants.DEBUG, api);
@@ -285,12 +283,13 @@ public class BurpExtender implements BurpExtension,
         // 监听代理的响应 (Montoya API)
         api.proxy().registerResponseHandler(new OneScanProxyResponseHandler());
         // 注册上下文菜单 (Montoya API)
-        api.userInterface().registerContextMenuItemsProvider(new burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider() {
-            @Override
-            public List<Component> provideMenuItems(burp.api.montoya.ui.contextmenu.ContextMenuEvent event) {
-                return BurpExtender.this.provideMenuItems(event);
-            }
-        });
+        api.userInterface()
+                .registerContextMenuItemsProvider(new burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider() {
+                    @Override
+                    public List<Component> provideMenuItems(burp.api.montoya.ui.contextmenu.ContextMenuEvent event) {
+                        return BurpExtender.this.provideMenuItems(event);
+                    }
+                });
         // 状态栏刷新定时器
         mStatusRefresh = new Timer(STATUS_REFRESH_INTERVAL_MS, e -> {
             if (mDataBoardTab == null) {
@@ -320,8 +319,8 @@ public class BurpExtender implements BurpExtension,
 
             // 从消息编辑器获取
             if (event.messageEditorRequestResponse().isPresent()) {
-                burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp =
-                        event.messageEditorRequestResponse().get();
+                burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp = event
+                        .messageEditorRequestResponse().get();
                 // 构建 HttpRequestResponse
                 messages.add(createHttpRequestResponse(editorReqResp));
             }
@@ -360,8 +359,7 @@ public class BurpExtender implements BurpExtension,
             burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp) {
         return burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
                 editorReqResp.requestResponse().request(),
-                editorReqResp.requestResponse().response()
-        );
+                editorReqResp.requestResponse().response());
     }
 
     /**
@@ -379,8 +377,8 @@ public class BurpExtender implements BurpExtension,
 
             // 从消息编辑器获取
             if (event.messageEditorRequestResponse().isPresent()) {
-                burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp =
-                        event.messageEditorRequestResponse().get();
+                burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse editorReqResp = event
+                        .messageEditorRequestResponse().get();
                 // 构建 HttpRequestResponse
                 messages.add(createHttpRequestResponse(editorReqResp));
             }
@@ -421,10 +419,10 @@ public class BurpExtender implements BurpExtension,
 
             // 获取请求响应对象 (Montoya API)
             // InterceptedResponse 本身实现了 HttpResponse,而 initiatingRequest() 返回 HttpRequest
-            burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp =
-                    burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
+            burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp = burp.api.montoya.http.message.HttpRequestResponse
+                    .httpRequestResponse(
                             interceptedResponse.initiatingRequest(),
-                            interceptedResponse  // InterceptedResponse 就是 HttpResponse
+                            interceptedResponse // InterceptedResponse 就是 HttpResponse
                     );
 
             // 扫描任务
@@ -443,8 +441,7 @@ public class BurpExtender implements BurpExtension,
     }
 
     // ============================================================
-    // 辅助方法: Montoya API 类型转换 (临时方案)
-    // TODO: MIGRATE-401 完全迁移后移除
+    // 辅助方法: Montoya API 请求构建
     // ============================================================
 
     /**
@@ -470,18 +467,17 @@ public class BurpExtender implements BurpExtension,
             byte[] requestBytes = buildSimpleGetRequest(host, pqf);
 
             burp.api.montoya.http.HttpService service = burp.api.montoya.http.HttpService.httpService(
-                u.getHost(),
-                u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
-                u.getProtocol().equals("https")
-            );
+                    u.getHost(),
+                    u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
+                    u.getProtocol().equals("https"));
 
-            burp.api.montoya.http.message.requests.HttpRequest request =
-                burp.api.montoya.http.message.requests.HttpRequest.httpRequest(service,
-                    burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+            burp.api.montoya.http.message.requests.HttpRequest request = burp.api.montoya.http.message.requests.HttpRequest
+                    .httpRequest(service,
+                            burp.api.montoya.core.ByteArray.byteArray(requestBytes));
 
             return burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
-                request,
-                null  // 导入URL时没有响应
+                    request,
+                    null // 导入URL时没有响应
             );
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Url: " + url + " format error.");
@@ -492,10 +488,10 @@ public class BurpExtender implements BurpExtension,
      * 从重定向信息构建 Montoya API 的 HttpRequestResponse
      * MIGRATE-202: 用于处理重定向场景
      *
-     * @param service 旧API的HttpService
+     * @param service  旧API的HttpService
      * @param urlOrPqf 完整URL或路径
-     * @param headers 请求头列表
-     * @param cookies Cookie列表
+     * @param headers  请求头列表
+     * @param cookies  Cookie列表
      * @return HttpRequestResponse 实例
      * @throws IllegalArgumentException 如果参数错误
      */
@@ -520,13 +516,13 @@ public class BurpExtender implements BurpExtension,
             requestBytes = buildRequestWithHeadersAndCookies(urlOrPqf, headers, cookies, service);
         }
 
-        burp.api.montoya.http.message.requests.HttpRequest request =
-            burp.api.montoya.http.message.requests.HttpRequest.httpRequest(service,
-                burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+        burp.api.montoya.http.message.requests.HttpRequest request = burp.api.montoya.http.message.requests.HttpRequest
+                .httpRequest(service,
+                        burp.api.montoya.core.ByteArray.byteArray(requestBytes));
 
         return burp.api.montoya.http.message.HttpRequestResponse.httpRequestResponse(
-            request,
-            null  // 重定向请求时没有响应
+                request,
+                null // 重定向请求时没有响应
         );
     }
 
@@ -534,10 +530,10 @@ public class BurpExtender implements BurpExtension,
      * 构建包含headers和cookies的请求字节数组
      */
     private byte[] buildRequestWithHeadersAndCookies(String reqPQF, List<String> headers,
-                                                      List<String> cookies,
-                                                      burp.api.montoya.http.HttpService service) {
+            List<String> cookies,
+            burp.api.montoya.http.HttpService service) {
         boolean existsCookie = headers != null && headers.stream()
-            .anyMatch(h -> h.toLowerCase().startsWith("cookie: "));
+                .anyMatch(h -> h.toLowerCase().startsWith("cookie: "));
 
         StringBuilder builder = new StringBuilder();
         String host = service.host() + (service.port() == 80 || service.port() == 443 ? "" : ":" + service.port());
@@ -580,7 +576,8 @@ public class BurpExtender implements BurpExtension,
     private static byte[] buildSimpleGetRequest(String host, String reqPQF) {
         return ("GET " + reqPQF + " HTTP/1.1\r\n" +
                 "Host: " + host + "\r\n" +
-                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n" +
+                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
+                +
                 "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8\r\n" +
                 "Accept-Encoding: gzip, deflate\r\n" +
                 "Cache-Control: max-age=0\r\n" +
@@ -635,15 +632,16 @@ public class BurpExtender implements BurpExtension,
         return urlPath;
     }
 
-    private void doScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, String from, String payloadItem) {
+    private void doScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, String from,
+            String payloadItem) {
         if (httpReqResp == null || httpReqResp.httpService() == null) {
             return;
         }
 
         byte[] requestBytes = httpReqResp.request().toByteArray().getBytes();
         byte[] responseBytes = httpReqResp.response() != null
-            ? httpReqResp.response().toByteArray().getBytes()
-            : new byte[0];
+                ? httpReqResp.response().toByteArray().getBytes()
+                : new byte[0];
 
         HttpRequest request = httpReqResp.request();
         String host = httpReqResp.httpService().host();
@@ -709,7 +707,8 @@ public class BurpExtender implements BurpExtension,
     /**
      * 处理原始请求（非递归扫描）
      */
-    private void processOriginalRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request, URL url, String from) {
+    private void processOriginalRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp,
+            HttpRequest request, URL url, String from) {
         if (!proxyExcludeSuffixFilter(url.getPath())) {
             runScanTask(httpReqResp, request, null, from);
         } else {
@@ -720,7 +719,8 @@ public class BurpExtender implements BurpExtension,
     /**
      * 执行递归目录扫描
      */
-    private void performRecursiveScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request, URL url, String payloadItem) {
+    private void performRecursiveScan(burp.api.montoya.http.message.HttpRequestResponse httpReqResp,
+            HttpRequest request, URL url, String payloadItem) {
         String reqPath = getReqPathByRequestInfo(request);
         String reqHost = getReqHostByReqPath(reqPath);
         Logger.debug("doScan receive: %s", url.toString());
@@ -968,7 +968,8 @@ public class BurpExtender implements BurpExtension,
      * @param pathWithQuery 路径+query参数
      * @param from          请求来源
      */
-    private void runScanTask(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest originalRequest, String pathWithQuery, String from) {
+    private void runScanTask(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest originalRequest,
+            String pathWithQuery, String from) {
         burp.api.montoya.http.HttpService service = httpReqResp.httpService();
         // 处理请求头
         byte[] request = handleHeader(httpReqResp, originalRequest, pathWithQuery, from);
@@ -998,7 +999,7 @@ public class BurpExtender implements BurpExtension,
      * 生成请求 ID
      *
      * @param request HttpRequest 实例
-     * @param from 请求来源
+     * @param from    请求来源
      * @return 失败返回 "null" 字符串
      */
     private String generateReqId(HttpRequest request, String from) {
@@ -1030,9 +1031,11 @@ public class BurpExtender implements BurpExtension,
     /**
      * 根据 Url 检测是否重复扫描
      *
-     * <p>线程安全说明: sRepeatFilter 使用 ConcurrentHashMap.newKeySet() 创建,
+     * <p>
+     * 线程安全说明: sRepeatFilter 使用 ConcurrentHashMap.newKeySet() 创建,
      * add() 方法本身是原子操作,返回 true 表示成功添加(首次出现),返回 false 表示已存在(重复)。
-     * 无需额外的 synchronized 同步。</p>
+     * 无需额外的 synchronized 同步。
+     * </p>
      *
      * @param reqId 请求 ID
      * @return true=重复；false=不重复
@@ -1049,7 +1052,8 @@ public class BurpExtender implements BurpExtension,
      * @param reqRawBytes 请求数据包
      * @param from        请求来源
      */
-    private void runEnableAndMergeTask(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes, String from) {
+    private void runEnableAndMergeTask(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes,
+            String from) {
         // 获取已经启用并且需要合并的“请求包处理”规则
         List<ProcessingItem> processList = getPayloadProcess()
                 .stream().filter(ProcessingItem::isEnabledAndMerge)
@@ -1083,7 +1087,8 @@ public class BurpExtender implements BurpExtension,
      * @param reqId       请求 ID
      * @param reqRawBytes 请求数据包
      */
-    private void runEnabledWithoutMergeProcessingTask(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes) {
+    private void runEnabledWithoutMergeProcessingTask(burp.api.montoya.http.HttpService service, String reqId,
+            byte[] reqRawBytes) {
         // 遍历规则列表，进行 Payload Processing 处理后，再次请求数据包
         getPayloadProcess().parallelStream().filter(ProcessingItem::isEnabledWithoutMerge)
                 .forEach((item) -> {
@@ -1110,7 +1115,8 @@ public class BurpExtender implements BurpExtension,
      * @param reqRawBytes 请求数据包
      * @param from        请求来源
      */
-    private void doBurpRequest(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes, String from) {
+    private void doBurpRequest(burp.api.montoya.http.HttpService service, String reqId, byte[] reqRawBytes,
+            String from) {
         // 线程池关闭后，不接收任何任务
         if (isTaskThreadPoolShutdown()) {
             Logger.debug("doBurpRequest: thread pool is shutdown, intercept req id: %s", reqId);
@@ -1135,7 +1141,8 @@ public class BurpExtender implements BurpExtension,
                 // 获取配置的请求重试次数
                 int retryCount = Config.getInt(Config.KEY_RETRY_COUNT);
                 // 发起请求
-                burp.onescan.common.IHttpRequestResponse newReqResp = doMakeHttpRequest(service, reqRawBytes, retryCount);
+                burp.onescan.common.IHttpRequestResponse newReqResp = doMakeHttpRequest(service, reqRawBytes,
+                        retryCount);
                 // 构建展示的数据包
                 TaskData data = buildTaskData(newReqResp, from);
                 mDataBoardTab.getTaskTable().addTaskData(data);
@@ -1235,10 +1242,11 @@ public class BurpExtender implements BurpExtension,
         try {
             burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp;
             // 使用 Montoya API 解析请求
-            HttpRequest httpRequest = HttpRequest.httpRequest(reqResp.getHttpService(), ByteArray.byteArray(reqResp.getRequest()));
+            HttpRequest httpRequest = HttpRequest.httpRequest(reqResp.getHttpService(),
+                    ByteArray.byteArray(reqResp.getRequest()));
             List<String> headers = httpRequest.headers().stream()
-                .map(h -> h.name() + ": " + h.value())
-                .collect(java.util.stream.Collectors.toList());
+                    .map(h -> h.name() + ": " + h.value())
+                    .collect(java.util.stream.Collectors.toList());
             // 兼容完整 Host 地址
             if (UrlUtils.isHTTP(reqPath)) {
                 URL originUrl = UrlUtils.parseURL(reqPath);
@@ -1249,7 +1257,8 @@ public class BurpExtender implements BurpExtension,
                 URL originUrl = UrlUtils.parseURL(reqHost + reqPath);
                 URL redirectUrl = UrlUtils.parseRedirectTargetURL(originUrl, location);
                 burp.api.montoya.http.HttpService service = buildHttpServiceByURL(redirectUrl);
-                montoyaReqResp = buildMontoyaRequestFromRedirect(service, UrlUtils.toPQF(redirectUrl), headers, cookies);
+                montoyaReqResp = buildMontoyaRequestFromRedirect(service, UrlUtils.toPQF(redirectUrl), headers,
+                        cookies);
             }
             doScan(montoyaReqResp, FROM_REDIRECT + "（" + data.getId() + "）");
         } catch (IllegalArgumentException e) {
@@ -1299,7 +1308,8 @@ public class BurpExtender implements BurpExtension,
      * @param retryCount  重试次数（为0表示不重试）
      * @return 请求响应数据
      */
-    private burp.onescan.common.IHttpRequestResponse doMakeHttpRequest(burp.api.montoya.http.HttpService service, byte[] reqRawBytes, int retryCount) {
+    private burp.onescan.common.IHttpRequestResponse doMakeHttpRequest(burp.api.montoya.http.HttpService service,
+            byte[] reqRawBytes, int retryCount) {
         burp.onescan.common.IHttpRequestResponse reqResp;
         String reqHost = getReqHostByHttpService(service);
         // 如果启用拦截超时主机，并检测到当前请求主机超时，直接拦截
@@ -1371,13 +1381,14 @@ public class BurpExtender implements BurpExtension,
      * @param from          数据来源
      * @return 处理完成的数据包，失败时返回null
      */
-    private byte[] handleHeader(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request, String pathWithQuery, String from) {
+    private byte[] handleHeader(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request,
+            String pathWithQuery, String from) {
         List<String> configHeaders = getHeader();
         List<String> removeHeaders = getRemoveHeaders();
         // Convert Montoya API headers to List<String>
         List<String> originalHeaders = request.headers().stream()
-            .map(h -> h.name() + ": " + h.value())
-            .collect(java.util.stream.Collectors.toList());
+                .map(h -> h.name() + ": " + h.value())
+                .collect(java.util.stream.Collectors.toList());
         // Add request line as the first element
         originalHeaders.add(0, request.method() + " " + request.path() + " " + request.httpVersion());
 
@@ -1413,7 +1424,7 @@ public class BurpExtender implements BurpExtension,
      * 处理原始请求头（移除/替换/保留）
      */
     private void processHeaders(StringBuilder requestRaw, List<String> headers,
-                                 List<String> configHeaders, List<String> removeHeaders, String from) {
+            List<String> configHeaders, List<String> removeHeaders, String from) {
         // 从索引 1 开始，跳过请求行
         for (int i = 1; i < headers.size(); i++) {
             String header = headers.get(i);
@@ -1467,21 +1478,22 @@ public class BurpExtender implements BurpExtension,
      */
     private String findMatchingConfigHeader(String targetKey, List<String> configHeaders, List<String> removeHeaders) {
         return configHeaders.stream()
-            .filter(configHeader -> {
-                if (StringUtils.isEmpty(configHeader) || !configHeader.contains(": ")) {
-                    return false;
-                }
-                String configKey = configHeader.split(": ")[0];
-                return !removeHeaders.contains(configKey) && configKey.equals(targetKey);
-            })
-            .findFirst()
-            .orElse(null);
+                .filter(configHeader -> {
+                    if (StringUtils.isEmpty(configHeader) || !configHeader.contains(": ")) {
+                        return false;
+                    }
+                    String configKey = configHeader.split(": ")[0];
+                    return !removeHeaders.contains(configKey) && configKey.equals(targetKey);
+                })
+                .findFirst()
+                .orElse(null);
     }
 
     /**
      * 添加配置中剩余的请求头
      */
-    private void appendRemainingConfigHeaders(StringBuilder requestRaw, List<String> configHeaders, List<String> removeHeaders) {
+    private void appendRemainingConfigHeaders(StringBuilder requestRaw, List<String> configHeaders,
+            List<String> removeHeaders) {
         for (String header : configHeaders) {
             String headerKey = extractHeaderKey(header);
             if (headerKey == null) {
@@ -1497,7 +1509,8 @@ public class BurpExtender implements BurpExtension,
     /**
      * 添加请求 body（仅非扫描请求）
      */
-    private void appendRequestBody(StringBuilder requestRaw, burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request, String from) {
+    private void appendRequestBody(StringBuilder requestRaw,
+            burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request, String from) {
         if (from.equals(FROM_SCAN)) {
             return;
         }
@@ -1513,7 +1526,8 @@ public class BurpExtender implements BurpExtension,
     /**
      * 完成请求构建：填充变量并更新 Content-Length
      */
-    private byte[] finalizeRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request, String requestRaw) {
+    private byte[] finalizeRequest(burp.api.montoya.http.message.HttpRequestResponse httpReqResp, HttpRequest request,
+            String requestRaw) {
         burp.api.montoya.http.HttpService service = httpReqResp.httpService();
         URL url = getUrlByRequestInfo(request);
         String processedRequest = setupVariable(service, url, requestRaw);
@@ -1874,7 +1888,8 @@ public class BurpExtender implements BurpExtension,
      * @param requestBytes 请求数据包
      * @return 处理后的数据包
      */
-    private byte[] handlePayloadProcess(burp.api.montoya.http.HttpService service, byte[] requestBytes, List<PayloadItem> list) {
+    private byte[] handlePayloadProcess(burp.api.montoya.http.HttpService service, byte[] requestBytes,
+            List<PayloadItem> list) {
         if (requestBytes == null || requestBytes.length == 0 || list == null || list.isEmpty()) {
             return null;
         }
@@ -1977,7 +1992,8 @@ public class BurpExtender implements BurpExtension,
      */
     private TaskData buildTaskData(burp.onescan.common.IHttpRequestResponse httpReqResp, String from) {
         // 使用 Montoya API 解析请求
-        HttpRequest httpRequest = HttpRequest.httpRequest(httpReqResp.getHttpService(), ByteArray.byteArray(httpReqResp.getRequest()));
+        HttpRequest httpRequest = HttpRequest.httpRequest(httpReqResp.getHttpService(),
+                ByteArray.byteArray(httpReqResp.getRequest()));
         byte[] respBytes = httpReqResp.getResponse();
         // 获取所需要的参数
         String method = httpRequest.method();
@@ -2196,12 +2212,12 @@ public class BurpExtender implements BurpExtension,
     @Override
     public byte[] getBodyByTaskData(TaskData data) {
         if (data == null || data.getReqResp() == null) {
-            return new byte[]{};
+            return new byte[] {};
         }
         mCurrentReqResp = data.getReqResp();
         byte[] respBytes = mCurrentReqResp.getResponse();
         if (respBytes == null || respBytes.length == 0) {
-            return new byte[]{};
+            return new byte[] {};
         }
         HttpResponse httpResponse = HttpResponse.httpResponse(ByteArray.byteArray(respBytes));
         int offset = httpResponse.bodyOffset();
@@ -2284,8 +2300,7 @@ public class BurpExtender implements BurpExtension,
                 try {
                     String url = String.valueOf(item);
                     // 使用 Montoya API 构建 HTTP 请求
-                    burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp =
-                        buildMontoyaRequestFromUrl(url);
+                    burp.api.montoya.http.message.HttpRequestResponse montoyaReqResp = buildMontoyaRequestFromUrl(url);
                     doScan(montoyaReqResp, FROM_IMPORT);
                 } catch (IllegalArgumentException e) {
                     Logger.error("Import error: " + e.getMessage());
@@ -2305,16 +2320,15 @@ public class BurpExtender implements BurpExtension,
     private void stopAllTask() {
         // 关闭线程池，处理未执行的任务
         List<Runnable>[] tasks = mScanEngine.shutdownNowAndGetTasks();
-        handleStopTasks(tasks[0]);  // 任务列表
-        handleStopTasks(tasks[1]);  // 低频任务列表
+        handleStopTasks(tasks[0]); // 任务列表
+        handleStopTasks(tasks[1]); // 低频任务列表
         // 提示信息
         UIHelper.showTipsDialog(L.get("stop_task_tips"));
         // 停止后，重新创建扫描引擎
         mScanEngine = new burp.onescan.engine.ScanEngine(
                 TASK_THREAD_COUNT,
                 LF_TASK_THREAD_COUNT,
-                FP_THREAD_COUNT
-        );
+                FP_THREAD_COUNT);
         // 重新初始化 QPS 限制器
         initQpsLimiter();
     }
