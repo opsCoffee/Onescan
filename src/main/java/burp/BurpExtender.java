@@ -17,7 +17,6 @@ import burp.onescan.bean.FpData;
 import burp.onescan.bean.TaskData;
 import burp.onescan.common.*;
 import burp.onescan.common.IHttpRequestResponse;  // 显式导入,避免与 burp.IHttpRequestResponse 冲突
-import burp.onescan.info.OneScanInfoTab;
 import burp.onescan.manager.FpManager;
 import burp.onescan.manager.WordlistManager;
 import burp.onescan.ui.tab.DataBoardTab;
@@ -241,9 +240,6 @@ public class BurpExtender implements BurpExtension,
         initQpsLimiter();
         // 注册扩展卸载监听器 (Montoya API)
         api.extension().registerUnloadingHandler(this::extensionUnloaded);
-        // TODO: MIGRATE-303 迁移 registerMessageEditorTabFactory (依赖 OneScanInfoTab 迁移)
-        // 旧: this.mCallbacks.registerMessageEditorTabFactory(this);
-        // 新: api.userInterface().registerHttpRequestEditorProvider(...)
     }
 
     /**
@@ -2360,7 +2356,6 @@ public class BurpExtender implements BurpExtension,
      */
     private void extensionUnloaded() {
         // 代理监听器通过 Montoya API 注册,自动清理,无需手动移除
-        // 信息辅助面板已在 MIGRATE-303-D 中迁移为 RawEditor,无需手动移除
         // 上下文菜单通过 Montoya API 注册,自动清理,无需手动移除
         // 停止状态栏刷新定时器
         mStatusRefresh.stop();
