@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 指纹规则
@@ -85,7 +84,7 @@ public class FpRule implements Serializable {
      */
     public static List<String> getDataSources() {
         List<Field> fields = FpDSProvider.getClassFields(FpDSProvider.class);
-        return fields.stream().map(Field::getName).collect(Collectors.toList());
+        return fields.stream().map(Field::getName).toList();
     }
 
     /**
@@ -102,7 +101,7 @@ public class FpRule implements Serializable {
             return result;
         }
         List<Field> dataSourceClassFields = FpDSProvider.getClassFields(field.getType());
-        return dataSourceClassFields.stream().map(Field::getName).collect(Collectors.toList());
+        return dataSourceClassFields.stream().map(Field::getName).toList();
     }
 
     /**

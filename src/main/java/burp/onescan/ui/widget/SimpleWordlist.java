@@ -18,7 +18,6 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 简单的字典列表展示
@@ -243,7 +242,7 @@ public class SimpleWordlist extends JPanel implements ActionListener, ListDataLi
             // 过滤空的字符串，转换为 List 实例
             List<String> list = Arrays.stream(lines)
                     .filter(StringUtils::isNotEmpty)
-                    .collect(Collectors.toList());
+                    .toList();
             // 添加到列表展示
             List<String> listData = getListData();
             listData.addAll(list);

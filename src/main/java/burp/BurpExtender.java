@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 
 /**
  * 插件入口
@@ -1054,7 +1053,7 @@ public class BurpExtender implements BurpExtension,
         // 获取已经启用并且需要合并的“请求包处理”规则
         List<ProcessingItem> processList = getPayloadProcess()
                 .stream().filter(ProcessingItem::isEnabledAndMerge)
-                .collect(Collectors.toList());
+                .toList();
         // 如果规则为空，直接发起请求
         if (processList.isEmpty()) {
             doBurpRequest(service, reqId, reqRawBytes, from);
@@ -1564,7 +1563,7 @@ public class BurpExtender implements BurpExtension,
         if (list == null) {
             return new ArrayList<>();
         }
-        return list.stream().filter(ProcessingItem::isEnabled).collect(Collectors.toList());
+        return list.stream().filter(ProcessingItem::isEnabled).toList();
     }
 
     /**
@@ -1781,7 +1780,7 @@ public class BurpExtender implements BurpExtension,
      * @return [0]=年;[1]=月;[2]=日;[3]=时;[4]=分;[5]=秒;如果解析失败返回空数组
      */
     private String[] parseDateTime(String dateTime) {
-        if (dateTime == null || dateTime.trim().isEmpty()) {
+        if (dateTime == null || dateTime.isBlank()) {
             Logger.debug("DateTime string is null or empty");
             return new String[6];
         }

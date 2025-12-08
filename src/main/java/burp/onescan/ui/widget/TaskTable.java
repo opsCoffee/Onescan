@@ -33,7 +33,6 @@ import java.net.URL;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * 任务列表
@@ -895,7 +894,7 @@ public class TaskTable extends JTable implements ActionListener {
                 return;
             }
             // 数据不允许为空
-            List<TaskData> validItems = items.stream().filter(Objects::nonNull).collect(Collectors.toList());
+            List<TaskData> validItems = items.stream().filter(Objects::nonNull).toList();
             if (validItems.isEmpty()) {
                 return;
             }

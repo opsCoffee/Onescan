@@ -414,12 +414,12 @@ public class FpManager {
                 errors.add("Column at index " + i + " is null");
                 continue;
             }
-            if (c.getId() == null || c.getId().trim().isEmpty()) {
+            if (c.getId() == null || c.getId().isBlank()) {
                 errors.add("Column id is empty at index " + i);
             } else if (!colIds.add(c.getId())) {
                 errors.add("Duplicate column id: " + c.getId());
             }
-            if (c.getName() == null || c.getName().trim().isEmpty()) {
+            if (c.getName() == null || c.getName().isBlank()) {
                 errors.add("Column name is empty for id " + c.getId());
             } else if (!colNames.add(c.getName())) {
                 errors.add("Duplicate column name: " + c.getName());
@@ -452,7 +452,7 @@ public class FpManager {
 
             // 校验颜色
             String color = data.getColor();
-            if (color != null && !color.trim().isEmpty()) {
+            if (color != null && !color.isBlank()) {
                 boolean ok = colorNames.contains(color)
                         || colorHex.contains(color)
                         || color.matches("#[0-9a-fA-F]{6}");
@@ -472,7 +472,7 @@ public class FpManager {
                         continue;
                     }
                     String k = param.getK();
-                    if (k == null || k.trim().isEmpty()) {
+                    if (k == null || k.isBlank()) {
                         errors.add("Empty param key at data index " + i + ", param index " + p);
                     } else {
                         if (!columnIdSet.contains(k)) {
@@ -510,21 +510,21 @@ public class FpManager {
                         continue;
                     }
 
-                    if (ds == null || ds.trim().isEmpty()) {
+                    if (ds == null || ds.isBlank()) {
                         errors.add(loc(i, g, r) + "dataSource(ds) is empty");
                     } else if (!dataSources.contains(ds)) {
                         errors.add(loc(i, g, r) + "Unknown dataSource '" + ds + "'");
                     } else {
                         // 字段校验
                         List<String> fields = FpRule.getFieldsByDataSource(ds);
-                        if (f == null || f.trim().isEmpty()) {
+                        if (f == null || f.isBlank()) {
                             errors.add(loc(i, g, r) + "field(f) is empty");
                         } else if (!fields.contains(f)) {
                             errors.add(loc(i, g, r) + "Unknown field '" + f + "' for dataSource '" + ds + "'");
                         }
                     }
 
-                    if (m == null || m.trim().isEmpty()) {
+                    if (m == null || m.isBlank()) {
                         errors.add(loc(i, g, r) + "method(m) is empty");
                     } else if (!methods.contains(m)) {
                         errors.add(loc(i, g, r) + "Unknown method '" + m + "'");
@@ -647,7 +647,7 @@ public class FpManager {
                 }
                 return true;
             });
-        }).collect(Collectors.toList());
+        }).toList();
         // 如果启用缓存
         if (useCache) {
             // 将指纹识别结果存放在缓存
@@ -796,7 +796,7 @@ public class FpManager {
             List<FpData.Param> removeParams = data.getParams()
                     .stream()
                     .filter(param -> column.getId().equals(param.getK()))
-                    .collect(Collectors.toList());
+                    .toList();
             // 批量移除
             data.getParams().removeAll(removeParams);
         }
