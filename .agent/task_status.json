@@ -25,7 +25,7 @@
       "estimated_hours": 0.1,
       "actual_hours": 0.05,
       "completed_at": "2025-12-08T09:00:00+08:00",
-      "commit": "9fb07534464782a2d128a51b902db054b6490758",
+      "commit": "7610d263b8f62c527c36c5111cc65ef75daba734",
       "depends_on": ["CLEANUP-801"],
       "notes": ["已删除 mCallbacks 和 mHelpers 成员变量", "已迁移 mCallbacks.unloadExtension() 到 api.extension().unload()"]
     },
@@ -36,7 +36,7 @@
       "estimated_hours": 0.1,
       "actual_hours": 0.05,
       "completed_at": "2025-12-08T09:00:00+08:00",
-      "commit": "9fb07534464782a2d128a51b902db054b6490758",
+      "commit": "7610d263b8f62c527c36c5111cc65ef75daba734",
       "depends_on": ["CLEANUP-801"],
       "notes": ["已删除 convertHttpServiceToLegacy() 方法"]
     },
