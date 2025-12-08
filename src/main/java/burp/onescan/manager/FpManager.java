@@ -9,6 +9,7 @@ import burp.onescan.common.FpMethodHandler;
 import burp.onescan.common.OnFpColumnModifyListener;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.error.YAMLException;
 import java.awt.*;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -124,7 +125,7 @@ public class FpManager {
                 throw new IllegalArgumentException("YAML root must be a mapping");
             }
             root = (Map<String, Object>) obj;
-        } catch (Exception e) {
+        } catch (YAMLException e) {
             throw new IllegalArgumentException("Failed to parse YAML: " + e.getMessage(), e);
         }
 

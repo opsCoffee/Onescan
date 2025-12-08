@@ -42,7 +42,7 @@ public class GsonUtils {
         }
         try {
             return sGson.toJson(obj);
-        } catch (Exception e) {
+        } catch (JsonIOException e) {
             Logger.error("Failed to convert object to JSON: %s", e.getMessage());
             return result;
         }
@@ -58,7 +58,7 @@ public class GsonUtils {
         }
         try {
             return sGson.fromJson(json, clz);
-        } catch (Exception e) {
+        } catch (JsonSyntaxException | JsonIOException e) {
             Logger.error("Failed to parse JSON to object: %s", e.getMessage());
             return null;
         }
@@ -75,7 +75,7 @@ public class GsonUtils {
         try {
             Type type = TypeToken.getParameterized(Map.class, String.class, clz).getType();
             return sGson.fromJson(json, type);
-        } catch (Exception e) {
+        } catch (JsonSyntaxException | JsonIOException e) {
             Logger.error("Failed to parse JSON to map: %s", e.getMessage());
             return null;
         }
@@ -92,7 +92,7 @@ public class GsonUtils {
         try {
             Type type = TypeToken.getParameterized(ArrayList.class, clz).getType();
             return sGson.fromJson(json, type);
-        } catch (Exception e) {
+        } catch (JsonSyntaxException | JsonIOException e) {
             Logger.error("Failed to parse JSON to list: %s", e.getMessage());
             return null;
         }

@@ -63,7 +63,7 @@ public class FileUtils {
             return false;
         }
         try (FileOutputStream fos = new FileOutputStream(file);
-             InputStream inputStream = is) {
+                InputStream inputStream = is) {
             int len;
             byte[] temp = new byte[FILE_COPY_BUFFER_SIZE];
             while ((len = inputStream.read(temp)) != -1) {
@@ -71,7 +71,7 @@ public class FileUtils {
             }
             fos.flush();
             return true;
-        } catch (Exception e) {
+        } catch (IOException e) {
             Logger.error("Failed to write file: %s - %s", file.getPath(), e.getMessage());
             return false;
         }
@@ -148,7 +148,7 @@ public class FileUtils {
                 }
             }
             return lines;
-        } catch (Exception e) {
+        } catch (IOException e) {
             Logger.error("Failed to read stream to list: %s", e.getMessage());
             return null;
         }
