@@ -106,7 +106,8 @@ public class Config {
         InputStream is = Config.class.getClassLoader().getResourceAsStream("fp_config.yaml");
         if (is == null) {
             Logger.error("Init fingerprint failed: resource fp_config.yaml not found in classpath");
-            throw new IllegalStateException("fp_config.yaml resource missing. Please reinstall or check package integrity.");
+            throw new IllegalStateException(
+                    "fp_config.yaml resource missing. Please reinstall or check package integrity.");
         }
         String content = FileUtils.readStreamToString(is);
         FileUtils.writeFile(path, content);
@@ -393,8 +394,8 @@ public class Config {
                     item.setMerge(Boolean.parseBoolean(mergeValue));
                     String name = String.valueOf(mapItem.get("name"));
                     item.setName(name);
-                    ArrayList<LinkedTreeMap<String, Object>> payloadMapItems =
-                            (ArrayList<LinkedTreeMap<String, Object>>) mapItem.get("items");
+                    ArrayList<LinkedTreeMap<String, Object>> payloadMapItems = (ArrayList<LinkedTreeMap<String, Object>>) mapItem
+                            .get("items");
                     ArrayList<PayloadItem> payloadItems = mapItemsConvert(payloadMapItems);
                     item.setItems(payloadItems);
                     result.add(item);
