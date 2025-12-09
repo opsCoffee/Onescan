@@ -141,8 +141,8 @@ public class FileUtils {
         }
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             ArrayList<String> lines = new ArrayList<>();
-            while (br.ready()) {
-                String line = br.readLine();
+            String line;
+            while ((line = br.readLine()) != null) {
                 if (StringUtils.isNotEmpty(line)) {
                     lines.add(line);
                 }
