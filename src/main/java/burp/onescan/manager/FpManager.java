@@ -392,6 +392,7 @@ public class FpManager {
      * @param config 配置实例
      * @throws IllegalArgumentException 如果配置无效
      */
+    @SuppressWarnings("unchecked")
     private static void validateConfig(FpConfig config) {
         if (config == null) {
             throw new IllegalArgumentException("Fingerprint config is null");

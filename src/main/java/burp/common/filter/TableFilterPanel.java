@@ -169,6 +169,7 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
             }
             // 获取操作符
             JPanel rulePanel = (JPanel) panel.getComponent(1);
+            @SuppressWarnings("unchecked")
             JComboBox<String> operateBox = (JComboBox<String>) rulePanel.getComponent(0);
             int operate = operateBox.getSelectedIndex();
             // 获取值
