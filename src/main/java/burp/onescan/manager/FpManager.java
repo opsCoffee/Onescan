@@ -227,195 +227,69 @@ public class FpManager {
     }
 
     /**
-     * 将新格式 matchers 转换为内部 rules（外层 OR、组内 AND）
+     * 将 matchers 转换为内部 rules（外层 OR、组内 AND）
      * 
-     * 支持两种格式：
-     * 1. 新嵌套格式（group + rules）：
-     *    matchers:
-     *      - group: 1
-     *        rules:
-     *          - dataSource: response
-     *            field: body
-     *            method: contains
-     *            content: "xxx"
-     *      - group: 2
-     *        rules:
-     *          - dataSource: response
-     *            ...
-     * 
-     * 2. 旧扁平格式（直接 dataSource/field/method/content，可选 group 字段）
+     * 仅支持嵌套格式（group + rules）：
+     * matchers:
+     *   - group: 1
+     *     rules:
+     *       - dataSource: response
+     *         field: body
+     *         method: contains
+     *         content: "xxx"
+     *   - group: 2
+     *     rules:
+     *       - dataSource: response
+     *         ...
      */
     private static ArrayList<ArrayList<FpRule>> convertMatchersToRules(List<Map<String, Object>> matchers,
             String matchersCondition) {
-        boolean topAnd = "and".equalsIgnoreCase(matchersCondition);
+        ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
         
-        // 检查是否为新嵌套格式（group + rules）
-        boolean isNestedFormat = matchers.stream().anyMatch(m -> m.containsKey("group") && m.containsKey("rules"));
-        
-        if (isNestedFormat) {
-            // 新嵌套格式：每个 matcher 是一个规则组，包含 group 和 rules
-            ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
+        for (Map<String, Object> groupMap : matchers) {
+            Object rulesObj = groupMap.get("rules");
+            if (!(rulesObj instanceof List<?> rulesList)) {
+                continue;
+            }
             
-            for (Map<String, Object> groupMap : matchers) {
-                Object rulesObj = groupMap.get("rules");
-                if (!(rulesObj instanceof List<?> rulesList)) {
+            ArrayList<FpRule> groupRules = new ArrayList<>();
+            for (Object ruleObj : rulesList) {
+                if (!(ruleObj instanceof Map<?, ?> ruleMap)) {
+                    continue;
+                }
+                Map<String, Object> rule = (Map<String, Object>) ruleMap;
+                
+                String ds = valueAsString(rule.get("dataSource"));
+                String field = valueAsString(rule.get("field"));
+                String method = valueAsString(rule.get("method"));
+                Object contentObj = rule.get("content");
+                
+                if (StringUtils.isEmpty(ds) || StringUtils.isEmpty(field) || StringUtils.isEmpty(method)) {
                     continue;
                 }
                 
-                ArrayList<FpRule> groupRules = new ArrayList<>();
-                for (Object ruleObj : rulesList) {
-                    if (!(ruleObj instanceof Map<?, ?> ruleMap)) {
-                        continue;
+                // 处理 content（可以是单个字符串或字符串列表）
+                List<String> contents = new ArrayList<>();
+                if (contentObj instanceof List<?> contentList) {
+                    for (Object v : contentList) {
+                        contents.add(valueAsString(v));
                     }
-                    Map<String, Object> rule = (Map<String, Object>) ruleMap;
-                    
-                    String ds = valueAsString(rule.get("dataSource"));
-                    String field = valueAsString(rule.get("field"));
-                    String method = valueAsString(rule.get("method"));
-                    Object contentObj = rule.get("content");
-                    String condition = valueAsString(rule.get("condition")); // and|or，仅在 content 为列表时生效
-                    
-                    if (StringUtils.isEmpty(ds) || StringUtils.isEmpty(field) || StringUtils.isEmpty(method)) {
-                        continue;
-                    }
-                    
-                    // 处理 content（可以是单个字符串或字符串列表）
-                    List<String> contents = new ArrayList<>();
-                    if (contentObj instanceof List<?> contentList) {
-                        for (Object v : contentList) {
-                            contents.add(valueAsString(v));
-                        }
-                    } else if (contentObj != null) {
-                        contents.add(valueAsString(contentObj));
-                    }
-                    
-                    if (contents.isEmpty()) {
-                        continue;
-                    }
-                    
-                    // 当 content 是列表时，根据 condition 决定如何处理
-                    // condition=and（默认）：所有 content 都要匹配，生成多条规则放入同一组
-                    // condition=or：任一 content 匹配即可，但这里我们统一放入同一组，由外层 OR 处理
-                    for (String c : contents) {
-                        groupRules.add(newRule(ds, field, method, c));
-                    }
+                } else if (contentObj != null) {
+                    contents.add(valueAsString(contentObj));
                 }
                 
-                if (!groupRules.isEmpty()) {
-                    result.add(groupRules);
+                if (contents.isEmpty()) {
+                    continue;
                 }
-            }
-            return result;
-        }
-        
-        // 检查是否有 group 字段（旧扁平格式带 group）
-        boolean hasGroupField = matchers.stream().anyMatch(m -> m.containsKey("group") && m.containsKey("dataSource"));
-        
-        if (hasGroupField) {
-            // 按 group 字段重建规则组结构
-            Map<Integer, ArrayList<FpRule>> groupMap = new LinkedHashMap<>();
-            
-            for (Map<String, Object> m : matchers) {
-                Object groupObj = m.get("group");
-                int groupId = (groupObj instanceof Number) ? ((Number) groupObj).intValue() : 1;
                 
-                // 创建规则
-                String ds = valueAsString(m.get("dataSource"));
-                String field = valueAsString(m.get("field"));
-                String method = valueAsString(m.get("method"));
-                String content = valueAsString(m.get("content"));
-                
-                if (!StringUtils.isEmpty(ds) && !StringUtils.isEmpty(field) && 
-                    !StringUtils.isEmpty(method) && !StringUtils.isEmpty(content)) {
-                    FpRule rule = newRule(ds, field, method, content);
-                    groupMap.computeIfAbsent(groupId, k -> new ArrayList<>()).add(rule);
+                // content 列表中的每个值生成一条规则，放入同一组（组内 AND）
+                for (String c : contents) {
+                    groupRules.add(newRule(ds, field, method, c));
                 }
             }
             
-            // 转换为 ArrayList<ArrayList<FpRule>>
-            ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
-            for (int i = 1; i <= groupMap.size(); i++) {
-                ArrayList<FpRule> group = groupMap.get(i);
-                if (group != null && !group.isEmpty()) {
-                    result.add(group);
-                }
-            }
-            return result;
-        }
-        
-        // 原有逻辑：处理没有 group 字段的情况
-        if (topAnd) {
-            // 从一个空组开始，逐步扩展
-            ArrayList<ArrayList<FpRule>> groups = new ArrayList<>();
-            groups.add(new ArrayList<>());
-            for (Map<String, Object> m : matchers) {
-                groups = andMerge(groups, buildGroupsFromMatcher(m));
-            }
-            return groups;
-        } else {
-            // 顶层 OR：各 matcher 独立产生 OR 组，最后合并
-            ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
-            for (Map<String, Object> m : matchers) {
-                result.addAll(buildGroupsFromMatcher(m));
-            }
-            return result;
-        }
-    }
-
-    // 将 matcher 构造成若干 AND 组（当 content 列表且 condition=or 时产生多个组；=and 时为单一组内多条规则）
-    private static ArrayList<ArrayList<FpRule>> buildGroupsFromMatcher(Map<String, Object> m) {
-        String ds = valueAsString(m.get("dataSource"));
-        String field = valueAsString(m.get("field"));
-        String method = valueAsString(m.get("method"));
-        Object contentObj = m.get("content");
-        String condition = valueAsString(m.get("condition")); // and|or，仅在列表时生效
-
-        if (StringUtils.isEmpty(ds) || StringUtils.isEmpty(field) || StringUtils.isEmpty(method)) {
-            throw new IllegalArgumentException("matcher missing required fields: dataSource/field/method");
-        }
-
-        List<String> contents = new ArrayList<>();
-        if (contentObj instanceof List<?> contentList) {
-            for (Object v : contentList) {
-                contents.add(valueAsString(v));
-            }
-        } else if (contentObj != null) {
-            contents.add(valueAsString(contentObj));
-        } else {
-            throw new IllegalArgumentException("matcher content is empty");
-        }
-
-        boolean listAnd = "and".equalsIgnoreCase(condition);
-
-        ArrayList<ArrayList<FpRule>> groups = new ArrayList<>();
-        if (contents.size() == 1 || listAnd) {
-            // 单组：组内 AND 多条规则
-            ArrayList<FpRule> group = new ArrayList<>();
-            for (String c : contents) {
-                group.add(newRule(ds, field, method, c));
-            }
-            groups.add(group);
-        } else {
-            // 列表且默认 OR：为每个内容生成一个独立组
-            for (String c : contents) {
-                ArrayList<FpRule> group = new ArrayList<>();
-                group.add(newRule(ds, field, method, c));
-                groups.add(group);
-            }
-        }
-        return groups;
-    }
-
-    // 现有组（AND 组集合） 与 新 matcher 组集合（每元素是 AND 组）做笛卡尔乘积并合并（组内 AND）
-    private static ArrayList<ArrayList<FpRule>> andMerge(ArrayList<ArrayList<FpRule>> base,
-            ArrayList<ArrayList<FpRule>> addon) {
-        ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
-        for (ArrayList<FpRule> g1 : base) {
-            for (ArrayList<FpRule> g2 : addon) {
-                ArrayList<FpRule> merged = new ArrayList<>();
-                merged.addAll(g1);
-                merged.addAll(g2);
-                result.add(merged);
+            if (!groupRules.isEmpty()) {
+                result.add(groupRules);
             }
         }
         return result;
