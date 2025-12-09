@@ -127,6 +127,13 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
         operateBox.setSelectedIndex(operate);
         rulePanel.add(operateBox);
         JTextField input = new JTextField(value);
+        input.setVisible(operate != FilterRule.OPERATE_EMPTY && operate != FilterRule.OPERATE_NOT_EMPTY);
+        operateBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                int selected = operateBox.getSelectedIndex();
+                input.setVisible(selected != FilterRule.OPERATE_EMPTY && selected != FilterRule.OPERATE_NOT_EMPTY);
+            }
+        });
         rulePanel.add(input, "1w");
         JButton delBtn = new JButton(L.get("table_filter.x"));
         rulePanel.add(delBtn, "40px");
@@ -261,9 +268,13 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
                     result.append(" ").append(operateStr).append(" ");
                     result.append(value);
                 } else {
-                    value = "'" + value + "'";
-                    result.append(".").append(operateStr).append("(");
-                    result.append(value).append(")");
+                    if (operate == FilterRule.OPERATE_EMPTY || operate == FilterRule.OPERATE_NOT_EMPTY) {
+                        result.append(".").append(operateStr).append("()");
+                    } else {
+                        value = "'" + value + "'";
+                        result.append(".").append(operateStr).append("(");
+                        result.append(value).append(")");
+                    }
                 }
             }
         }

@@ -82,6 +82,16 @@ public class FilterRule {
     public static final int OPERATE_NOT_INCLUDE = 12;
 
     /**
+     * 为空（isEmpty）
+     */
+    public static final int OPERATE_EMPTY = 13;
+
+    /**
+     * 不为空（isNotEmpty）
+     */
+    public static final int OPERATE_NOT_EMPTY = 14;
+
+    /**
      * 操作符文本字符串
      */
     public static final String[] OPERATE_ITEMS = {
@@ -98,6 +108,8 @@ public class FilterRule {
             L.get("table_filter_rule.not_ends_with"),
             L.get("table_filter_rule.contains"),
             L.get("table_filter_rule.not_contains"),
+            L.get("table_filter_rule.is_empty"),
+            L.get("table_filter_rule.is_not_empty"),
     };
 
     /**
@@ -106,7 +118,8 @@ public class FilterRule {
     public static final String[] OPERATE_CHAR = {"",
             "==", "!=", ">", ">=", "<", "<=",
             "startsWith", "noStartsWith", "endsWith",
-            "noEndsWith", "contains", "noContains"};
+            "noEndsWith", "contains", "noContains",
+            "isEmpty", "isNotEmpty"};
 
     private final int columnIndex;
     private final ArrayList<Item> items;

@@ -112,6 +112,8 @@ public class TableFilter<T extends AbstractTableModel> extends RowFilter<T, Obje
                 case FilterRule.OPERATE_NOT_END -> !value.endsWith(right);
                 case FilterRule.OPERATE_INCLUDE -> value.contains(right);
                 case FilterRule.OPERATE_NOT_INCLUDE -> !value.contains(right);
+                case FilterRule.OPERATE_EMPTY -> value.isEmpty();
+                case FilterRule.OPERATE_NOT_EMPTY -> !value.isEmpty();
                 default -> false;
             };
         }
