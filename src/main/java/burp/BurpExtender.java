@@ -570,16 +570,15 @@ public class BurpExtender implements BurpExtension,
      * @return 请求字节数组
      */
     private static byte[] buildSimpleGetRequest(String host, String reqPQF) {
-        return """
-                GET %s HTTP/1.1
-                Host: %s
-                Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-                Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
-                Accept-Encoding: gzip, deflate
-                Cache-Control: max-age=0
-
-                """
-                .formatted(reqPQF, host).getBytes(StandardCharsets.UTF_8);
+        StringBuilder builder = new StringBuilder()
+                .append("GET ").append(reqPQF).append(" HTTP/1.1").append("\r\n")
+                .append("Host: ").append(host).append("\r\n")
+                .append("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9").append("\r\n")
+                .append("Accept-Language: zh-CN,zh;q=0.9,en;q=0.8").append("\r\n")
+                .append("Accept-Encoding: gzip, deflate").append("\r\n")
+                .append("Cache-Control: max-age=0").append("\r\n")
+                .append("\r\n");
+        return builder.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     // ============================================================
