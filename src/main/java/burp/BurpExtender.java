@@ -466,8 +466,8 @@ public class BurpExtender implements BurpExtension,
                     u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
                     u.getProtocol().equals("https"));
 
-            // 尝试 HTTP/2，如果失败则回退到 HTTP/1.1
-            byte[] requestBytes = buildHttpRequestWithVersionFallback(host, pqf, service);
+            // 使用 HTTP/1.1 构建请求
+            byte[] requestBytes = buildSimpleGetRequest(host, pqf, "HTTP/1.1");
 
             burp.api.montoya.http.message.requests.HttpRequest request = burp.api.montoya.http.message.requests.HttpRequest
                     .httpRequest(service,
@@ -589,40 +589,6 @@ public class BurpExtender implements BurpExtension,
                 .append("Host: ").append(host).append("\r\n")
                 .append("\r\n");
         return builder.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    /**
-     * 构建 HTTP 请求，支持协议版本回退
-     * 优先尝试 HTTP/2，如果服务不支持则回退到 HTTP/1.1
-     *
-     * @param host    主机名
-     * @param reqPQF  请求路径、查询参数和片段
-     * @param service HTTP 服务实例
-     * @return 请求字节数组
-     */
-    private byte[] buildHttpRequestWithVersionFallback(String host, String reqPQF, 
-            burp.api.montoya.http.HttpService service) {
-        // 对于 HTTPS 连接，优先尝试 HTTP/2
-        if (service.secure()) {
-            try {
-                // 尝试构建 HTTP/2 请求
-                byte[] http2Request = buildSimpleGetRequest(host, reqPQF, "HTTP/2");
-                
-                // 创建临时请求来测试服务器是否支持 HTTP/2
-                burp.api.montoya.http.message.requests.HttpRequest testRequest = 
-                    burp.api.montoya.http.message.requests.HttpRequest.httpRequest(service,
-                        burp.api.montoya.core.ByteArray.byteArray(http2Request));
-                
-                // 如果能成功创建请求，说明可能支持 HTTP/2
-                return http2Request;
-            } catch (Exception e) {
-                // HTTP/2 不支持，回退到 HTTP/1.1
-                api.logging().logToOutput("HTTP/2 不支持，回退到 HTTP/1.1: " + e.getMessage());
-            }
-        }
-        
-        // 默认使用 HTTP/1.1
-        return buildSimpleGetRequest(host, reqPQF, "HTTP/1.1");
     }
 
     // ============================================================
