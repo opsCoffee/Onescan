@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "lastUpdate": "2025-12-09T12:08:53.400022+00:00",
+  "lastUpdate": "2025-12-09T12:17:16.557614+00:00",
   "current_phase": "code-quality-improvement",
-  "current_task": "TASK-001",
+  "current_task": "TASK-002",
   "tasks": [
     {
       "taskId": "TASK-001",
@@ -29,7 +29,9 @@
   "completed_tasks": [
     "TASK-001"
   ],
-  "in_progress_tasks": [],
+  "in_progress_tasks": [
+    "TASK-002"
+  ],
   "skipped_tasks": [],
   "failed_tasks": [],
   "task_details": {
@@ -66,7 +68,9 @@
           "title": "添加pre-commit hook",
           "status": "pending"
         }
-      ]
+      ],
+      "status": "in_progress",
+      "started_at": "2025-12-09T12:17:16.557602+00:00"
     },
     "TASK-003": {
       "id": "TASK-003",
@@ -81,8 +85,8 @@
   "summary": {
     "totalTasks": 3,
     "completedTasks": 1,
-    "inProgressTasks": 0,
-    "pendingTasks": 2,
+    "inProgressTasks": 1,
+    "pendingTasks": 1,
     "progressPercentage": 33
   }
 }

@@ -30,3 +30,8 @@ target
 
 # Git commit message temporary file (used with -F parameter)
 commit.log
+
+# Agent temporary files - keep only task_status_manager.py and task_status.json
+.agent/*
+!.agent/task_status_manager.py
+!.agent/task_status.json
