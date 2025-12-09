@@ -5,6 +5,8 @@
 
 import json
 import sys
+import re
+import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -185,11 +187,114 @@ class TaskStatusManager:
             print(f"原因: {reason}")
         return 0
 
+    def init(self, prompt_file="prompt.md"):
+        """初始化任务系统，从 prompt.md 加载任务"""
+        print(f"🔄 正在从 {prompt_file} 加载任务...")
+        
+        # 解析 prompt.md 文件
+        tasks = self._parse_prompt_md(prompt_file)
+        
+        if not tasks:
+            print("⚠️  未找到任务定义")
+            return 1
+        
+        # 更新任务数据
+        self.data["tasks"] = tasks
+        self.data["version"] = "2.0"
+        
+        # 清理旧状态
+        self.data["completed_tasks"] = []
+        self.data["in_progress_tasks"] = []
+        self.data["skipped_tasks"] = []
+        self.data["failed_tasks"] = []
+        self.data["task_details"] = {}
+        self.data["current_phase"] = None
+        self.data["current_task"] = None
+        
+        self._save()
+        
+        print(f"✅ 成功加载 {len(tasks)} 个任务")
+        for task in tasks:
+            print(f"   📋 {task['taskId']}: {task['title']}")
+        
+        return 0
+
+    def _parse_prompt_md(self, prompt_file):
+        """解析 prompt.md 文件，提取任务信息"""
+        try:
+            with open(prompt_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except FileNotFoundError:
+            print(f"❌ 文件 {prompt_file} 不存在")
+            return []
+        
+        tasks = []
+        
+        # 查找任务定义 - 以 "#### 任务：" 开头的行
+        task_pattern = r'#### 任务：(.+?)(?=####|\Z)'
+        task_matches = re.findall(task_pattern, content, re.DOTALL)
+        
+        for i, task_content in enumerate(task_matches):
+            task = self._parse_single_task(task_content, i + 1)
+            if task:
+                tasks.append(task)
+        
+        return tasks
+
+    def _parse_single_task(self, task_content, task_number):
+        """解析单个任务的内容"""
+        lines = task_content.strip().split('\n')
+        if not lines:
+            return None
+        
+        # 提取任务标题（第一行）
+        title = lines[0].strip()
+        
+        # 生成任务ID
+        task_id = self._generate_task_id(title, task_number)
+        
+        # 提取任务描述
+        description = ""
+        priority = "中"
+        estimated_time = ""
+        
+        # 解析任务属性
+        for line in lines:
+            line = line.strip()
+            if line.startswith("**任务描述**："):
+                description = line.replace("**任务描述**：", "").strip()
+            elif line.startswith("**优先级**："):
+                priority = line.replace("**优先级**：", "").strip()
+            elif line.startswith("**预计工作量**："):
+                estimated_time = line.replace("**预计工作量**：", "").strip()
+        
+        # 如果没有找到描述，使用整个内容作为描述
+        if not description:
+            description = task_content.strip()
+        
+        return {
+            "taskId": task_id,
+            "title": title,
+            "description": description,
+            "priority": priority,
+            "estimatedTime": estimated_time,
+            "phaseId": "main",
+            "dependencies": [],
+            "status": "pending"
+        }
+
+    def _generate_task_id(self, title, task_number):
+        """生成唯一的任务ID"""
+        # 使用标题的哈希值生成短ID
+        title_hash = hashlib.md5(title.encode('utf-8')).hexdigest()[:8]
+        return f"task-{task_number:02d}-{title_hash}"
+
 
 def main():
     if len(sys.argv) < 2:
         print("用法: python task_status_manager.py <command> [args]")
         print("命令:")
+        print("  init [file]         - 初始化任务系统，从文件加载任务（默认：prompt.md）")
         print("  status              - 显示当前状态")
         print("  next                - 获取并开始下一个任务")
         print("  complete <task_id> [commit] - 标记任务完成")
@@ -199,7 +304,10 @@ def main():
     manager = TaskStatusManager()
     command = sys.argv[1]
 
-    if command == "status":
+    if command == "init":
+        prompt_file = sys.argv[2] if len(sys.argv) > 2 else "prompt.md"
+        return manager.init(prompt_file)
+    elif command == "status":
         return manager.status()
     elif command == "next":
         return manager.next_task()

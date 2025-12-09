@@ -3,10 +3,14 @@ set -euo pipefail
 
 cd "$GITHUB_WORKSPACE"
 
-# 1. 确保状态系统就绪（你已经有这个逻辑）
+# 1. 确保状态系统就绪
 if [ ! -f .agent/task_status.json ]; then
   echo "首次运行，初始化状态系统..."
-  python .agent/task_status_manager.py init || echo "初始化完成"
+  # 创建 .agent 目录（如果不存在）
+  mkdir -p .agent
+  # 从 prompt.md 初始化任务
+  python .agent/task_status_manager.py init
+  echo "初始化完成"
 fi
 
 # 2. 清理旧的完成标记（允许继续）
