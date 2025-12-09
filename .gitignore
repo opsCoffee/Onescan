@@ -30,3 +30,7 @@ target
 
 # Git commit message temporary file (used with -F parameter)
 commit.log
+
+# 临时测试文件（避免混入版本控制）
+Test*.java
+**/Test*.java
