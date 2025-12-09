@@ -460,12 +460,14 @@ public class BurpExtender implements BurpExtension,
             URL u = new java.net.URI(url).toURL();
             String host = UrlUtils.getHostByURL(u);
             String pqf = UrlUtils.toPQF(u);
-            byte[] requestBytes = buildSimpleGetRequest(host, pqf);
-
+            
             burp.api.montoya.http.HttpService service = burp.api.montoya.http.HttpService.httpService(
                     u.getHost(),
                     u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
                     u.getProtocol().equals("https"));
+
+            // 尝试 HTTP/2，如果失败则回退到 HTTP/1.1
+            byte[] requestBytes = buildHttpRequestWithVersionFallback(host, pqf, service);
 
             burp.api.montoya.http.message.requests.HttpRequest request = burp.api.montoya.http.message.requests.HttpRequest
                     .httpRequest(service,
@@ -570,15 +572,57 @@ public class BurpExtender implements BurpExtension,
      * @return 请求字节数组
      */
     private static byte[] buildSimpleGetRequest(String host, String reqPQF) {
+        return buildSimpleGetRequest(host, reqPQF, "HTTP/1.1");
+    }
+
+    /**
+     * 构建简单的 GET 请求
+     *
+     * @param host        主机名
+     * @param reqPQF      请求路径、查询参数和片段
+     * @param httpVersion HTTP 协议版本 (HTTP/1.1 或 HTTP/2)
+     * @return 请求字节数组
+     */
+    private static byte[] buildSimpleGetRequest(String host, String reqPQF, String httpVersion) {
         StringBuilder builder = new StringBuilder()
-                .append("GET ").append(reqPQF).append(" HTTP/1.1").append("\r\n")
+                .append("GET ").append(reqPQF).append(" ").append(httpVersion).append("\r\n")
                 .append("Host: ").append(host).append("\r\n")
-                .append("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9").append("\r\n")
-                .append("Accept-Language: zh-CN,zh;q=0.9,en;q=0.8").append("\r\n")
-                .append("Accept-Encoding: gzip, deflate").append("\r\n")
-                .append("Cache-Control: max-age=0").append("\r\n")
                 .append("\r\n");
         return builder.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 构建 HTTP 请求，支持协议版本回退
+     * 优先尝试 HTTP/2，如果服务不支持则回退到 HTTP/1.1
+     *
+     * @param host    主机名
+     * @param reqPQF  请求路径、查询参数和片段
+     * @param service HTTP 服务实例
+     * @return 请求字节数组
+     */
+    private byte[] buildHttpRequestWithVersionFallback(String host, String reqPQF, 
+            burp.api.montoya.http.HttpService service) {
+        // 对于 HTTPS 连接，优先尝试 HTTP/2
+        if (service.secure()) {
+            try {
+                // 尝试构建 HTTP/2 请求
+                byte[] http2Request = buildSimpleGetRequest(host, reqPQF, "HTTP/2");
+                
+                // 创建临时请求来测试服务器是否支持 HTTP/2
+                burp.api.montoya.http.message.requests.HttpRequest testRequest = 
+                    burp.api.montoya.http.message.requests.HttpRequest.httpRequest(service,
+                        burp.api.montoya.core.ByteArray.byteArray(http2Request));
+                
+                // 如果能成功创建请求，说明可能支持 HTTP/2
+                return http2Request;
+            } catch (Exception e) {
+                // HTTP/2 不支持，回退到 HTTP/1.1
+                api.logging().logToOutput("HTTP/2 不支持，回退到 HTTP/1.1: " + e.getMessage());
+            }
+        }
+        
+        // 默认使用 HTTP/1.1
+        return buildSimpleGetRequest(host, reqPQF, "HTTP/1.1");
     }
 
     // ============================================================
