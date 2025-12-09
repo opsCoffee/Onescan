@@ -49,6 +49,33 @@ if [ -f .agent/completed ]; then
   exit 0
 fi
 
-# 5. 【自驱动核心】完成本轮后，自动触发下一轮
-echo "本轮完成，触发下一轮优化..."
-gh workflow run "Claude 代码处理" --ref $(git rev-parse --abbrev-ref HEAD)
+# 5. 【自驱动核心】完成本轮后，通过 Git 提交触发下一轮
+echo "本轮完成，检查是否需要触发下一轮..."
+
+# 检查是否有变更需要提交和推送
+if [ -n "$(git status --porcelain)" ]; then
+  echo "发现未提交的变更，提交并推送以触发下一轮..."
+  
+  # 添加所有变更
+  git add .
+  
+  # 创建提交（触发 workflow）
+  git commit -m "自动提交：完成当前任务轮次，触发下一轮处理"
+  
+  # 推送到远程仓库（这会触发 workflow）
+  git push origin HEAD
+  
+  echo "已推送变更，将自动触发下一轮工作流"
+else
+  echo "没有变更需要提交，检查任务状态..."
+  
+  # 如果没有变更但还有待处理任务，创建一个空提交来触发
+  if ! python .agent/task_status_manager.py status | grep -q "所有任务已完成"; then
+    echo "仍有待处理任务，创建空提交触发下一轮..."
+    git commit --allow-empty -m "触发：继续处理剩余任务"
+    git push origin HEAD
+    echo "已创建空提交触发下一轮工作流"
+  else
+    echo "所有任务已完成，无需触发下一轮"
+  fi
+fi
