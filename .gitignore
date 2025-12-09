@@ -34,3 +34,8 @@ commit.log
 # 临时测试文件（避免混入版本控制）
 Test*.java
 **/Test*.java
+
+# Agent temporary files - keep only task_status_manager.py and task_status.json
+.agent/*
+!.agent/task_status_manager.py
+!.agent/task_status.json

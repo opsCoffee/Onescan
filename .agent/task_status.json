@@ -1,0 +1,98 @@
+{
+  "version": "2.0",
+  "lastUpdate": "2025-12-09T12:32:40.906708+00:00",
+  "current_phase": "code-quality-improvement",
+  "current_task": "TASK-003",
+  "tasks": [
+    {
+      "taskId": "TASK-001",
+      "phaseId": "code-quality-improvement",
+      "title": "删除HTTP/2假回退代码",
+      "description": "BurpExtender.java:603处的HTTP/2回退逻辑存在问题,需要删除或正确实现",
+      "dependencies": []
+    },
+    {
+      "taskId": "TASK-002",
+      "phaseId": "code-quality-improvement",
+      "title": "规范Git流程",
+      "description": "添加.gitignore规则和pre-commit hook,防止临时文件和auto commit混入版本控制",
+      "dependencies": []
+    },
+    {
+      "taskId": "TASK-003",
+      "phaseId": "code-quality-improvement",
+      "title": "统一HTTP请求构建逻辑",
+      "description": "创建HttpRequestBuilder工具类,消除4处相似的HTTP请求构建代码",
+      "dependencies": []
+    }
+  ],
+  "completed_tasks": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-003"
+  ],
+  "in_progress_tasks": [],
+  "skipped_tasks": [],
+  "failed_tasks": [],
+  "task_details": {
+    "TASK-001": {
+      "id": "TASK-001",
+      "title": "删除HTTP/2假回退代码",
+      "description": "BurpExtender.java:603处的HTTP/2回退逻辑存在问题,需要删除或正确实现",
+      "priority": "high",
+      "category": "bug-fix",
+      "location": "src/main/java/burp/BurpExtender.java:603",
+      "created": "2025-12-09T12:02:00Z",
+      "estimatedHours": 1,
+      "status": "completed",
+      "started_at": "2025-12-09T12:04:54.567604+00:00",
+      "completed_at": "2025-12-09T12:08:53.400011+00:00",
+      "commit": "d6e9c4273496bbb82f36e623d7800f6cd80db79f"
+    },
+    "TASK-002": {
+      "id": "TASK-002",
+      "title": "规范Git流程",
+      "description": "添加.gitignore规则和pre-commit hook,防止临时文件和auto commit混入版本控制",
+      "priority": "medium",
+      "category": "dev-ops",
+      "created": "2025-12-09T12:02:00Z",
+      "estimatedHours": 2,
+      "sub_tasks": [
+        {
+          "id": "TASK-002-1",
+          "title": "完善.gitignore规则",
+          "status": "pending"
+        },
+        {
+          "id": "TASK-002-2",
+          "title": "添加pre-commit hook",
+          "status": "pending"
+        }
+      ],
+      "status": "completed",
+      "started_at": "2025-12-09T12:17:16.557602+00:00",
+      "completed_at": "2025-12-09T12:21:44.010292+00:00",
+      "commit": "f8a36b78231f6977c36ed00fd4e060dc2e9da243"
+    },
+    "TASK-003": {
+      "id": "TASK-003",
+      "title": "统一HTTP请求构建逻辑",
+      "description": "创建HttpRequestBuilder工具类,消除4处相似的HTTP请求构建代码",
+      "priority": "medium",
+      "category": "refactoring",
+      "created": "2025-12-09T12:02:00Z",
+      "estimatedHours": 3,
+      "status": "completed",
+      "started_at": "2025-12-09T12:23:50.832428+00:00",
+      "completed_at": "2025-12-09T12:32:40.906696+00:00",
+      "commit": "c35e1cff3669bf1c9c0002f7a38fa9d0326b5159"
+    }
+  },
+  "summary": {
+    "totalTasks": 3,
+    "completedTasks": 3,
+    "inProgressTasks": 0,
+    "pendingTasks": 0,
+    "progressPercentage": 100
+  }
+}
