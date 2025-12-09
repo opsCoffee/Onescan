@@ -9,8 +9,10 @@ import burp.onescan.common.FpMethodHandler;
 import burp.onescan.common.OnFpColumnModifyListener;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.error.YAMLException;
 import java.awt.*;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.*;
@@ -572,6 +574,150 @@ public class FpManager {
     }
 
     /**
+     * 保存配置到文件
+     * 将内存中的配置转换为YAML格式并写入文件
+     */
+    private static void saveConfig() {
+        checkInit();
+        try {
+            // 将内存中的FpConfig转换为YAML格式的Map结构
+            Map<String, Object> yamlData = convertConfigToYaml(sConfig);
+            
+            // 配置YAML输出格式
+            DumperOptions options = new DumperOptions();
+            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            options.setPrettyFlow(true);
+            options.setIndent(2);
+            
+            Yaml yaml = new Yaml(options);
+            String yamlContent = yaml.dump(yamlData);
+            
+            // 写入文件
+            boolean success = FileUtils.writeFile(sFilePath, yamlContent);
+            if (!success) {
+                throw new IOException("写入文件失败");
+            }
+            Logger.debug("指纹配置已保存到文件: %s", sFilePath);
+            
+        } catch (Exception e) {
+            Logger.error("保存指纹配置失败: %s", e.getMessage());
+            // 不抛出异常，避免影响正常功能，但记录错误日志
+        }
+    }
+
+    /**
+     * 将FpConfig转换为YAML格式的Map结构
+     * 
+     * @param config 指纹配置对象
+     * @return YAML格式的Map
+     */
+    private static Map<String, Object> convertConfigToYaml(FpConfig config) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        
+        // 获取列名（假设只有一个列）
+        List<FpColumn> columns = config.getColumns();
+        if (columns != null && !columns.isEmpty()) {
+            root.put("name", columns.get(0).getName());
+        }
+        
+        // 转换指纹数据列表
+        List<Map<String, Object>> itemList = new ArrayList<>();
+        List<FpData> dataList = config.getList();
+        
+        if (dataList != null) {
+            for (FpData data : dataList) {
+                Map<String, Object> item = convertFpDataToYaml(data);
+                if (item != null) {
+                    itemList.add(item);
+                }
+            }
+        }
+        
+        root.put("list", itemList);
+        return root;
+    }
+
+    /**
+     * 将FpData转换为YAML格式的Map
+     * 
+     * @param data 指纹数据对象
+     * @return YAML格式的Map
+     */
+    private static Map<String, Object> convertFpDataToYaml(FpData data) {
+        if (data == null) {
+            return null;
+        }
+        
+        Map<String, Object> item = new LinkedHashMap<>();
+        
+        // 获取指纹名称（从参数中提取）
+        String name = "";
+        if (data.getParams() != null && !data.getParams().isEmpty()) {
+            FpData.Param firstParam = data.getParams().get(0);
+            if (firstParam != null) {
+                name = firstParam.getV();
+            }
+        }
+        item.put("name", name);
+        
+        // 启用状态
+        item.put("enabled", data.isEnabled());
+        
+        // 颜色
+        if (StringUtils.isNotEmpty(data.getColor())) {
+            item.put("color", data.getColor());
+        }
+        
+        // 转换规则为matchers格式
+        List<Map<String, Object>> matchers = convertRulesToMatchers(data.getRules());
+        item.put("matchers", matchers);
+        
+        // 设置matchers-condition（默认为and）
+        item.put("matchers-condition", "and");
+        
+        return item;
+    }
+
+    /**
+     * 将规则列表转换为matchers格式
+     * 
+     * @param rules 规则列表（外层OR，内层AND）
+     * @return matchers列表
+     */
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> convertRulesToMatchers(List<ArrayList<FpRule>> rules) {
+        List<Map<String, Object>> matchers = new ArrayList<>();
+        
+        if (rules == null || rules.isEmpty()) {
+            return matchers;
+        }
+        
+        // 将所有规则组合并为一个matchers列表
+        // 注意：这里简化处理，将所有规则平铺为独立的matcher
+        for (ArrayList<FpRule> group : rules) {
+            if (group == null || group.isEmpty()) {
+                continue;
+            }
+            
+            for (FpRule rule : group) {
+                if (rule == null) {
+                    continue;
+                }
+                
+                Map<String, Object> matcher = new LinkedHashMap<>();
+                matcher.put("dataSource", rule.getDataSource());
+                matcher.put("field", rule.getField());
+                matcher.put("method", rule.getMethod());
+                matcher.put("content", rule.getContent());
+                
+                matchers.add(matcher);
+            }
+        }
+        
+        return matchers;
+    }
+
+    /**
      * 指纹识别
      *
      * @param reqBytes  HTTP 请求数据包
@@ -693,6 +839,8 @@ public class FpManager {
         sConfig.addListItem(data);
         // 增量预编译新加入的规则
         precompilePatterns(data);
+        // 保存配置到文件
+        saveConfig();
     }
 
     /**
@@ -703,6 +851,8 @@ public class FpManager {
     public static void removeItem(int index) {
         checkInit();
         sConfig.removeListItem(index);
+        // 保存配置到文件
+        saveConfig();
     }
 
     /**
@@ -716,6 +866,8 @@ public class FpManager {
         sConfig.setListItem(index, data);
         // 增量预编译修改后的规则
         precompilePatterns(data);
+        // 保存配置到文件
+        saveConfig();
     }
 
     /**
@@ -775,6 +927,8 @@ public class FpManager {
         checkInit();
         sConfig.addColumnsItem(column);
         invokeFpColumnModifyListeners();
+        // 保存配置到文件
+        saveConfig();
     }
 
     /**
@@ -803,6 +957,8 @@ public class FpManager {
         // 保存指纹数据
         sConfig.setList(list);
         invokeFpColumnModifyListeners();
+        // 保存配置到文件
+        saveConfig();
     }
 
     /**
@@ -815,6 +971,8 @@ public class FpManager {
         checkInit();
         sConfig.setColumnsItem(index, column);
         invokeFpColumnModifyListeners();
+        // 保存配置到文件
+        saveConfig();
     }
 
     /**
