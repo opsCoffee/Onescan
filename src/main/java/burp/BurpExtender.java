@@ -457,7 +457,7 @@ public class BurpExtender implements BurpExtension,
             throw new IllegalArgumentException(url + " does not include the protocol.");
         }
         try {
-            URL u = new URL(url);
+            URL u = new java.net.URI(url).toURL();
             String host = UrlUtils.getHostByURL(u);
             String pqf = UrlUtils.toPQF(u);
             byte[] requestBytes = buildSimpleGetRequest(host, pqf);
@@ -475,7 +475,7 @@ public class BurpExtender implements BurpExtension,
                     request,
                     null // 导入URL时没有响应
             );
-        } catch (MalformedURLException e) {
+        } catch (java.net.URISyntaxException | MalformedURLException e) {
             throw new IllegalArgumentException("Url: " + url + " format error.");
         }
     }
@@ -501,10 +501,10 @@ public class BurpExtender implements BurpExtension,
         if (UrlUtils.isHTTP(urlOrPqf)) {
             // 完整URL
             try {
-                URL u = new URL(urlOrPqf);
+                URL u = new java.net.URI(urlOrPqf).toURL();
                 String pqf = UrlUtils.toPQF(u);
                 requestBytes = buildRequestWithHeadersAndCookies(pqf, headers, cookies, service);
-            } catch (MalformedURLException e) {
+            } catch (java.net.URISyntaxException | MalformedURLException e) {
                 throw new IllegalArgumentException("Invalid URL: " + urlOrPqf);
             }
         } else {
@@ -570,14 +570,16 @@ public class BurpExtender implements BurpExtension,
      * @return 请求字节数组
      */
     private static byte[] buildSimpleGetRequest(String host, String reqPQF) {
-        return ("GET " + reqPQF + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9\r\n"
-                +
-                "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8\r\n" +
-                "Accept-Encoding: gzip, deflate\r\n" +
-                "Cache-Control: max-age=0\r\n" +
-                "\r\n").getBytes(StandardCharsets.UTF_8);
+        return """
+                GET %s HTTP/1.1
+                Host: %s
+                Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+                Accept-Language: zh-CN,zh;q=0.9,en;q=0.8
+                Accept-Encoding: gzip, deflate
+                Cache-Control: max-age=0
+
+                """
+                .formatted(reqPQF, host).getBytes(StandardCharsets.UTF_8);
     }
 
     // ============================================================
@@ -652,14 +654,14 @@ public class BurpExtender implements BurpExtension,
 
         // 处理原始请求
         try {
-            URL url = new URL(request.url());
+            URL url = new java.net.URI(request.url()).toURL();
             processOriginalRequest(httpReqResp, request, url, from);
 
             // 递归目录扫描
             if (mDataBoardTab.hasDirScan()) {
                 performRecursiveScan(httpReqResp, request, url, payloadItem);
             }
-        } catch (java.net.MalformedURLException e) {
+        } catch (java.net.URISyntaxException | java.net.MalformedURLException e) {
             Logger.debug("Invalid URL from request: %s", request.url());
         }
     }
@@ -772,9 +774,9 @@ public class BurpExtender implements BurpExtension,
             return "";
         }
         try {
-            URL url = new URL(reqPath);
+            URL url = new java.net.URI(reqPath).toURL();
             return UrlUtils.getReqHostByURL(url);
-        } catch (MalformedURLException e) {
+        } catch (java.net.URISyntaxException | MalformedURLException e) {
             return "";
         }
     }
@@ -1006,10 +1008,10 @@ public class BurpExtender implements BurpExtension,
         // 生成携带完整的 Host 地址请求的请求 ID 值
         if (UrlUtils.isHTTP(reqPath)) {
             try {
-                URL originUrl = new URL(request.url());
+                URL originUrl = new java.net.URI(request.url()).toURL();
                 String originReqHost = UrlUtils.getReqHostByURL(originUrl);
                 return originReqHost + "->" + reqPath;
-            } catch (java.net.MalformedURLException e) {
+            } catch (java.net.URISyntaxException | java.net.MalformedURLException e) {
                 Logger.debug("Invalid URL in generateReqId: %s", request.url());
                 return reqPath;
             }
@@ -1242,7 +1244,7 @@ public class BurpExtender implements BurpExtension,
                     ByteArray.byteArray(reqResp.getRequest()));
             List<String> headers = httpRequest.headers().stream()
                     .map(h -> h.name() + ": " + h.value())
-                    .collect(java.util.stream.Collectors.toList());
+                    .toList();
             // 兼容完整 Host 地址
             if (UrlUtils.isHTTP(reqPath)) {
                 URL originUrl = UrlUtils.parseURL(reqPath);
@@ -1902,7 +1904,7 @@ public class BurpExtender implements BurpExtension,
             PayloadRule rule = item.getRule();
             try {
                 switch (item.getScope()) {
-                    case PayloadRule.SCOPE_URL:
+                    case PayloadRule.SCOPE_URL -> {
                         String newUrl = rule.handleProcess(url);
                         // 截取请求头第一行，用于定位要处理的位置
                         String reqLine = header.substring(0, header.indexOf("\r\n"));
@@ -1918,20 +1920,18 @@ public class BurpExtender implements BurpExtension,
                             request = header + "\r\n\r\n" + body;
                         }
                         url = newUrl;
-                        break;
-                    case PayloadRule.SCOPE_HEADER:
+                    }
+                    case PayloadRule.SCOPE_HEADER -> {
                         String newHeader = rule.handleProcess(header);
                         header = newHeader;
                         request = newHeader + "\r\n\r\n" + body;
-                        break;
-                    case PayloadRule.SCOPE_BODY:
+                    }
+                    case PayloadRule.SCOPE_BODY -> {
                         String newBody = rule.handleProcess(body);
                         request = header + "\r\n\r\n" + newBody;
                         body = newBody;
-                        break;
-                    case PayloadRule.SCOPE_REQUEST:
-                        request = rule.handleProcess(request);
-                        break;
+                    }
+                    case PayloadRule.SCOPE_REQUEST -> request = rule.handleProcess(request);
                 }
             } catch (Exception e) {
                 Logger.debug("handlePayloadProcess exception: " + e.getMessage());
@@ -2104,18 +2104,18 @@ public class BurpExtender implements BurpExtension,
      */
     private URL getUrlByRequestInfo(HttpRequest request) {
         try {
-            URL url = new URL(request.url());
+            URL url = new java.net.URI(request.url()).toURL();
             // 分两种情况，一种是完整 Host 地址，还有一种是普通请求路径
             String reqPath = getReqPathByRequestInfo(request);
             if (UrlUtils.isHTTP(reqPath)) {
-                return new URL(reqPath);
+                return new java.net.URI(reqPath).toURL();
             }
             // 普通请求路径因为 Montoya API 的 request.url() 方法已经很准确，直接使用
             return url;
         } catch (Exception e) {
             Logger.error("getUrlByRequestInfo: convert url error: %s", e.getMessage());
             try {
-                return new URL(request.url());
+                return new java.net.URI(request.url()).toURL();
             } catch (Exception ex) {
                 return null;
             }
@@ -2243,21 +2243,11 @@ public class BurpExtender implements BurpExtension,
     @Override
     public void onTabEventMethod(String action, Object... params) {
         switch (action) {
-            case RequestTab.EVENT_QPS_LIMIT:
-                changeQpsLimit(String.valueOf(params[0]));
-                break;
-            case RequestTab.EVENT_REQUEST_DELAY:
-                changeRequestDelay(String.valueOf(params[0]));
-                break;
-            case OtherTab.EVENT_UNLOAD_PLUGIN:
-                api.extension().unload();
-                break;
-            case DataBoardTab.EVENT_IMPORT_URL:
-                importUrl((List<?>) params[0]);
-                break;
-            case DataBoardTab.EVENT_STOP_TASK:
-                stopAllTask();
-                break;
+            case RequestTab.EVENT_QPS_LIMIT -> changeQpsLimit(String.valueOf(params[0]));
+            case RequestTab.EVENT_REQUEST_DELAY -> changeRequestDelay(String.valueOf(params[0]));
+            case OtherTab.EVENT_UNLOAD_PLUGIN -> api.extension().unload();
+            case DataBoardTab.EVENT_IMPORT_URL -> importUrl((List<?>) params[0]);
+            case DataBoardTab.EVENT_STOP_TASK -> stopAllTask();
         }
     }
 

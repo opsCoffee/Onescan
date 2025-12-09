@@ -29,7 +29,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -355,7 +354,7 @@ public class TaskTable extends JTable implements ActionListener {
      * 更新过滤器
      */
     public void updateRowFilter() {
-        ArrayList<TableFilter<AbstractTableModel>> groupFilter = new ArrayList<>();
+        var groupFilter = new ArrayList<TableFilter<AbstractTableModel>>();
         // 过滤规则
         if (mTableFilters != null && !mTableFilters.isEmpty()) {
             groupFilter.addAll(mTableFilters);
@@ -365,7 +364,7 @@ public class TaskTable extends JTable implements ActionListener {
             groupFilter.addAll(mTempFilters);
         }
         // 检测过滤字段是否有效
-        ArrayList<TableFilter<AbstractTableModel>> result = new ArrayList<>();
+        var result = new ArrayList<TableFilter<AbstractTableModel>>();
         for (TableFilter<AbstractTableModel> filter : groupFilter) {
             FilterRule rule = filter.getRule();
             // 规则为空检测
@@ -475,7 +474,7 @@ public class TaskTable extends JTable implements ActionListener {
      * @return 失败返回空字符串
      */
     private String fetchBodyDataByAction(String action, int[] selectedRows) {
-        StringBuilder result = new StringBuilder();
+        var result = new StringBuilder();
         for (int index : selectedRows) {
             TaskData data = getTaskData(index);
             if (data == null) {
@@ -506,7 +505,7 @@ public class TaskTable extends JTable implements ActionListener {
      * @param selectedRows 选中行
      */
     private void doCopyUrl(int[] selectedRows) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
         for (int index : selectedRows) {
             TaskData data = getTaskData(index);
             if (data == null) {
@@ -583,11 +582,11 @@ public class TaskTable extends JTable implements ActionListener {
                 continue;
             }
             try {
-                String host = new URL(data.getHost()).getHost();
+                String host = new java.net.URI(data.getHost()).toURL().getHost();
                 if (!hosts.contains(host)) {
                     hosts.add(host);
                 }
-            } catch (MalformedURLException ex) {
+            } catch (java.net.URISyntaxException | MalformedURLException ex) {
                 Logger.error(ex.getMessage());
             }
         }
@@ -808,7 +807,7 @@ public class TaskTable extends JTable implements ActionListener {
      * 初始化所有字段名
      */
     private static void initColumnNames() {
-        Vector<String> result = new Vector<>(Arrays.asList(TaskTableModel.PRE_COLUMN_NAMES));
+        Vector<String> result = new Vector<>(List.of(TaskTableModel.PRE_COLUMN_NAMES));
         // 指纹字段名列表
         List<String> fpColumnNames = FpManager.getColumnNames();
         result.addAll(fpColumnNames);

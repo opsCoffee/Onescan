@@ -46,20 +46,18 @@ public class MontoyaHttpRequestBuilder {
             throw new IllegalArgumentException(url + " does not include the protocol.");
         }
         try {
-            URL u = new URL(url);
+            URL u = new java.net.URI(url).toURL();
             String host = UrlUtils.getHostByURL(u);
             String pqf = UrlUtils.toPQF(u);
             byte[] requestBytes = buildRequestBytes(host, pqf);
 
             return HttpRequest.httpRequest(
-                HttpService.httpService(
-                    u.getHost(),
-                    u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
-                    u.getProtocol().equals("https")
-                ),
-                burp.api.montoya.core.ByteArray.byteArray(requestBytes)
-            );
-        } catch (MalformedURLException e) {
+                    HttpService.httpService(
+                            u.getHost(),
+                            u.getPort() == -1 ? (u.getProtocol().equals("https") ? 443 : 80) : u.getPort(),
+                            u.getProtocol().equals("https")),
+                    burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+        } catch (java.net.URISyntaxException | MalformedURLException e) {
             throw new IllegalArgumentException("Url: " + url + " format error.");
         }
     }
@@ -74,7 +72,7 @@ public class MontoyaHttpRequestBuilder {
      * @return HttpRequest 实例
      */
     public HttpRequest buildFromComponents(HttpService service, String reqPQF,
-                                            List<String> headers, List<String> cookies) {
+            List<String> headers, List<String> cookies) {
         boolean existsCookie = existsCookieByHeader(headers);
         StringBuilder builder = new StringBuilder();
         String host = service.host() + (service.port() == 80 || service.port() == 443 ? "" : ":" + service.port());
@@ -111,7 +109,7 @@ public class MontoyaHttpRequestBuilder {
         byte[] requestBytes = builder.toString().getBytes(StandardCharsets.UTF_8);
 
         return HttpRequest.httpRequest(service,
-            burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+                burp.api.montoya.core.ByteArray.byteArray(requestBytes));
     }
 
     /**
@@ -123,7 +121,7 @@ public class MontoyaHttpRequestBuilder {
      */
     public HttpRequest buildFromBytes(HttpService service, byte[] requestBytes) {
         return HttpRequest.httpRequest(service,
-            burp.api.montoya.core.ByteArray.byteArray(requestBytes));
+                burp.api.montoya.core.ByteArray.byteArray(requestBytes));
     }
 
     /**

@@ -10,7 +10,7 @@ import java.util.ResourceBundle;
  */
 public class L {
 
-    private static final Locale sDefaultLocale = new Locale("en", "US");
+    private static final Locale sDefaultLocale = Locale.US;
     private static final String sBaseName = "i18n/messages";
     private static final ResourceBundle sLanguage;
 

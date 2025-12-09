@@ -319,6 +319,7 @@ public class FpManager {
     /**
      * 预编译指纹规则中的正则模式
      */
+    @SuppressWarnings("unchecked")
     private static void precompilePatterns(FpConfig config) {
         if (config == null || config.getList() == null) {
             return;
@@ -347,6 +348,7 @@ public class FpManager {
     /**
      * 预编译单个指纹数据中的正则模式（用于增量更新）
      */
+    @SuppressWarnings("unchecked")
     private static void precompilePatterns(FpData data) {
         if (data == null || data.getRules() == null) {
             return;
@@ -406,8 +408,8 @@ public class FpManager {
         List<String> errors = new ArrayList<>();
 
         // 校验列：非空与唯一
-        Set<String> colIds = new HashSet<>();
-        Set<String> colNames = new HashSet<>();
+        var colIds = new HashSet<String>();
+        var colNames = new HashSet<String>();
         for (int i = 0; i < columns.size(); i++) {
             FpColumn c = columns.get(i);
             if (c == null) {
@@ -432,8 +434,8 @@ public class FpManager {
         }
 
         // 可用颜色集合（名称与十六进制）
-        Set<String> colorNames = new HashSet<>(Arrays.asList(sColorNames));
-        Set<String> colorHex = new HashSet<>(Arrays.asList(sColorHex));
+        var colorNames = new HashSet<>(List.of(sColorNames));
+        var colorHex = new HashSet<>(List.of(sColorHex));
 
         // 规则方法、数据源校验集合
         List<String> methods = FpRule.getMethods();
@@ -1101,7 +1103,7 @@ public class FpManager {
         if (colorLevels == null || colorLevels.length == 0) {
             return "";
         }
-        return upgradeColors(Arrays.asList(colorLevels));
+        return upgradeColors(List.of(colorLevels));
     }
 
     /**
@@ -1115,7 +1117,7 @@ public class FpManager {
             return "";
         }
         // 统计每个颜色值的出现次数
-        Map<Integer, Integer> frequency = new HashMap<>();
+        var frequency = new HashMap<Integer, Integer>();
         for (int colorLevel : colorLevels) {
             int frequencyValue = frequency.getOrDefault(colorLevel, 0);
             frequency.put(colorLevel, frequencyValue + 1);

@@ -93,49 +93,27 @@ public class TableFilter<T extends AbstractTableModel> extends RowFilter<T, Obje
         if (operate >= FilterRule.OPERATE_GT && operate <= FilterRule.OPERATE_LT_EQUAL) {
             int left = StringUtils.parseInt(value);
             int right = StringUtils.parseInt(item.getValue());
-            switch (operate) {
-                case FilterRule.OPERATE_GT:
-                    check = left > right;
-                    break;
-                case FilterRule.OPERATE_GT_EQUAL:
-                    check = left >= right;
-                    break;
-                case FilterRule.OPERATE_LT:
-                    check = left < right;
-                    break;
-                case FilterRule.OPERATE_LT_EQUAL:
-                    check = left <= right;
-                    break;
-            }
+            check = switch (operate) {
+                case FilterRule.OPERATE_GT -> left > right;
+                case FilterRule.OPERATE_GT_EQUAL -> left >= right;
+                case FilterRule.OPERATE_LT -> left < right;
+                case FilterRule.OPERATE_LT_EQUAL -> left <= right;
+                default -> false;
+            };
         } else {
             // 剩下的操作符都可以使用字符串类型判定
             String right = item.getValue();
-            switch (operate) {
-                case FilterRule.OPERATE_EQUAL:
-                    check = value.equals(right);
-                    break;
-                case FilterRule.OPERATE_NOT_EQUAL:
-                    check = !value.equals(right);
-                    break;
-                case FilterRule.OPERATE_START:
-                    check = value.startsWith(right);
-                    break;
-                case FilterRule.OPERATE_NOT_START:
-                    check = !value.startsWith(right);
-                    break;
-                case FilterRule.OPERATE_END:
-                    check = value.endsWith(right);
-                    break;
-                case FilterRule.OPERATE_NOT_END:
-                    check = !value.endsWith(right);
-                    break;
-                case FilterRule.OPERATE_INCLUDE:
-                    check = value.contains(right);
-                    break;
-                case FilterRule.OPERATE_NOT_INCLUDE:
-                    check = !value.contains(right);
-                    break;
-            }
+            check = switch (operate) {
+                case FilterRule.OPERATE_EQUAL -> value.equals(right);
+                case FilterRule.OPERATE_NOT_EQUAL -> !value.equals(right);
+                case FilterRule.OPERATE_START -> value.startsWith(right);
+                case FilterRule.OPERATE_NOT_START -> !value.startsWith(right);
+                case FilterRule.OPERATE_END -> value.endsWith(right);
+                case FilterRule.OPERATE_NOT_END -> !value.endsWith(right);
+                case FilterRule.OPERATE_INCLUDE -> value.contains(right);
+                case FilterRule.OPERATE_NOT_INCLUDE -> !value.contains(right);
+                default -> false;
+            };
         }
         return check;
     }

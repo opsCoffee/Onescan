@@ -35,18 +35,18 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
             throw new IllegalArgumentException(url + " does not include the protocol.");
         }
         try {
-            URL u = new URL(url);
+            URL u = new java.net.URI(url).toURL();
             HttpService service = BurpExtender.buildHttpServiceByURL(u);
             String host = UrlUtils.getHostByURL(u);
             byte[] requestBytes = buildRequestBytes(host, UrlUtils.toPQF(u));
             return new HttpReqRespAdapter(service, requestBytes);
-        } catch (MalformedURLException e) {
+        } catch (java.net.URISyntaxException | MalformedURLException e) {
             throw new IllegalArgumentException("Url: " + url + " format error.");
         }
     }
 
     public static HttpReqRespAdapter from(HttpService service, String reqPQF,
-                                          List<String> headers, List<String> cookies) {
+            List<String> headers, List<String> cookies) {
         boolean existsCookie = existsCookieByHeader(headers);
         StringBuilder builder = new StringBuilder();
         String host = BurpExtender.getHostByHttpService(service);

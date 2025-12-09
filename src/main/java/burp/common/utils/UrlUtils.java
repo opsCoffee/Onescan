@@ -31,7 +31,9 @@ public class UrlUtils {
 
     /**
      * 将 URL 拼接 path + query 值，输出字符串
-     * <p>示例格式：/api/v1、/api/v1/get?a=1&b=2</p>
+     * <p>
+     * 示例格式：/api/v1、/api/v1/get?a=1&b=2
+     * </p>
      *
      * @param url URL 实例
      * @return 示例格式字符串
@@ -44,7 +46,9 @@ public class UrlUtils {
 
     /**
      * 将 URL 拼接 path + query + fragment 值，输出字符串
-     * <p>示例格式：/api/v1、/api/v1/get?a=1&b=2、/api/v1/get?a=1#xxx</p>
+     * <p>
+     * 示例格式：/api/v1、/api/v1/get?a=1&b=2、/api/v1/get?a=1#xxx
+     * </p>
      *
      * @param url URL 实例
      * @return 示例格式字符串
@@ -58,7 +62,9 @@ public class UrlUtils {
 
     /**
      * 拼接 path + query + fragment 值，输出字符串
-     * <p>示例格式：/api/v1、/api/v1/get?a=1&b=2、/api/v1/get?a=1#xxx</p>
+     * <p>
+     * 示例格式：/api/v1、/api/v1/get?a=1&b=2、/api/v1/get?a=1#xxx
+     * </p>
      *
      * @param path     路径
      * @param query    参数
@@ -98,8 +104,8 @@ public class UrlUtils {
      */
     public static URL parseURL(String url, URL defValue) {
         try {
-            return new URL(url);
-        } catch (MalformedURLException e) {
+            return new java.net.URI(url).toURL();
+        } catch (java.net.URISyntaxException | MalformedURLException e) {
             return defValue;
         }
     }

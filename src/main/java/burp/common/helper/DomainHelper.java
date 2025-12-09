@@ -6,7 +6,6 @@ import burp.common.utils.IPUtils;
 import burp.common.utils.StringUtils;
 
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class DomainHelper {
             return defValue;
         }
         String[] split = fqdn.split("\\.");
-        List<String> list = Arrays.asList(split);
+        List<String> list = List.of(split);
         LinkedList<String> parts = new LinkedList<>(list);
         String domain = queryDomain(parts, sTree);
         if (StringUtils.isEmpty(domain) || !domain.contains(".")) {
@@ -90,7 +89,7 @@ public class DomainHelper {
         }
         String[] parts = domain.split("\\.");
         if (parts.length == 0) {
-            return defValue;  // 防止数组越界
+            return defValue; // 防止数组越界
         }
         return parts[0];
     }

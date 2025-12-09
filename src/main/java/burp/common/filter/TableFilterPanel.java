@@ -303,12 +303,12 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
-            case "add-filter-item":
+            case "add-filter-item" -> {
                 // 规则添加事件
                 addRuleItem(1, 0, null);
                 UIHelper.refreshUI(mRulesScrollPanel);
-                break;
-            case "clear-filter-item":
+            }
+            case "clear-filter-item" -> {
                 // 规则清除事件
                 int ruleIndex = indexOfByColumnIndex(mLastColumnIndex);
                 if (ruleIndex != -1) {
@@ -316,7 +316,7 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
                 }
                 // 刷新
                 setupData();
-                break;
+            }
         }
     }
 
@@ -327,7 +327,7 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
      */
     public void showDialog(DialogCallback callback) {
         int state = UIHelper.showCustomDialog(L.get("table_filter_dialog.title"),
-                new String[]{L.get("ok"), L.get("cancel"), L.get("reset")}, this);
+                new String[] { L.get("ok"), L.get("cancel"), L.get("reset") }, this);
         if (state == JOptionPane.YES_OPTION) {
             ArrayList<FilterRule> filterRules = exportRules();
             ArrayList<TableFilter<AbstractTableModel>> filters = exportTableFilters();
@@ -354,8 +354,8 @@ public class TableFilterPanel extends JPanel implements ItemListener, ActionList
          * @param rulesText   规则表达式
          */
         void onConfirm(ArrayList<FilterRule> filterRules,
-                       ArrayList<TableFilter<AbstractTableModel>> filters,
-                       String rulesText);
+                ArrayList<TableFilter<AbstractTableModel>> filters,
+                String rulesText);
 
         /**
          * 点击 Reset 按钮回调
