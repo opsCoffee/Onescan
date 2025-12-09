@@ -4,6 +4,7 @@ import burp.common.helper.UIHelper;
 import burp.common.layout.HLayout;
 import burp.common.layout.VFlowLayout;
 import burp.common.layout.VLayout;
+import burp.common.log.Logger;
 import burp.common.utils.ClassUtils;
 import burp.common.utils.StringUtils;
 import burp.common.widget.HintTextField;
@@ -18,6 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Vector;
 
 /**
@@ -234,6 +236,8 @@ public class FpDetailPanel extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String action = e.getActionCommand();
         ArrayList<ArrayList<FpRule>> rules = mData.getRules();
+        boolean needSave = false;
+        
         if ("add-item".equals(action)) {
             FpRulesPanel panel = new FpRulesPanel();
             ArrayList<FpRule> fpRules = panel.showDialog(this);
@@ -243,6 +247,10 @@ public class FpDetailPanel extends JPanel implements ActionListener {
                 int idx = mRulesListModel.getSize() + 1;
                 mRulesListModel.addElement(L.get("fingerprint_detail.rules_group_prefix", idx) + ": " + rulesText);
                 refreshExpressionPreview();
+                needSave = true;
+            }
+            if (needSave) {
+                saveCurrentData();
             }
             return;
         }
@@ -259,6 +267,7 @@ public class FpDetailPanel extends JPanel implements ActionListener {
                     String rulesText = this.parseFpRulesToStr(fpRules);
                     mRulesListModel.setElementAt(L.get("fingerprint_detail.rules_group_prefix", index + 1) + ": " + rulesText, index);
                     refreshExpressionPreview();
+                    needSave = true;
                 }
                 break;
             case "delete-item":
@@ -268,6 +277,7 @@ public class FpDetailPanel extends JPanel implements ActionListener {
                     mRulesListModel.removeElementAt(index);
                     rules.remove(index);
                     refreshExpressionPreview();
+                    needSave = true;
                 }
                 break;
             case "up-item":
@@ -275,6 +285,7 @@ public class FpDetailPanel extends JPanel implements ActionListener {
                 if (upIndex >= 0) {
                     doMoveItem(rules, index, upIndex);
                     refreshExpressionPreview();
+                    needSave = true;
                 }
                 break;
             case "down-item":
@@ -282,8 +293,13 @@ public class FpDetailPanel extends JPanel implements ActionListener {
                 if (downIndex < mRulesListModel.size()) {
                     doMoveItem(rules, index, downIndex);
                     refreshExpressionPreview();
+                    needSave = true;
                 }
                 break;
+        }
+        
+        if (needSave) {
+            saveCurrentData();
         }
     }
 
@@ -310,6 +326,74 @@ public class FpDetailPanel extends JPanel implements ActionListener {
             String expr = pos >= 0 ? text.substring(pos + 2) : text;
             mRulesListModel.set(i, L.get("fingerprint_detail.rules_group_prefix", i + 1) + ": " + expr);
         }
+    }
+
+    /**
+     * 保存当前数据到配置文件
+     * 当规则发生变化时立即保存，确保数据不丢失
+     */
+    private void saveCurrentData() {
+        if (hasCreate) {
+            // 新建指纹时不需要立即保存，等用户确认后再保存
+            return;
+        }
+        
+        try {
+            // 查找当前指纹在列表中的位置
+            List<FpData> allData = FpManager.getList();
+            for (int i = 0; i < allData.size(); i++) {
+                FpData existingData = allData.get(i);
+                // 通过比较参数来识别是否为同一个指纹（因为FpData可能被深拷贝）
+                if (isSameFingerprint(existingData, mData)) {
+                    // 更新指纹数据（这会触发FpManager的保存逻辑）
+                    FpManager.setItem(i, mData);
+                    Logger.debug("指纹规则已实时保存: 索引=%d", i);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Logger.error("实时保存指纹规则失败: %s", e.getMessage());
+        }
+    }
+
+    /**
+     * 判断两个指纹数据是否为同一个指纹
+     * 通过比较参数列表来识别
+     */
+    private boolean isSameFingerprint(FpData data1, FpData data2) {
+        if (data1 == null || data2 == null) {
+            return false;
+        }
+        
+        ArrayList<FpData.Param> params1 = data1.getParams();
+        ArrayList<FpData.Param> params2 = data2.getParams();
+        
+        if (params1 == null && params2 == null) {
+            return true;
+        }
+        if (params1 == null || params2 == null) {
+            return false;
+        }
+        if (params1.size() != params2.size()) {
+            return false;
+        }
+        
+        // 比较所有参数
+        for (int i = 0; i < params1.size(); i++) {
+            FpData.Param p1 = params1.get(i);
+            FpData.Param p2 = params2.get(i);
+            if (p1 == null && p2 == null) {
+                continue;
+            }
+            if (p1 == null || p2 == null) {
+                return false;
+            }
+            if (!Objects.equals(p1.getK(), p2.getK()) || !Objects.equals(p1.getV(), p2.getV())) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     private transient JTextArea mExprPreview;
