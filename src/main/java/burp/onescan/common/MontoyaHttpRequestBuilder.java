@@ -205,18 +205,24 @@ public class MontoyaHttpRequestBuilder {
     }
 
     private static byte[] buildRequestBytes(String host, String reqPQF) {
-        StringBuilder result = buildRequest(host, reqPQF);
+        StringBuilder result = buildSimpleRequest(host, reqPQF, "HTTP/1.1");
         if (StringUtils.isNotEmpty(result)) {
             return result.toString().getBytes(StandardCharsets.UTF_8);
         }
         return new byte[0];
     }
 
-    private static StringBuilder buildRequest(String host, String reqPQF) {
-        return buildRequest(host, reqPQF, "HTTP/1.1");
-    }
-
-    private static StringBuilder buildRequest(String host, String reqPQF, String httpVersion) {
+    /**
+     * 构建简单的 HTTP GET 请求
+     * <p>
+     * 此方法提供统一的 HTTP 请求构建逻辑,替代各处的重复实现
+     *
+     * @param host        主机名 (包含端口,如 example.com:8080)
+     * @param reqPQF      请求路径、查询参数和片段 (Path + Query + Fragment)
+     * @param httpVersion HTTP 协议版本 (如 "HTTP/1.1" 或 "HTTP/2")
+     * @return StringBuilder 包含完整的 HTTP 请求报文
+     */
+    public static StringBuilder buildSimpleRequest(String host, String reqPQF, String httpVersion) {
         return new StringBuilder()
                 .append("GET ").append(reqPQF).append(" ").append(httpVersion).append("\r\n")
                 .append("Host: ").append(host).append("\r\n")

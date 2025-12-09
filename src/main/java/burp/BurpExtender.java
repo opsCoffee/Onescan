@@ -584,11 +584,9 @@ public class BurpExtender implements BurpExtension,
      * @return 请求字节数组
      */
     private static byte[] buildSimpleGetRequest(String host, String reqPQF, String httpVersion) {
-        StringBuilder builder = new StringBuilder()
-                .append("GET ").append(reqPQF).append(" ").append(httpVersion).append("\r\n")
-                .append("Host: ").append(host).append("\r\n")
-                .append("\r\n");
-        return builder.toString().getBytes(StandardCharsets.UTF_8);
+        return MontoyaHttpRequestBuilder.buildSimpleRequest(host, reqPQF, httpVersion)
+                .toString()
+                .getBytes(StandardCharsets.UTF_8);
     }
 
     // ============================================================

@@ -182,22 +182,11 @@ public class HttpReqRespAdapter implements IHttpRequestResponse {
     }
 
     private static byte[] buildRequestBytes(String host, String reqPQF) {
-        StringBuilder result = buildRequest(host, reqPQF);
+        StringBuilder result = MontoyaHttpRequestBuilder.buildSimpleRequest(host, reqPQF, "HTTP/1.1");
         if (StringUtils.isNotEmpty(result)) {
             return result.toString().getBytes(StandardCharsets.UTF_8);
         }
         return new byte[0];
-    }
-
-    private static StringBuilder buildRequest(String host, String reqPQF) {
-        return buildRequest(host, reqPQF, "HTTP/1.1");
-    }
-
-    private static StringBuilder buildRequest(String host, String reqPQF, String httpVersion) {
-        return new StringBuilder()
-                .append("GET ").append(reqPQF).append(" ").append(httpVersion).append("\r\n")
-                .append("Host: ").append(host).append("\r\n")
-                .append("\r\n");
     }
 
     @Override
