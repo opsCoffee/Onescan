@@ -672,8 +672,11 @@ public class FpManager {
         List<Map<String, Object>> matchers = convertRulesToMatchers(data.getRules());
         item.put("matchers", matchers);
         
-        // 设置matchers-condition（默认为and）
-        item.put("matchers-condition", "and");
+        // 根据规则组数量设置matchers-condition
+        // 组间为OR，组内为AND
+        ArrayList<ArrayList<FpRule>> rules = data.getRules();
+        String matchersCondition = (rules != null && rules.size() > 1) ? "or" : "and";
+        item.put("matchers-condition", matchersCondition);
         
         return item;
     }
@@ -692,8 +695,8 @@ public class FpManager {
             return matchers;
         }
         
-        // 将所有规则组合并为一个matchers列表
-        // 注意：这里简化处理，将所有规则平铺为独立的matcher
+        // 对于所有情况，都直接平铺所有规则
+        // matchers-condition会在上层控制组间关系（or/and）
         for (ArrayList<FpRule> group : rules) {
             if (group == null || group.isEmpty()) {
                 continue;
