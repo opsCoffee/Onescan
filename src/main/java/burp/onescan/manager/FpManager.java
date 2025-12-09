@@ -228,16 +228,91 @@ public class FpManager {
 
     /**
      * 将新格式 matchers 转换为内部 rules（外层 OR、组内 AND）
+     * 
+     * 支持两种格式：
+     * 1. 新嵌套格式（group + rules）：
+     *    matchers:
+     *      - group: 1
+     *        rules:
+     *          - dataSource: response
+     *            field: body
+     *            method: contains
+     *            content: "xxx"
+     *      - group: 2
+     *        rules:
+     *          - dataSource: response
+     *            ...
+     * 
+     * 2. 旧扁平格式（直接 dataSource/field/method/content，可选 group 字段）
      */
     private static ArrayList<ArrayList<FpRule>> convertMatchersToRules(List<Map<String, Object>> matchers,
             String matchersCondition) {
         boolean topAnd = "and".equalsIgnoreCase(matchersCondition);
         
-        // 检查是否有group字段，如果有则按组重建结构
-        boolean hasGroupField = matchers.stream().anyMatch(m -> m.containsKey("group"));
+        // 检查是否为新嵌套格式（group + rules）
+        boolean isNestedFormat = matchers.stream().anyMatch(m -> m.containsKey("group") && m.containsKey("rules"));
+        
+        if (isNestedFormat) {
+            // 新嵌套格式：每个 matcher 是一个规则组，包含 group 和 rules
+            ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
+            
+            for (Map<String, Object> groupMap : matchers) {
+                Object rulesObj = groupMap.get("rules");
+                if (!(rulesObj instanceof List<?> rulesList)) {
+                    continue;
+                }
+                
+                ArrayList<FpRule> groupRules = new ArrayList<>();
+                for (Object ruleObj : rulesList) {
+                    if (!(ruleObj instanceof Map<?, ?> ruleMap)) {
+                        continue;
+                    }
+                    Map<String, Object> rule = (Map<String, Object>) ruleMap;
+                    
+                    String ds = valueAsString(rule.get("dataSource"));
+                    String field = valueAsString(rule.get("field"));
+                    String method = valueAsString(rule.get("method"));
+                    Object contentObj = rule.get("content");
+                    String condition = valueAsString(rule.get("condition")); // and|or，仅在 content 为列表时生效
+                    
+                    if (StringUtils.isEmpty(ds) || StringUtils.isEmpty(field) || StringUtils.isEmpty(method)) {
+                        continue;
+                    }
+                    
+                    // 处理 content（可以是单个字符串或字符串列表）
+                    List<String> contents = new ArrayList<>();
+                    if (contentObj instanceof List<?> contentList) {
+                        for (Object v : contentList) {
+                            contents.add(valueAsString(v));
+                        }
+                    } else if (contentObj != null) {
+                        contents.add(valueAsString(contentObj));
+                    }
+                    
+                    if (contents.isEmpty()) {
+                        continue;
+                    }
+                    
+                    // 当 content 是列表时，根据 condition 决定如何处理
+                    // condition=and（默认）：所有 content 都要匹配，生成多条规则放入同一组
+                    // condition=or：任一 content 匹配即可，但这里我们统一放入同一组，由外层 OR 处理
+                    for (String c : contents) {
+                        groupRules.add(newRule(ds, field, method, c));
+                    }
+                }
+                
+                if (!groupRules.isEmpty()) {
+                    result.add(groupRules);
+                }
+            }
+            return result;
+        }
+        
+        // 检查是否有 group 字段（旧扁平格式带 group）
+        boolean hasGroupField = matchers.stream().anyMatch(m -> m.containsKey("group") && m.containsKey("dataSource"));
         
         if (hasGroupField) {
-            // 按group字段重建规则组结构
+            // 按 group 字段重建规则组结构
             Map<Integer, ArrayList<FpRule>> groupMap = new LinkedHashMap<>();
             
             for (Map<String, Object> m : matchers) {
@@ -257,7 +332,7 @@ public class FpManager {
                 }
             }
             
-            // 转换为ArrayList<ArrayList<FpRule>>
+            // 转换为 ArrayList<ArrayList<FpRule>>
             ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
             for (int i = 1; i <= groupMap.size(); i++) {
                 ArrayList<FpRule> group = groupMap.get(i);
@@ -268,7 +343,7 @@ public class FpManager {
             return result;
         }
         
-        // 原有逻辑：处理没有group字段的情况
+        // 原有逻辑：处理没有 group 字段的情况
         if (topAnd) {
             // 从一个空组开始，逐步扩展
             ArrayList<ArrayList<FpRule>> groups = new ArrayList<>();
@@ -719,10 +794,26 @@ public class FpManager {
     }
 
     /**
-     * 将规则列表转换为matchers格式
+     * 将规则列表转换为 matchers 格式（新嵌套格式：group + rules）
      * 
-     * @param rules 规则列表（外层OR，内层AND）
-     * @return matchers列表
+     * 输出格式：
+     * matchers:
+     *   - group: 1
+     *     rules:
+     *       - dataSource: response
+     *         field: body
+     *         method: contains
+     *         content: "xxx"
+     *   - group: 2
+     *     rules:
+     *       - dataSource: response
+     *         ...
+     * 
+     * 同一组内相同 dataSource + field + method 的规则会自动合并，
+     * 多个 content 合并为列表。
+     * 
+     * @param rules 规则列表（外层 OR，内层 AND）
+     * @return matchers 列表
      */
     @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> convertRulesToMatchers(List<ArrayList<FpRule>> rules) {
@@ -732,51 +823,78 @@ public class FpManager {
             return matchers;
         }
         
-        if (rules.size() == 1) {
-            // 单个规则组：直接平铺所有规则
-            ArrayList<FpRule> group = rules.get(0);
-            if (group != null) {
-                for (FpRule rule : group) {
-                    if (rule == null) {
-                        continue;
-                    }
-                    
-                    Map<String, Object> matcher = new LinkedHashMap<>();
-                    matcher.put("dataSource", rule.getDataSource());
-                    matcher.put("field", rule.getField());
-                    matcher.put("method", rule.getMethod());
-                    matcher.put("content", rule.getContent());
-                    
-                    matchers.add(matcher);
-                }
+        for (int groupIndex = 0; groupIndex < rules.size(); groupIndex++) {
+            ArrayList<FpRule> group = rules.get(groupIndex);
+            if (group == null || group.isEmpty()) {
+                continue;
             }
-        } else {
-            // 多个规则组：为每个规则组添加组标识
-            for (int groupIndex = 0; groupIndex < rules.size(); groupIndex++) {
-                ArrayList<FpRule> group = rules.get(groupIndex);
-                if (group == null || group.isEmpty()) {
-                    continue;
-                }
-                
-                for (FpRule rule : group) {
-                    if (rule == null) {
-                        continue;
-                    }
-                    
-                    Map<String, Object> matcher = new LinkedHashMap<>();
-                    matcher.put("dataSource", rule.getDataSource());
-                    matcher.put("field", rule.getField());
-                    matcher.put("method", rule.getMethod());
-                    matcher.put("content", rule.getContent());
-                    // 添加组标识，用于区分不同的规则组
-                    matcher.put("group", groupIndex + 1);
-                    
-                    matchers.add(matcher);
-                }
-            }
+            
+            // 创建规则组对象
+            Map<String, Object> groupMap = new LinkedHashMap<>();
+            groupMap.put("group", groupIndex + 1);
+            
+            // 合并相同 dataSource + field + method 的规则
+            List<Map<String, Object>> rulesList = mergeRulesInGroup(group);
+            
+            groupMap.put("rules", rulesList);
+            matchers.add(groupMap);
         }
         
         return matchers;
+    }
+
+    /**
+     * 合并同一组内相同 dataSource + field + method 的规则
+     * 
+     * @param group 规则组
+     * @return 合并后的规则列表
+     */
+    private static List<Map<String, Object>> mergeRulesInGroup(ArrayList<FpRule> group) {
+        // 使用 LinkedHashMap 保持插入顺序，key 为 "dataSource|field|method"
+        Map<String, Map<String, Object>> mergedRules = new LinkedHashMap<>();
+        
+        for (FpRule rule : group) {
+            if (rule == null) {
+                continue;
+            }
+            
+            String ds = rule.getDataSource();
+            String field = rule.getField();
+            String method = rule.getMethod();
+            String content = rule.getContent();
+            
+            // 生成合并 key
+            String mergeKey = ds + "|" + field + "|" + method;
+            
+            if (mergedRules.containsKey(mergeKey)) {
+                // 已存在相同 key 的规则，合并 content
+                Map<String, Object> existingRule = mergedRules.get(mergeKey);
+                Object existingContent = existingRule.get("content");
+                
+                if (existingContent instanceof List) {
+                    // 已经是列表，直接添加
+                    @SuppressWarnings("unchecked")
+                    List<String> contentList = (List<String>) existingContent;
+                    contentList.add(content);
+                } else {
+                    // 还是单个字符串，转换为列表
+                    List<String> contentList = new ArrayList<>();
+                    contentList.add((String) existingContent);
+                    contentList.add(content);
+                    existingRule.put("content", contentList);
+                }
+            } else {
+                // 新规则
+                Map<String, Object> ruleMap = new LinkedHashMap<>();
+                ruleMap.put("dataSource", ds);
+                ruleMap.put("field", field);
+                ruleMap.put("method", method);
+                ruleMap.put("content", content);
+                mergedRules.put(mergeKey, ruleMap);
+            }
+        }
+        
+        return new ArrayList<>(mergedRules.values());
     }
 
     /**
