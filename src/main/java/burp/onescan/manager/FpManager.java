@@ -232,6 +232,43 @@ public class FpManager {
     private static ArrayList<ArrayList<FpRule>> convertMatchersToRules(List<Map<String, Object>> matchers,
             String matchersCondition) {
         boolean topAnd = "and".equalsIgnoreCase(matchersCondition);
+        
+        // 检查是否有group字段，如果有则按组重建结构
+        boolean hasGroupField = matchers.stream().anyMatch(m -> m.containsKey("group"));
+        
+        if (hasGroupField) {
+            // 按group字段重建规则组结构
+            Map<Integer, ArrayList<FpRule>> groupMap = new LinkedHashMap<>();
+            
+            for (Map<String, Object> m : matchers) {
+                Object groupObj = m.get("group");
+                int groupId = (groupObj instanceof Number) ? ((Number) groupObj).intValue() : 1;
+                
+                // 创建规则
+                String ds = valueAsString(m.get("dataSource"));
+                String field = valueAsString(m.get("field"));
+                String method = valueAsString(m.get("method"));
+                String content = valueAsString(m.get("content"));
+                
+                if (!StringUtils.isEmpty(ds) && !StringUtils.isEmpty(field) && 
+                    !StringUtils.isEmpty(method) && !StringUtils.isEmpty(content)) {
+                    FpRule rule = newRule(ds, field, method, content);
+                    groupMap.computeIfAbsent(groupId, k -> new ArrayList<>()).add(rule);
+                }
+            }
+            
+            // 转换为ArrayList<ArrayList<FpRule>>
+            ArrayList<ArrayList<FpRule>> result = new ArrayList<>();
+            for (int i = 1; i <= groupMap.size(); i++) {
+                ArrayList<FpRule> group = groupMap.get(i);
+                if (group != null && !group.isEmpty()) {
+                    result.add(group);
+                }
+            }
+            return result;
+        }
+        
+        // 原有逻辑：处理没有group字段的情况
         if (topAnd) {
             // 从一个空组开始，逐步扩展
             ArrayList<ArrayList<FpRule>> groups = new ArrayList<>();
@@ -714,43 +751,27 @@ public class FpManager {
                 }
             }
         } else {
-            // 多个规则组：需要保持组的结构
-            // 将每个规则组按照dataSource.field.method分组，然后合并content
-            for (ArrayList<FpRule> group : rules) {
+            // 多个规则组：为每个规则组添加组标识
+            for (int groupIndex = 0; groupIndex < rules.size(); groupIndex++) {
+                ArrayList<FpRule> group = rules.get(groupIndex);
                 if (group == null || group.isEmpty()) {
                     continue;
                 }
                 
-                // 将同一组的规则按照dataSource.field.method分组
-                Map<String, List<String>> groupedRules = new LinkedHashMap<>();
                 for (FpRule rule : group) {
                     if (rule == null) {
                         continue;
                     }
                     
-                    String key = rule.getDataSource() + "." + rule.getField() + "." + rule.getMethod();
-                    groupedRules.computeIfAbsent(key, k -> new ArrayList<>()).add(rule.getContent());
-                }
-                
-                // 为每个分组创建一个matcher
-                for (Map.Entry<String, List<String>> entry : groupedRules.entrySet()) {
-                    String[] parts = entry.getKey().split("\\.");
-                    if (parts.length == 3) {
-                        Map<String, Object> matcher = new LinkedHashMap<>();
-                        matcher.put("dataSource", parts[0]);
-                        matcher.put("field", parts[1]);
-                        matcher.put("method", parts[2]);
-                        
-                        List<String> contents = entry.getValue();
-                        if (contents.size() == 1) {
-                            matcher.put("content", contents.get(0));
-                        } else {
-                            matcher.put("content", contents);
-                            matcher.put("condition", "and"); // 同一组内多个content使用AND
-                        }
-                        
-                        matchers.add(matcher);
-                    }
+                    Map<String, Object> matcher = new LinkedHashMap<>();
+                    matcher.put("dataSource", rule.getDataSource());
+                    matcher.put("field", rule.getField());
+                    matcher.put("method", rule.getMethod());
+                    matcher.put("content", rule.getContent());
+                    // 添加组标识，用于区分不同的规则组
+                    matcher.put("group", groupIndex + 1);
+                    
+                    matchers.add(matcher);
                 }
             }
         }
