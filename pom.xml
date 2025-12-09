@@ -51,6 +51,17 @@
                     <target>${jdk.version}</target>
                 </configuration>
             </plugin>
+            <!-- 跳过默认 JAR 生成，只使用 assembly 插件生成 fat JAR -->
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>default-jar</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
