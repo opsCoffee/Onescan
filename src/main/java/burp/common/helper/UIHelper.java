@@ -61,7 +61,7 @@ public class UIHelper {
         List<String> colorKeys = new ArrayList<>();
         Set<Map.Entry<Object, Object>> entries = UIManager.getLookAndFeelDefaults().entrySet();
         for (Map.Entry<Object, Object> entry : entries) {
-            if (entry.getValue() instanceof Color) {
+            if (entry.getValue() instanceof Color colorValue) {
                 colorKeys.add(entry.getKey().toString());
             }
         }
@@ -137,10 +137,9 @@ public class UIHelper {
             return;
         }
         TableCellRenderer thr = table.getTableHeader().getDefaultRenderer();
-        if (!(thr instanceof JLabel)) {
+        if (!(thr instanceof JLabel headerLabel)) {
             return;
         }
-        JLabel headerLabel = (JLabel) thr;
         switch (align) {
             case SwingConstants.LEFT:
             case SwingConstants.RIGHT:

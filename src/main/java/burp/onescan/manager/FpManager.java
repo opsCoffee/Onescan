@@ -121,10 +121,10 @@ public class FpManager {
             options.setNestingDepthLimit(YAML_MAX_NESTING_DEPTH);
             Yaml yaml = new Yaml(options);
             Object obj = yaml.load(content);
-            if (!(obj instanceof Map)) {
+            if (!(obj instanceof Map<?, ?> map)) {
                 throw new IllegalArgumentException("YAML root must be a mapping");
             }
-            root = (Map<String, Object>) obj;
+            root = (Map<String, Object>) map;
         } catch (YAMLException e) {
             throw new IllegalArgumentException("Failed to parse YAML: " + e.getMessage(), e);
         }
@@ -136,7 +136,7 @@ public class FpManager {
         String columnId = genStableColumnId(columnName);
 
         Object items = root.get("list");
-        if (!(items instanceof List)) {
+        if (!(items instanceof List<?> itemList)) {
             throw new IllegalArgumentException("Top-level 'list' must be an array");
         }
 
@@ -150,10 +150,10 @@ public class FpManager {
         config.setColumns(columns);
 
         List<FpData> dataList = new ArrayList<>();
-        for (Object it : (List<?>) items) {
-            if (!(it instanceof Map))
+        for (Object it : itemList) {
+            if (!(it instanceof Map<?, ?> rawMap))
                 continue;
-            Map<String, Object> m = (Map<String, Object>) it;
+            Map<String, Object> m = (Map<String, Object>) rawMap;
             String itemName = valueAsString(m.get("name"));
             Boolean enabled = valueAsBoolean(m.get("enabled"), Boolean.TRUE);
             String color = valueAsString(m.get("color"));
@@ -161,15 +161,15 @@ public class FpManager {
             if (StringUtils.isEmpty(matchersCondition))
                 matchersCondition = "and"; // 默认 and
             Object matchersObj = m.get("matchers");
-            if (!(matchersObj instanceof List)) {
+            if (!(matchersObj instanceof List<?> matcherList)) {
                 throw new IllegalArgumentException("'matchers' must be an array for item: " + itemName);
             }
             List<Map<String, Object>> matchers = new ArrayList<>();
-            for (Object mm : (List<?>) matchersObj) {
-                if (!(mm instanceof Map)) {
+            for (Object mm : matcherList) {
+                if (!(mm instanceof Map<?, ?> matcherMap)) {
                     throw new IllegalArgumentException("matcher must be a mapping for item: " + itemName);
                 }
-                matchers.add((Map<String, Object>) mm);
+                matchers.add((Map<String, Object>) matcherMap);
             }
 
             FpData data = new FpData();
@@ -205,8 +205,8 @@ public class FpManager {
     private static Boolean valueAsBoolean(Object v, Boolean defVal) {
         if (v == null)
             return defVal;
-        if (v instanceof Boolean)
-            return (Boolean) v;
+        if (v instanceof Boolean boolVal)
+            return boolVal;
         String s = String.valueOf(v);
         if ("true".equalsIgnoreCase(s))
             return Boolean.TRUE;
@@ -261,8 +261,8 @@ public class FpManager {
         }
 
         List<String> contents = new ArrayList<>();
-        if (contentObj instanceof List) {
-            for (Object v : (List<?>) contentObj) {
+        if (contentObj instanceof List<?> contentList) {
+            for (Object v : contentList) {
                 contents.add(valueAsString(v));
             }
         } else if (contentObj != null) {
@@ -333,10 +333,7 @@ public class FpManager {
                     continue;
                 for (int i = 0; i < group.size(); i++) {
                     Object obj = group.get(i);
-                    FpRule rule;
-                    if (obj instanceof FpRule) {
-                        rule = (FpRule) obj;
-                    } else {
+                    if (!(obj instanceof FpRule rule)) {
                         continue;
                     }
                     compileRule(rule);
