@@ -3,7 +3,6 @@ list:
 - name: Swagger-UI
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -13,15 +12,46 @@ list:
       content:
       - '"swagger":'
       - '"swaggerVersion":'
-      condition: and
     - dataSource: response
       field: title
       method: contains
       content: Swagger UI
+  - group: 2
+    rules:
+    - dataSource: response
+      field: header
+      method: contains
+      content: application/json
+    - dataSource: response
+      field: body
+      method: contains
+      content:
+      - '"name":'
+      - '"url":'
+      - '"swaggerVersion":'
+      - '"location":'
+  - group: 3
+    rules:
+    - dataSource: response
+      field: header
+      method: contains
+      content: text/html
+    - dataSource: response
+      field: body
+      method: contains
+      content:
+      - Swagger Models
+      - <td>basePath</td>
+      - <td>host</td>
+      - Location
+    - dataSource: response
+      field: title
+      method: contains
+      content: swagger-bootstrap-ui
+  matchers-condition: or
 - name: OpenAPI
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -32,11 +62,13 @@ list:
     - dataSource: response
       field: body
       method: contains
-      content: '"openapi":'
+      content:
+      - '"openapi":'
+      - '"servers":'
+  matchers-condition: and
 - name: UEditor
   enabled: true
   color: green
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -60,10 +92,10 @@ list:
       field: body
       method: iContains
       content: /ueditor/php/
-- name: Shiro
-  enabled: true
-  color: green
   matchers-condition: and
+- name: Shiro
+  enabled: false
+  color: green
   matchers:
   - group: 1
     rules:
@@ -73,11 +105,10 @@ list:
       content:
       - rememberMe=
       - =deleteMe
-      condition: and
+  matchers-condition: and
 - name: Springboot
   enabled: true
   color: gray
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -97,10 +128,10 @@ list:
       field: body
       method: iContains
       content: Whitelabel Error Page
+  matchers-condition: and
 - name: Tomcat
   enabled: true
   color: gray
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -110,7 +141,6 @@ list:
       content:
       - Tomcat
       - Apache-Coyote
-      condition: and
     - dataSource: response
       field: body
       method: iContains
@@ -119,10 +149,10 @@ list:
       field: bodyHash
       method: equals
       content: '-297069493'
+  matchers-condition: and
 - name: Struts2
   enabled: true
   color: gray
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -132,11 +162,10 @@ list:
       content:
       - .do
       - .action
-      condition: and
+  matchers-condition: and
 - name: JSON Web Token
   enabled: false
   color: green
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -144,10 +173,10 @@ list:
       field: body
       method: regex
       content: (eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|eyJ[A-Za-z0-9_\/+-]{10,}\.[A-Za-z0-9._\/+-]{10,})
+  matchers-condition: and
 - name: Java Deserialization
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -155,10 +184,10 @@ list:
       field: body
       method: contains
       content: javax.faces.ViewState
+  matchers-condition: and
 - name: Upload Form
   enabled: false
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -166,10 +195,10 @@ list:
       field: body
       method: iContains
       content: type="file"
+  matchers-condition: and
 - name: Druid
   enabled: true
   color: orange
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -190,15 +219,14 @@ list:
       - JavaVersion
       - JavaClassPath
       - StartTime
-      condition: and
     - dataSource: response
       field: status
       method: equals
       content: '200'
+  matchers-condition: and
 - name: PDF.js Viewer
   enabled: true
   color: green
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -206,10 +234,10 @@ list:
       field: body
       method: iContains
       content: pdf.worker
+  matchers-condition: and
 - name: Vite DevMode
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -217,10 +245,10 @@ list:
       field: body
       method: contains
       content: /@vite/client
+  matchers-condition: and
 - name: Debug Logic Parameters
   enabled: true
   color: cyan
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -228,10 +256,10 @@ list:
       field: data
       method: iRegex
       content: ((access=)|(adm=)|(admin=)|(alter=)|(cfg=)|(clone=)|(config=)|(create=)|(dbg=)|(debug=)|(delete=)|(disable=)|(edit=)|(enable=)|(exec=)|(execute=)|(grant=)|(load=)|(make=)|(modify=)|(rename=)|(reset=)|(root=)|(shell=)|(test=)|(toggl=))
+  matchers-condition: and
 - name: Passwd File
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -239,10 +267,10 @@ list:
       field: body
       method: contains
       content: /root:/bin/bash
+  matchers-condition: and
 - name: Win.ini File
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -250,10 +278,10 @@ list:
       field: body
       method: contains
       content: for 16-bit app
+  matchers-condition: and
 - name: PPROF-debug
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -268,15 +296,14 @@ list:
       - ((heap profile:)|(Alloc))
       - '((Types of profiles available:)|(Profile Descriptions)|(goroutine profile:
         total))'
-      condition: and
     - dataSource: response
       field: header
       method: iRegex
       content: (text/plain)
+  matchers-condition: and
 - name: Node-Exporter-Metrics
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -288,10 +315,10 @@ list:
       field: data
       method: iRegex
       content: ((node_cooling_device)|(node_network))
+  matchers-condition: and
 - name: Kubelet-Metrics
   enabled: true
   color: pink
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -303,10 +330,10 @@ list:
       field: data
       method: iRegex
       content: ((<title>kube metrics server</title>)|(kube_configmap_)|(kube_pod_)|(kube_secret_)|(kube_deployment_)|(kube_namespace_)|(kube_service_))
+  matchers-condition: and
 - name: Springboot-Heapdump
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -320,11 +347,10 @@ list:
       content:
       - 4a4156412050524f46494c45
       - 4850524f46
-      condition: and
+  matchers-condition: and
 - name: Debug-Vars
   enabled: true
   color: gray
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -336,10 +362,10 @@ list:
       field: data
       method: iRegex
       content: (("memstats":)|("cmdline":))
+  matchers-condition: and
 - name: Prometheus-Metrics
   enabled: true
   color: gray
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -351,10 +377,10 @@ list:
       field: data
       method: iRegex
       content: ^(?!.*(?:lvm_|kube|namedprocess|mysqld|collectd_|libvirt_|mongodb|blackbox_|haproxy_|rabbitmq_)).*(?:cpu_seconds_total|http_request_duration_seconds|process_virtual_memory_bytes|process_start_time_seconds)
+  matchers-condition: and
 - name: Springboot-Actuator
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -370,10 +396,10 @@ list:
       field: header
       method: iRegex
       content: ((application/json)|(application/vnd.spring-boot.actuator)|(.spring-boot.actuator.))
+  matchers-condition: and
 - name: Springboot-env
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -387,15 +413,14 @@ list:
       content:
       - ((server.port)|(local.server.port))
       - ((applicationConfig)|(activeProfiles))
-      condition: and
     - dataSource: response
       field: header
       method: iRegex
       content: ((application/json)|(application/vnd.spring-boot.actuator))
+  matchers-condition: and
 - name: Springboot-httptrace
   enabled: false
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -410,15 +435,14 @@ list:
       - ("timestamp":)
       - ("traces":)
       - ("method":)
-      condition: and
     - dataSource: response
       field: header
       method: iRegex
       content: ((application/json)|(application/vnd.spring-boot.actuator))
+  matchers-condition: and
 - name: Binary
   enabled: true
   color: gray
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -443,18 +467,16 @@ list:
       - (000100005374616E64617264204A657420444200)
       - (54415045)
       - (D0CF11E0A1B11AE1)
-      condition: and
     - dataSource: response
       field: header
       method: regex
       content:
       - application/[-\w.]+
       - application/x-msaccess
-      condition: and
+  matchers-condition: and
 - name: OSS-ListBucket
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -470,10 +492,10 @@ list:
       field: header
       method: contains
       content: application/xml
+  matchers-condition: and
 - name: WSDL
   enabled: true
   color: magenta
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -489,14 +511,38 @@ list:
       field: body
       method: contains
       content:
-      - Available SOAP services
-      - -//W3C//DTD
-      - Endpoint address
-      condition: and
+      - 'Available SOAP services:'
+      - 'Endpoint address:'
+      - WSDL
+      - 'Target namespace:'
+  - group: 2
+    rules:
+    - dataSource: response
+      field: header
+      method: contains
+      content: text/xml
+    - dataSource: response
+      field: status
+      method: equals
+      content: '200'
+    - dataSource: response
+      field: body
+      method: contains
+      content:
+      - <?xml version=
+      - encoding
+      - <wsdl:definitions
+      - xmlns:xsd
+      - xmlns:wsdl
+      - xmlns:soap
+      - xmlns:ns1
+      - <wsdl:types>
+      - <xs:schema xmlns:xs
+      - <xs:element name=
+  matchers-condition: or
 - name: Chinese IDCard
   enabled: true
   color: orange
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -504,10 +550,10 @@ list:
       field: body
       method: regex
       content: '[^0-9]((\d{8}(0\d|10|11|12)([0-2]\d|30|31)\d{3}$)|(\d{6}(18|19|20)\d{2}(0[1-9]|10|11|12)([0-2]\d|30|31)\d{3}(\d|X|x)))[^0-9]'
+  matchers-condition: and
 - name: Swagger-API
   enabled: true
   color: red
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -519,10 +565,10 @@ list:
       field: body
       method: iRegex
       content: (?i)(?:swagger:|Swagger 2\\.0|\"swagger\":|Swagger UI|loadSwaggerUI|id=\"swagger-ui)
+  matchers-condition: and
 - name: JDBC Connection
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -530,10 +576,10 @@ list:
       field: body
       method: iRegex
       content: (jdbc:[a-z]+[0-9]?:\/\/[a-z0-9.\-_:;=/@?,&]+)
+  matchers-condition: and
 - name: Springboot-nacosconfig
   enabled: true
   color: yellow
-  matchers-condition: and
   matchers:
   - group: 1
     rules:
@@ -545,7 +591,8 @@ list:
       - ("serverAddr":)
       - ("username":)
       - ("password":)
-      condition: and
+      - ("namespace":)
+      - ("configServiceProperties":)
     - dataSource: response
       field: status
       method: equals
@@ -554,3 +601,4 @@ list:
       field: header
       method: iRegex
       content: ((application/json)|(application/vnd.spring-boot.actuator))
+  matchers-condition: and
