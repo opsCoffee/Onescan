@@ -143,6 +143,9 @@ public class FileUtils {
             ArrayList<String> lines = new ArrayList<>();
             String line;
             while ((line = br.readLine()) != null) {
+                if (line != null) {
+                    line = line.trim();
+                }
                 if (StringUtils.isNotEmpty(line)) {
                     lines.add(line);
                 }

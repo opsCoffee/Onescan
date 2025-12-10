@@ -2078,8 +2078,7 @@ public class BurpExtender implements BurpExtension,
             }
             // 普通请求路径因为 Montoya API 的 request.url() 方法已经很准确，直接使用
             return url;
-            // 普通请求路径因为 Montoya API 的 request.url() 方法已经很准确，直接使用
-            return url;
+
         } catch (Exception e) {
             // Logger.debug("getUrlByRequestInfo: URI parse error: %s", e.getMessage());
             try {

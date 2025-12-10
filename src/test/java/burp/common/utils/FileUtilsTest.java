@@ -98,8 +98,7 @@ public class FileUtilsTest {
 
     /**
      * Test reading file with empty lines
-     * NOTE: StringUtils.isNotEmpty() only checks null and length==0, NOT whitespace
-     * So lines with only spaces are considered non-empty (this is intentional behavior)
+     * NOTE: Now lines with only spaces are considered empty and filtered out (trim() applied)
      */
     @Test
     public void testReadStreamToList_WithEmptyLines() {
@@ -112,12 +111,11 @@ public class FileUtilsTest {
 
         // Assert
         assertNotNull("Result should not be null", result);
-        // StringUtils.isNotEmpty("  ") == true (only checks length, not whitespace)
-        assertEquals("Should contain 4 lines (including whitespace-only line)", 4, result.size());
+        // "  " (trimmed to "") should be filtered out
+        assertEquals("Should contain 3 lines (whitespace-only line filtered)", 3, result.size());
         assertEquals("line1", result.get(0));
         assertEquals("line2", result.get(1));
-        assertEquals("  ", result.get(2)); // Whitespace-only line is kept
-        assertEquals("line3", result.get(3));
+        assertEquals("line3", result.get(2));
     }
 
     /**
