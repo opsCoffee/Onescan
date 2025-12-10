@@ -132,6 +132,9 @@ public class UrlUtils {
      * @return 返回请求的 Host 地址
      */
     public static String getReqHostByURL(URL url) {
+        if (url == null) {
+            return "";
+        }
         String protocol = url.getProtocol();
         String host = url.getHost();
         int port = url.getPort();

@@ -2078,11 +2078,15 @@ public class BurpExtender implements BurpExtension,
             }
             // 普通请求路径因为 Montoya API 的 request.url() 方法已经很准确，直接使用
             return url;
+            // 普通请求路径因为 Montoya API 的 request.url() 方法已经很准确，直接使用
+            return url;
         } catch (Exception e) {
-            Logger.error("getUrlByRequestInfo: convert url error: %s", e.getMessage());
+            // Logger.debug("getUrlByRequestInfo: URI parse error: %s", e.getMessage());
             try {
-                return new java.net.URI(request.url()).toURL();
+                // 回退到不严格的 URL 构造函数（不需要 URI 编码）
+                return new URL(request.url());
             } catch (Exception ex) {
+                // Logger.error("getUrlByRequestInfo: URL parse error: %s", ex.getMessage());
                 return null;
             }
         }
