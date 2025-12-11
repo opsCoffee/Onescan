@@ -21,13 +21,13 @@ inclusion: always
 ## 可用技能列表
 
 ### 1. coding-style
-**Java 8 代码风格规范**
+**Java 17 代码风格规范**
 - 命名约定（成员变量 m 前缀、静态变量 s 前缀、常量 UPPER_SNAKE_CASE）
 - 格式化标准（4 空格缩进、K&R 大括号风格）
-- Lambda 表达式和 Stream API 使用指南
+- 现代 Java 特性使用指南（var、Records、Text Blocks、Pattern Matching、Stream API）
 - 异常处理、资源管理
 
-**使用时机**：编写或审查 Java 代码、讨论代码规范、进行代码格式化、使用 Java 8 特性
+**使用时机**：编写或审查 Java 代码、讨论代码规范、进行代码格式化
 
 ### 2. testing
 **Maven 测试策略和 JUnit 最佳实践**
