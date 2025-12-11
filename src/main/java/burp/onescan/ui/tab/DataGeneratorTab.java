@@ -66,7 +66,7 @@ public class DataGeneratorTab extends BaseConfigTab {
      * 创建数据类型选择面板
      */
     private JPanel createDataTypePanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 4, 15, 8));
+        JPanel panel = new JPanel(new GridLayout(3, 4, 15, 8));
 
         // 第一行：身份证、银行卡、手机号、姓名
         panel.add(createCheckBox("idcard", L.get("generator_idcard"), true));
@@ -74,11 +74,17 @@ public class DataGeneratorTab extends BaseConfigTab {
         panel.add(createCheckBox("phone", L.get("generator_phone"), false));
         panel.add(createCheckBox("name", L.get("generator_name"), false));
 
-        // 第二行：统一社会信用代码、组织机构代码、纳税人识别号、占位
+        // 第二行：统一社会信用代码、组织机构代码、纳税人识别号、虚拟地址
         panel.add(createCheckBox("creditcode", L.get("generator_creditcode"), false));
         panel.add(createCheckBox("orgcode", L.get("generator_orgcode"), false));
         panel.add(createCheckBox("taxpayerid", L.get("generator_taxpayerid"), false));
-        panel.add(new JLabel()); // 占位
+        panel.add(createCheckBox("address", L.get("generator_address"), false));
+
+        // 第三行：企业名称、开户行名称、开户行帐号、开户行电话
+        panel.add(createCheckBox("company", L.get("generator_company"), false));
+        panel.add(createCheckBox("bankbranch", L.get("generator_bankbranch"), false));
+        panel.add(createCheckBox("bankaccount", L.get("generator_bankaccount"), false));
+        panel.add(createCheckBox("bankphone", L.get("generator_bankphone"), false));
 
         return panel;
     }
@@ -259,8 +265,23 @@ public class DataGeneratorTab extends BaseConfigTab {
             List<String> data = generateDataByType(key, count, areaCode, gender, cardType, carrier);
 
             if (!data.isEmpty()) {
-                headers.add(label);
-                columns.add(data);
+                // 银行卡号和开户行帐号需要拆分为两列（卡号/帐号 + 对应银行）
+                if ("bankcard".equals(key) || "bankaccount".equals(key)) {
+                    List<String> numbers = new ArrayList<>(count);
+                    List<String> bankNames = new ArrayList<>(count);
+                    for (String item : data) {
+                        String[] parts = item.split(",");
+                        numbers.add(parts[0]);
+                        bankNames.add(parts.length > 1 ? parts[1] : "");
+                    }
+                    headers.add(label);
+                    columns.add(numbers);
+                    headers.add(L.get("generator_bank"));
+                    columns.add(bankNames);
+                } else {
+                    headers.add(label);
+                    columns.add(data);
+                }
             }
         }
 
@@ -277,12 +298,7 @@ public class DataGeneratorTab extends BaseConfigTab {
         for (int i = 0; i < count; i++) {
             List<String> row = new ArrayList<>();
             for (List<String> column : columns) {
-                String value = column.get(i);
-                // 银行卡号格式处理：只取卡号部分（逗号前）
-                if (value.contains(",")) {
-                    value = value.split(",")[0];
-                }
-                row.add(value);
+                row.add(column.get(i));
             }
             sb.append(String.join("\t", row)).append("\n");
         }
@@ -310,6 +326,16 @@ public class DataGeneratorTab extends BaseConfigTab {
                 return DataGenerator.generateOrgCode(count);
             case "taxpayerid":
                 return DataGenerator.generateTaxpayerId(count);
+            case "address":
+                return DataGenerator.generateAddress(count);
+            case "company":
+                return DataGenerator.generateCompanyName(count);
+            case "bankbranch":
+                return DataGenerator.generateBankBranch(count);
+            case "bankaccount":
+                return DataGenerator.generateBankAccount(count);
+            case "bankphone":
+                return DataGenerator.generateBankPhone(count);
             default:
                 return new ArrayList<>();
         }
