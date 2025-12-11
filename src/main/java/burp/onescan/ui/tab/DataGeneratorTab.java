@@ -219,11 +219,10 @@ public class DataGeneratorTab extends BaseConfigTab {
 
 
     /**
-     * 生成数据
+     * 生成数据（CSV格式输出）
      */
     private void generateData() {
         int count = (Integer) mCountSpinner.getValue();
-        List<String> allResults = new ArrayList<>();
 
         // 获取配置参数
         String areaCode = null;
@@ -246,7 +245,10 @@ public class DataGeneratorTab extends BaseConfigTab {
             carrier = (String) mCarrierCombo.getSelectedItem();
         }
 
-        // 根据选中的复选框生成数据
+        // 收集选中的数据类型和对应的数据
+        List<String> headers = new ArrayList<>();
+        List<List<String>> columns = new ArrayList<>();
+
         for (Map.Entry<String, JCheckBox> entry : mDataTypeCheckBoxes.entrySet()) {
             if (!entry.getValue().isSelected()) {
                 continue;
@@ -257,17 +259,35 @@ public class DataGeneratorTab extends BaseConfigTab {
             List<String> data = generateDataByType(key, count, areaCode, gender, cardType, carrier);
 
             if (!data.isEmpty()) {
-                allResults.add("=== " + label + " ===");
-                allResults.addAll(data);
-                allResults.add("");
+                headers.add(label);
+                columns.add(data);
             }
         }
 
-        if (allResults.isEmpty()) {
+        if (headers.isEmpty()) {
             mResultArea.setText(L.get("generator_no_type_selected"));
-        } else {
-            mResultArea.setText(String.join("\n", allResults));
+            return;
         }
+
+        // 生成 TSV 格式输出（Tab 分隔）
+        StringBuilder sb = new StringBuilder();
+        // 表头行
+        sb.append(String.join("\t", headers)).append("\n");
+        // 数据行
+        for (int i = 0; i < count; i++) {
+            List<String> row = new ArrayList<>();
+            for (List<String> column : columns) {
+                String value = column.get(i);
+                // 银行卡号格式处理：只取卡号部分（逗号前）
+                if (value.contains(",")) {
+                    value = value.split(",")[0];
+                }
+                row.add(value);
+            }
+            sb.append(String.join("\t", row)).append("\n");
+        }
+
+        mResultArea.setText(sb.toString());
     }
 
     /**
