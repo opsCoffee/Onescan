@@ -1,18 +1,15 @@
 package burp.onescan.ui.tab;
 
 import burp.common.layout.HLayout;
-import burp.common.layout.VLayout;
+import burp.common.layout.VFlowLayout;
 import burp.onescan.common.DataGenerator;
 import burp.onescan.common.L;
-import burp.onescan.ui.base.BaseTab;
+import burp.onescan.ui.widget.DividerLine;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 /**
@@ -22,252 +19,75 @@ import java.util.List;
  * <p>
  * Created by vaycore on 2024-12-11.
  */
-public class DataGeneratorTab extends BaseTab {
+public class DataGeneratorTab extends JTabbedPane {
 
-    private JTabbedPane mTabbedPane;
-
-    @Override
-    protected void initData() {
-        // 无需初始化数据
+    public DataGeneratorTab() {
+        initView();
     }
 
-    @Override
-    protected void initView() {
-        setLayout(new BorderLayout());
-        mTabbedPane = new JTabbedPane();
-        // 添加子面板
-        mTabbedPane.addTab(L.get("generator_idcard"), createIdCardPanel());
-        mTabbedPane.addTab(L.get("generator_bankcard"), createBankCardPanel());
-        mTabbedPane.addTab(L.get("generator_phone"), createPhonePanel());
-        mTabbedPane.addTab(L.get("generator_creditcode"), createCreditCodePanel());
-        mTabbedPane.addTab(L.get("generator_name"), createNamePanel());
-        add(mTabbedPane, BorderLayout.CENTER);
-    }
-
-    @Override
     public String getTitleName() {
         return L.get("tab_name.generator");
     }
 
-
-    // ==================== 身份证号生成面板 ====================
-
-    private JPanel createIdCardPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // 配置区域
-        JPanel configPanel = new JPanel(new HLayout(10));
-        configPanel.setBorder(new TitledBorder(L.get("generator_config")));
-
-        // 地区选择
-        configPanel.add(new JLabel(L.get("generator_area")));
-        JComboBox<String> areaCombo = new JComboBox<>();
-        areaCombo.addItem(L.get("generator_random"));
-        for (String area : DataGenerator.getAreaCodes()) {
-            areaCombo.addItem(area);
-        }
-        configPanel.add(areaCombo, "150px");
-
-        // 性别选择
-        configPanel.add(new JLabel(L.get("generator_gender")));
-        JComboBox<String> genderCombo = new JComboBox<>(DataGenerator.getGenders());
-        configPanel.add(genderCombo, "80px");
-
-        // 生成数量
-        configPanel.add(new JLabel(L.get("generator_count")));
-        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
-        configPanel.add(countSpinner, "80px");
-
-        configPanel.add(new JPanel(), "1w");
-        panel.add(configPanel, BorderLayout.NORTH);
-
-        // 结果区域
-        JTextArea resultArea = createResultArea();
-        panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
-
-        // 按钮区域
-        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
-            String areaCode = null;
-            if (areaCombo.getSelectedIndex() > 0) {
-                String selected = (String) areaCombo.getSelectedItem();
-                areaCode = selected.split("-")[0];
-            }
-            Integer gender = null;
-            if (genderCombo.getSelectedIndex() == 1) {
-                gender = 1; // 男
-            } else if (genderCombo.getSelectedIndex() == 2) {
-                gender = 0; // 女
-            }
-            int count = (Integer) countSpinner.getValue();
-            return DataGenerator.generateIdCard(areaCode, null, gender, count);
-        });
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
+    private void initView() {
+        // 添加子面板（使用 JScrollPane 包装）
+        addGeneratorTab(L.get("generator_idcard"), createIdCardPanel());
+        addGeneratorTab(L.get("generator_bankcard"), createBankCardPanel());
+        addGeneratorTab(L.get("generator_phone"), createPhonePanel());
+        addGeneratorTab(L.get("generator_creditcode"), createCreditCodePanel());
+        addGeneratorTab(L.get("generator_name"), createNamePanel());
     }
 
-    // ==================== 银行卡号生成面板 ====================
-
-    private JPanel createBankCardPanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // 配置区域
-        JPanel configPanel = new JPanel(new HLayout(10));
-        configPanel.setBorder(new TitledBorder(L.get("generator_config")));
-
-        // 卡类型选择
-        configPanel.add(new JLabel(L.get("generator_cardtype")));
-        JComboBox<String> cardTypeCombo = new JComboBox<>(DataGenerator.getCardTypes());
-        configPanel.add(cardTypeCombo, "100px");
-
-        // 生成数量
-        configPanel.add(new JLabel(L.get("generator_count")));
-        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(20, 1, 1000, 1));
-        configPanel.add(countSpinner, "80px");
-
-        configPanel.add(new JPanel(), "1w");
-        panel.add(configPanel, BorderLayout.NORTH);
-
-        // 结果区域
-        JTextArea resultArea = createResultArea();
-        panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
-
-        // 按钮区域
-        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
-            String cardType = (String) cardTypeCombo.getSelectedItem();
-            int count = (Integer) countSpinner.getValue();
-            return DataGenerator.generateBankCard(cardType, count);
-        });
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
+    /**
+     * 添加生成器子面板
+     */
+    private void addGeneratorTab(String title, JPanel panel) {
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(30);
+        scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+        addTab(title, scrollPane);
     }
 
 
-    // ==================== 手机号生成面板 ====================
+    // ==================== 通用样式方法 ====================
 
-    private JPanel createPhonePanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // 配置区域
-        JPanel configPanel = new JPanel(new HLayout(10));
-        configPanel.setBorder(new TitledBorder(L.get("generator_config")));
-
-        // 运营商选择
-        configPanel.add(new JLabel(L.get("generator_carrier")));
-        JComboBox<String> carrierCombo = new JComboBox<>();
-        carrierCombo.addItem(L.get("generator_random"));
-        for (String carrier : DataGenerator.getCarriers()) {
-            carrierCombo.addItem(carrier);
-        }
-        configPanel.add(carrierCombo, "120px");
-
-        // 生成数量
-        configPanel.add(new JLabel(L.get("generator_count")));
-        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
-        configPanel.add(countSpinner, "80px");
-
-        configPanel.add(new JPanel(), "1w");
-        panel.add(configPanel, BorderLayout.NORTH);
-
-        // 结果区域
-        JTextArea resultArea = createResultArea();
-        panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
-
-        // 按钮区域
-        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
-            String carrier = null;
-            if (carrierCombo.getSelectedIndex() > 0) {
-                carrier = (String) carrierCombo.getSelectedItem();
-            }
-            int count = (Integer) countSpinner.getValue();
-            return DataGenerator.generatePhone(carrier, count);
-        });
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
+    /**
+     * 创建基础面板（使用项目统一的 VFlowLayout 布局）
+     */
+    private JPanel createBasePanel() {
+        JPanel panel = new JPanel();
+        panel.setBorder(new EmptyBorder(5, 10, 5, 10));
+        panel.setLayout(new VFlowLayout());
         return panel;
     }
 
-    // ==================== 统一社会信用代码生成面板 ====================
-
-    private JPanel createCreditCodePanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // 配置区域
-        JPanel configPanel = new JPanel(new HLayout(10));
-        configPanel.setBorder(new TitledBorder(L.get("generator_config")));
-
-        // 生成数量
-        configPanel.add(new JLabel(L.get("generator_count")));
-        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
-        configPanel.add(countSpinner, "80px");
-
-        configPanel.add(new JPanel(), "1w");
-        panel.add(configPanel, BorderLayout.NORTH);
-
-        // 结果区域
-        JTextArea resultArea = createResultArea();
-        panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
-
-        // 按钮区域
-        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
-            int count = (Integer) countSpinner.getValue();
-            return DataGenerator.generateCreditCode(count);
-        });
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
+    /**
+     * 添加配置项标题
+     */
+    private void addTitle(JPanel panel, String title) {
+        JLabel label = new JLabel(title);
+        label.setFont(label.getFont().deriveFont(16f).deriveFont(Font.BOLD));
+        label.setBorder(new EmptyBorder(5, 3, 5, 0));
+        label.setForeground(Color.decode("#FF6633"));
+        panel.add(label);
     }
 
-    // ==================== 姓名生成面板 ====================
-
-    private JPanel createNamePanel() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        // 配置区域
-        JPanel configPanel = new JPanel(new HLayout(10));
-        configPanel.setBorder(new TitledBorder(L.get("generator_config")));
-
-        // 性别选择
-        configPanel.add(new JLabel(L.get("generator_gender")));
-        JComboBox<String> genderCombo = new JComboBox<>(DataGenerator.getGenders());
-        configPanel.add(genderCombo, "80px");
-
-        // 生成数量
-        configPanel.add(new JLabel(L.get("generator_count")));
-        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
-        configPanel.add(countSpinner, "80px");
-
-        configPanel.add(new JPanel(), "1w");
-        panel.add(configPanel, BorderLayout.NORTH);
-
-        // 结果区域
-        JTextArea resultArea = createResultArea();
-        panel.add(new JScrollPane(resultArea), BorderLayout.CENTER);
-
-        // 按钮区域
-        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
-            Integer gender = null;
-            if (genderCombo.getSelectedIndex() == 1) {
-                gender = 1; // 男
-            } else if (genderCombo.getSelectedIndex() == 2) {
-                gender = 0; // 女
-            }
-            int count = (Integer) countSpinner.getValue();
-            return DataGenerator.generateName(gender, count);
-        });
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        return panel;
+    /**
+     * 添加配置项副标题
+     */
+    private void addSubTitle(JPanel panel, String subTitle) {
+        JLabel label = new JLabel(subTitle);
+        label.setBorder(new EmptyBorder(0, 3, 5, 0));
+        panel.add(label);
     }
 
-
-    // ==================== 通用组件创建方法 ====================
+    /**
+     * 添加分隔线
+     */
+    private void addDivider(JPanel panel) {
+        panel.add(new JPanel(), "10px");
+        panel.add(DividerLine.h());
+    }
 
     /**
      * 创建结果显示区域
@@ -276,18 +96,15 @@ public class DataGeneratorTab extends BaseTab {
         JTextArea textArea = new JTextArea();
         textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         textArea.setEditable(false);
+        textArea.setRows(15);
         return textArea;
     }
 
     /**
      * 创建按钮面板
-     *
-     * @param resultArea 结果显示区域
-     * @param generator  数据生成器
      */
     private JPanel createButtonPanel(JTextArea resultArea, DataGeneratorCallback generator) {
-        JPanel panel = new JPanel(new HLayout(10));
-        panel.setBorder(new EmptyBorder(5, 0, 0, 0));
+        JPanel panel = new JPanel(new HLayout(5));
 
         // 生成按钮
         JButton generateBtn = new JButton(L.get("generator_generate"));
@@ -313,7 +130,248 @@ public class DataGeneratorTab extends BaseTab {
         clearBtn.addActionListener(e -> resultArea.setText(""));
         panel.add(clearBtn);
 
-        panel.add(new JPanel(), "1w");
+        return panel;
+    }
+
+
+    // ==================== 身份证号生成面板 ====================
+
+    private JPanel createIdCardPanel() {
+        JPanel panel = createBasePanel();
+
+        // 配置区域标题
+        addTitle(panel, L.get("generator_idcard"));
+        addSubTitle(panel, L.get("generator_idcard_desc"));
+
+        // 配置选项
+        JPanel configPanel = new JPanel(new HLayout(10));
+
+        // 地区选择
+        configPanel.add(new JLabel(L.get("generator_area")));
+        JComboBox<String> areaCombo = new JComboBox<>();
+        areaCombo.addItem(L.get("generator_random"));
+        for (String area : DataGenerator.getAreaCodes()) {
+            areaCombo.addItem(area);
+        }
+        areaCombo.setPreferredSize(new Dimension(180, 25));
+        configPanel.add(areaCombo);
+
+        // 性别选择
+        configPanel.add(new JLabel(L.get("generator_gender")));
+        JComboBox<String> genderCombo = new JComboBox<>(DataGenerator.getGenders());
+        genderCombo.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(genderCombo);
+
+        // 生成数量
+        configPanel.add(new JLabel(L.get("generator_count")));
+        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
+        countSpinner.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(countSpinner);
+
+        panel.add(configPanel);
+        addDivider(panel);
+
+        // 结果区域标题
+        addTitle(panel, L.get("generator_result"));
+
+        // 结果显示
+        JTextArea resultArea = createResultArea();
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+        scrollPane.setPreferredSize(new Dimension(0, 300));
+        panel.add(scrollPane);
+
+        // 按钮面板
+        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
+            String areaCode = null;
+            if (areaCombo.getSelectedIndex() > 0) {
+                String selected = (String) areaCombo.getSelectedItem();
+                areaCode = selected.split("-")[0];
+            }
+            Integer gender = null;
+            if (genderCombo.getSelectedIndex() == 1) {
+                gender = 1;
+            } else if (genderCombo.getSelectedIndex() == 2) {
+                gender = 0;
+            }
+            int count = (Integer) countSpinner.getValue();
+            return DataGenerator.generateIdCard(areaCode, null, gender, count);
+        });
+        panel.add(buttonPanel);
+
+        return panel;
+    }
+
+    // ==================== 银行卡号生成面板 ====================
+
+    private JPanel createBankCardPanel() {
+        JPanel panel = createBasePanel();
+
+        addTitle(panel, L.get("generator_bankcard"));
+        addSubTitle(panel, L.get("generator_bankcard_desc"));
+
+        JPanel configPanel = new JPanel(new HLayout(10));
+
+        // 卡类型选择
+        configPanel.add(new JLabel(L.get("generator_cardtype")));
+        JComboBox<String> cardTypeCombo = new JComboBox<>(DataGenerator.getCardTypes());
+        cardTypeCombo.setPreferredSize(new Dimension(100, 25));
+        configPanel.add(cardTypeCombo);
+
+        // 生成数量
+        configPanel.add(new JLabel(L.get("generator_count")));
+        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(20, 1, 1000, 1));
+        countSpinner.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(countSpinner);
+
+        panel.add(configPanel);
+        addDivider(panel);
+
+        addTitle(panel, L.get("generator_result"));
+
+        JTextArea resultArea = createResultArea();
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+        scrollPane.setPreferredSize(new Dimension(0, 300));
+        panel.add(scrollPane);
+
+        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
+            String cardType = (String) cardTypeCombo.getSelectedItem();
+            int count = (Integer) countSpinner.getValue();
+            return DataGenerator.generateBankCard(cardType, count);
+        });
+        panel.add(buttonPanel);
+
+        return panel;
+    }
+
+
+    // ==================== 手机号生成面板 ====================
+
+    private JPanel createPhonePanel() {
+        JPanel panel = createBasePanel();
+
+        addTitle(panel, L.get("generator_phone"));
+        addSubTitle(panel, L.get("generator_phone_desc"));
+
+        JPanel configPanel = new JPanel(new HLayout(10));
+
+        // 运营商选择
+        configPanel.add(new JLabel(L.get("generator_carrier")));
+        JComboBox<String> carrierCombo = new JComboBox<>();
+        carrierCombo.addItem(L.get("generator_random"));
+        for (String carrier : DataGenerator.getCarriers()) {
+            carrierCombo.addItem(carrier);
+        }
+        carrierCombo.setPreferredSize(new Dimension(120, 25));
+        configPanel.add(carrierCombo);
+
+        // 生成数量
+        configPanel.add(new JLabel(L.get("generator_count")));
+        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
+        countSpinner.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(countSpinner);
+
+        panel.add(configPanel);
+        addDivider(panel);
+
+        addTitle(panel, L.get("generator_result"));
+
+        JTextArea resultArea = createResultArea();
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+        scrollPane.setPreferredSize(new Dimension(0, 300));
+        panel.add(scrollPane);
+
+        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
+            String carrier = null;
+            if (carrierCombo.getSelectedIndex() > 0) {
+                carrier = (String) carrierCombo.getSelectedItem();
+            }
+            int count = (Integer) countSpinner.getValue();
+            return DataGenerator.generatePhone(carrier, count);
+        });
+        panel.add(buttonPanel);
+
+        return panel;
+    }
+
+    // ==================== 统一社会信用代码生成面板 ====================
+
+    private JPanel createCreditCodePanel() {
+        JPanel panel = createBasePanel();
+
+        addTitle(panel, L.get("generator_creditcode"));
+        addSubTitle(panel, L.get("generator_creditcode_desc"));
+
+        JPanel configPanel = new JPanel(new HLayout(10));
+
+        // 生成数量
+        configPanel.add(new JLabel(L.get("generator_count")));
+        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
+        countSpinner.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(countSpinner);
+
+        panel.add(configPanel);
+        addDivider(panel);
+
+        addTitle(panel, L.get("generator_result"));
+
+        JTextArea resultArea = createResultArea();
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+        scrollPane.setPreferredSize(new Dimension(0, 300));
+        panel.add(scrollPane);
+
+        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
+            int count = (Integer) countSpinner.getValue();
+            return DataGenerator.generateCreditCode(count);
+        });
+        panel.add(buttonPanel);
+
+        return panel;
+    }
+
+    // ==================== 姓名生成面板 ====================
+
+    private JPanel createNamePanel() {
+        JPanel panel = createBasePanel();
+
+        addTitle(panel, L.get("generator_name"));
+        addSubTitle(panel, L.get("generator_name_desc"));
+
+        JPanel configPanel = new JPanel(new HLayout(10));
+
+        // 性别选择
+        configPanel.add(new JLabel(L.get("generator_gender")));
+        JComboBox<String> genderCombo = new JComboBox<>(DataGenerator.getGenders());
+        genderCombo.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(genderCombo);
+
+        // 生成数量
+        configPanel.add(new JLabel(L.get("generator_count")));
+        JSpinner countSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 1000, 1));
+        countSpinner.setPreferredSize(new Dimension(80, 25));
+        configPanel.add(countSpinner);
+
+        panel.add(configPanel);
+        addDivider(panel);
+
+        addTitle(panel, L.get("generator_result"));
+
+        JTextArea resultArea = createResultArea();
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+        scrollPane.setPreferredSize(new Dimension(0, 300));
+        panel.add(scrollPane);
+
+        JPanel buttonPanel = createButtonPanel(resultArea, () -> {
+            Integer gender = null;
+            if (genderCombo.getSelectedIndex() == 1) {
+                gender = 1;
+            } else if (genderCombo.getSelectedIndex() == 2) {
+                gender = 0;
+            }
+            int count = (Integer) countSpinner.getValue();
+            return DataGenerator.generateName(gender, count);
+        });
+        panel.add(buttonPanel);
+
         return panel;
     }
 
