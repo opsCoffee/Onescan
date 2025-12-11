@@ -327,6 +327,72 @@ public class DataGenerator {
         return CREDIT_CODE_CHARS.charAt(checkIndex);
     }
 
+    // ==================== 组织机构代码生成 ====================
+
+    // 组织机构代码校验码权重
+    private static final int[] ORG_CODE_WEIGHTS = {3, 7, 9, 10, 5, 8, 4, 2};
+
+    /**
+     * 生成随机组织机构代码（9位）
+     *
+     * @param count 生成数量
+     * @return 组织机构代码列表
+     */
+    public static List<String> generateOrgCode(int count) {
+        List<String> result = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            result.add(generateSingleOrgCode());
+        }
+        return result;
+    }
+
+    private static String generateSingleOrgCode() {
+        StringBuilder sb = new StringBuilder(9);
+        // 生成8位随机数字
+        for (int i = 0; i < 8; i++) {
+            sb.append(sRandom.nextInt(10));
+        }
+        // 计算校验码
+        int sum = 0;
+        for (int i = 0; i < 8; i++) {
+            sum += (sb.charAt(i) - '0') * ORG_CODE_WEIGHTS[i];
+        }
+        int c9 = 11 - (sum % 11);
+        if (c9 == 11) {
+            sb.append('0');
+        } else if (c9 == 10) {
+            sb.append('X');
+        } else {
+            sb.append(c9);
+        }
+        return sb.toString();
+    }
+
+    // ==================== 纳税人识别号生成 ====================
+
+    /**
+     * 生成随机纳税人识别号（15位）
+     *
+     * @param count 生成数量
+     * @return 纳税人识别号列表
+     */
+    public static List<String> generateTaxpayerId(int count) {
+        List<String> result = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            result.add(generateSingleTaxpayerId());
+        }
+        return result;
+    }
+
+    private static String generateSingleTaxpayerId() {
+        StringBuilder sb = new StringBuilder(15);
+        // 6位行政区划码
+        sb.append(AREA_CODES[sRandom.nextInt(AREA_CODES.length)][0]);
+        // 9位组织机构代码
+        sb.append(generateSingleOrgCode());
+        return sb.toString();
+    }
+
     // ==================== 姓名生成 ====================
 
     /**
