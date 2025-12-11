@@ -5,6 +5,7 @@ import burp.onescan.common.Config;
 import burp.onescan.common.Constants;
 import burp.onescan.ui.tab.ConfigPanel;
 import burp.onescan.ui.tab.DataBoardTab;
+import burp.onescan.ui.tab.DataGeneratorTab;
 import burp.onescan.ui.tab.FingerprintTab;
 
 import javax.swing.*;
@@ -19,6 +20,7 @@ public class OneScan extends JTabbedPane {
     private DataBoardTab mDataBoardTab;
     private ConfigPanel mConfigPanel;
     private FingerprintTab mFingerprintTab;
+    private DataGeneratorTab mDataGeneratorTab;
 
     public OneScan() {
         loadModule();
@@ -39,6 +41,9 @@ public class OneScan extends JTabbedPane {
         // 指纹面板
         mFingerprintTab = new FingerprintTab();
         addTab(mFingerprintTab.getTitleName(), mFingerprintTab);
+        // 数据生成面板
+        mDataGeneratorTab = new DataGeneratorTab();
+        addTab(mDataGeneratorTab.getTitleName(), mDataGeneratorTab);
     }
 
     public DataBoardTab getDataBoardTab() {
